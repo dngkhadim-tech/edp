@@ -25,6 +25,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { MediaModule } from './modules/media/media.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { FollowsModule } from './modules/follows/follows.module';
+import { InteractionsModule } from './modules/interactions/interactions.module';
 import { databaseConfig } from './config/database.config';
 
 @Module({
@@ -63,6 +64,7 @@ import { databaseConfig } from './config/database.config';
     MediaModule,
     PaymentsModule,
     FollowsModule,
+    InteractionsModule,
   ],
   controllers: [HealthController],
 })
