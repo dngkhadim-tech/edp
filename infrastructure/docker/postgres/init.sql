@@ -1,0 +1,8 @@
+-- EDP Database Initialization
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "earthdistance";
+CREATE EXTENSION IF NOT EXISTS "cube";
+CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+
+-- Grant permissions
+GRANT ALL PRIVILEGES ON DATABASE edp_db TO edp_user;

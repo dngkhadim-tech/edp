@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: edp-web
+  namespace: edp
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: edp-web
+  template:
+    metadata:
+      labels:
+        app: edp-web
+    spec:
+      containers:
+        - name: edp-web
+          image: ghcr.io/your-org/edp-web:latest
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: edp-config
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "125m"
+            limits:
+              memory: "512Mi"
+              cpu: "250m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: edp-web
+  namespace: edp
+spec:
+  selector:
+    app: edp-web
+  ports:
+    - port: 3000
+      targetPort: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: edp-ingress
+  namespace: edp
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+spec:
+  tls:
+    - hosts:
+        - edp.app
+        - api.edp.app
+      secretName: edp-tls
+  rules:
+    - host: edp.app
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: edp-web
+                port:
+                  number: 3000
+    - host: api.edp.app
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: edp-api
+                port:
+                  number: 4000
