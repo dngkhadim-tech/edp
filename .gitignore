@@ -37,6 +37,9 @@ coverage/
 # Turbo
 .turbo/
 
+# Git worktrees
+.worktrees/
+
 # Expo
 .expo/
 *.jks
