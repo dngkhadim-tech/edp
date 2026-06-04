@@ -2,53 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Outfit:wght@600;700;800&display=swap');
 
 :root {
   --background: 0 0% 100%;
-  --foreground: 0 0% 4%;
+  --foreground: 220 13% 7%;
   --card: 0 0% 100%;
-  --card-foreground: 0 0% 4%;
+  --card-foreground: 220 13% 7%;
   --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 4%;
-  --primary: 44 55% 55%;
-  --primary-foreground: 0 0% 4%;
-  --secondary: 0 0% 96%;
-  --secondary-foreground: 0 0% 4%;
-  --muted: 0 0% 96%;
-  --muted-foreground: 0 0% 45%;
-  --accent: 44 55% 55%;
-  --accent-foreground: 0 0% 4%;
+  --popover-foreground: 220 13% 7%;
+  --primary: 343 84% 52%;
+  --primary-foreground: 0 0% 100%;
+  --primary-hover: 343 84% 40%;
+  --secondary: 220 14% 96%;
+  --secondary-foreground: 220 13% 7%;
+  --muted: 220 14% 96%;
+  --muted-foreground: 220 9% 44%;
+  --accent: 38 89% 32%;
+  --accent-foreground: 0 0% 100%;
+  --accent-light: 55 92% 88%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 98%;
-  --border: 0 0% 90%;
-  --input: 0 0% 90%;
-  --ring: 44 55% 55%;
-  --radius: 0.75rem;
-  --font-inter: 'Inter', sans-serif;
-  --font-playfair: 'Playfair Display', serif;
-}
+  --success: 142 71% 37%;
+  --border: 220 13% 91%;
+  --input: 220 13% 91%;
+  --ring: 343 84% 52%;
+  --radius: 1rem;
 
-.dark {
-  --background: 0 0% 4%;
-  --foreground: 0 0% 98%;
-  --card: 0 0% 8%;
-  --card-foreground: 0 0% 98%;
-  --popover: 0 0% 8%;
-  --popover-foreground: 0 0% 98%;
-  --primary: 44 55% 55%;
-  --primary-foreground: 0 0% 4%;
-  --secondary: 0 0% 12%;
-  --secondary-foreground: 0 0% 98%;
-  --muted: 0 0% 12%;
-  --muted-foreground: 0 0% 60%;
-  --accent: 44 55% 55%;
-  --accent-foreground: 0 0% 4%;
-  --destructive: 0 62% 50%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 0 0% 16%;
-  --input: 0 0% 16%;
-  --ring: 44 55% 55%;
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.06);
+  --shadow-card-hover: 0 4px 8px rgba(0,0,0,0.10), 0 12px 24px rgba(0,0,0,0.08);
+  --shadow-modal: 0 20px 60px rgba(0,0,0,0.20);
 }
 
 * {
@@ -58,48 +41,35 @@
 body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
-  font-family: var(--font-inter);
+  font-family: 'DM Sans', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3 {
-  font-family: var(--font-playfair);
+h1, h2, h3, h4 {
+  font-family: 'Outfit', system-ui, sans-serif;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: hsl(var(--border));
-  border-radius: 3px;
-}
+/* Scrollbar globale */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 3px; }
 
-/* Story ring gradient */
-.story-ring {
-  background: linear-gradient(135deg, #C9A84C, #E2C97E, #9D7E2A);
-  padding: 2px;
-  border-radius: 50%;
-}
+/* Cacher scrollbar horizontale (pills, reels) */
+.scrollbar-none::-webkit-scrollbar { display: none; }
+.scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* Gold gradient text */
-.gold-text {
-  background: linear-gradient(135deg, #C9A84C, #E2C97E);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+/* Animation like */
+@keyframes like-pop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.35); }
+  100% { transform: scale(1); }
 }
+.animate-like-pop { animation: like-pop 250ms ease-out; }
 
-/* Reel scroll snap */
-.reel-container {
-  scroll-snap-type: y mandatory;
-  overflow-y: scroll;
-  height: 100vh;
-}
-.reel-item {
-  scroll-snap-align: start;
-  height: 100vh;
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
