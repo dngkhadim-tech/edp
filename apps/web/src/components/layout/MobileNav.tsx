@@ -22,7 +22,7 @@ export function MobileNav() {
     >
       {/* Accueil + Découvrir */}
       {ITEMS.slice(0, 2).map(({ href, icon: Icon, label }) => (
-        <NavItem key={href} href={href} icon={Icon} label={label} active={pathname.startsWith(href)} />
+        <NavItem key={href} href={href} icon={Icon} label={label} active={pathname === href || pathname.startsWith(href + '/')} />
       ))}
 
       {/* Bouton central surélevé */}
@@ -38,7 +38,7 @@ export function MobileNav() {
 
       {/* Reels + Profil */}
       {ITEMS.slice(2).map(({ href, icon: Icon, label }) => (
-        <NavItem key={href} href={href} icon={Icon} label={label} active={pathname.startsWith(href)} />
+        <NavItem key={href} href={href} icon={Icon} label={label} active={pathname === href || pathname.startsWith(href + '/')} />
       ))}
     </nav>
   );
