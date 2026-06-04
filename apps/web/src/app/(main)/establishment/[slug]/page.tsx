@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Star, MapPin, Clock, Navigation, Bookmark,
-  ChevronLeft, MoreHorizontal,
+  ChevronLeft, MoreHorizontal, Check,
 } from 'lucide-react';
 import { cn, formatNumber } from '@/lib/utils';
 import { HeroGallery } from '@/components/establishment/HeroGallery';
@@ -239,10 +239,16 @@ export default function EstablishmentPage({ params }: { params: any }) {
                 </div>
               )}
               {est.wifi && (
-                <div className="bg-secondary px-3 py-2 rounded-xl text-sm text-foreground">Wifi ✓</div>
+                <div className="flex items-center gap-1.5 bg-secondary px-3 py-2 rounded-xl text-sm text-foreground">
+                  <Check size={13} className="text-success" />
+                  Wifi
+                </div>
               )}
               {est.parking && (
-                <div className="bg-secondary px-3 py-2 rounded-xl text-sm text-foreground">Parking ✓</div>
+                <div className="flex items-center gap-1.5 bg-secondary px-3 py-2 rounded-xl text-sm text-foreground">
+                  <Check size={13} className="text-success" />
+                  Parking
+                </div>
               )}
             </div>
           </div>

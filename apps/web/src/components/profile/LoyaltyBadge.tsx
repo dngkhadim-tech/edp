@@ -1,6 +1,5 @@
 import { Star } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { gradeBgColor, gradeLabel } from '@/lib/utils';
+import { cn, gradeBgColor, gradeLabel } from '@/lib/utils';
 
 interface LoyaltyBadgeProps {
   grade: string;
