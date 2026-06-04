@@ -53,7 +53,7 @@ export function MenuAccordion({ sections }: MenuAccordionProps) {
             {isOpen && (
               <ul className="px-4 pb-3 space-y-2.5 animate-fade-in">
                 {section.items.map((item, i) => (
-                  <li key={i} className="flex items-start justify-between gap-3">
+                  <li key={item.name} className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-sans font-medium text-foreground truncate">{item.name}</p>
                       {item.description && (

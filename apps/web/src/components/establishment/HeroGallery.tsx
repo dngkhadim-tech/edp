@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { Images } from 'lucide-react';
+import { Images, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface HeroGalleryProps {
   images: string[];
@@ -54,14 +54,14 @@ export function HeroGallery({ images, name, totalCount }: HeroGalleryProps) {
             aria-label="Photo précédente"
             className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 transition-colors hidden md:flex"
           >
-            ‹
+            <ChevronLeft size={20} />
           </button>
           <button
             onClick={next}
             aria-label="Photo suivante"
             className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 transition-colors hidden md:flex"
           >
-            ›
+            <ChevronRight size={20} />
           </button>
         </>
       )}

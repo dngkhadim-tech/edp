@@ -1,9 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useInView } from 'react-intersection-observer';
-import { useEffect } from 'react';
 import { api } from '@/lib/api';
 import { PostCard } from '@/components/feed/PostCard';
 import { CategoryPills, type FeedCategory } from '@/components/feed/CategoryPills';
