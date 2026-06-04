@@ -37,7 +37,7 @@ function ReelItem({ reel, isActive }: { reel: any; isActive: boolean }) {
   };
 
   return (
-    <div className="reel-item relative bg-black overflow-hidden">
+    <div className="snap-start h-screen w-full flex-shrink-0 relative bg-black overflow-hidden">
       {reel.media?.[0]?.type === 'video' ? (
         <video
           ref={videoRef}
@@ -137,7 +137,7 @@ export default function ReelsPage() {
   return (
     <div
       ref={containerRef}
-      className="reel-container"
+      className="h-screen overflow-y-scroll snap-y snap-mandatory"
       onScroll={handleScroll}
     >
       {reels.map((reel: any, i: number) => (

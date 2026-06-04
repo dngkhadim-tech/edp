@@ -17,16 +17,16 @@ export function PostCard({ post }: PostCardProps) {
   const [liked, setLiked] = useState(post.isLiked);
   const [likesCount, setLikesCount] = useState(post.likesCount);
   const [saved, setSaved] = useState(post.isSaved);
+  const [likeAnimating, setLikeAnimating] = useState(false);
 
   const handleLike = async () => {
     setLiked(!liked);
+    setLikeAnimating(true);
     setLikesCount((c: number) => liked ? c - 1 : c + 1);
-    try {
-      await api.post(`/posts/${post.id}/like`);
-    } catch {
+    await api.post(`/posts/${post.id}/like`).catch(() => {
       setLiked(liked);
       setLikesCount((c: number) => liked ? c + 1 : c - 1);
-    }
+    });
   };
 
   const author = post.author || post.establishment;
@@ -62,37 +62,68 @@ export function PostCard({ post }: PostCardProps) {
         </button>
       </header>
 
-      {post.media?.length > 0 && (
-        <div className="relative aspect-square bg-muted">
-          {post.media[0].type === 'video' ? (
-            <video
-              src={post.media[0].url}
-              className="w-full h-full object-cover"
-              controls
-              playsInline
-            />
-          ) : (
-            <Image
-              src={post.media[0].url}
-              alt={post.caption || 'Post'}
-              fill
-              className="object-cover"
-            />
-          )}
-        </div>
-      )}
+      {(() => {
+        const mediaItem = post.media?.[0];
+        return mediaItem ? (
+          <div
+            data-testid="post-media"
+            className="relative bg-muted overflow-hidden"
+            style={{ aspectRatio: '4/5' }}
+          >
+            {/* Gradient overlay pour le badge */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent z-10 pointer-events-none" />
+
+            {mediaItem.type === 'video' ? (
+              <video
+                src={mediaItem.url}
+                className="w-full h-full object-cover"
+                controls
+                playsInline
+              />
+            ) : (
+              <Image
+                src={mediaItem.url}
+                alt={post.caption || 'Post EDP'}
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 600px"
+              />
+            )}
+
+            {/* Badge établissement */}
+            {post.establishment && (
+              <Link
+                href={`/establishment/${post.establishment.slug}`}
+                className="absolute bottom-3 left-3 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-foreground text-xs font-heading font-semibold backdrop-blur-md"
+                style={{ background: 'rgba(255,255,255,0.88)' }}
+              >
+                <MapPin size={11} className="text-primary flex-shrink-0" />
+                <span className="truncate max-w-[140px]">{post.establishment.name}</span>
+              </Link>
+            )}
+          </div>
+        ) : null;
+      })()}
 
       <div className="p-4 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
               onClick={handleLike}
+              aria-label="J'aime"
               className={cn(
-                'flex items-center gap-1.5 text-sm transition-all',
-                liked ? 'text-red-500' : 'text-muted-foreground hover:text-foreground',
+                'flex items-center gap-1.5 text-sm transition-colors',
+                liked ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
               )}
             >
-              <Heart size={22} className={liked ? 'fill-red-500' : ''} />
+              <Heart
+                size={22}
+                className={cn(
+                  liked ? 'fill-primary text-primary' : '',
+                  likeAnimating ? 'animate-like-pop' : '',
+                )}
+                onAnimationEnd={() => setLikeAnimating(false)}
+              />
               <span>{formatNumber(likesCount)}</span>
             </button>
             <Link

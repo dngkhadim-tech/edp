@@ -38,11 +38,22 @@ export function gradeColor(grade: string): string {
   const map: Record<string, string> = {
     BRONZE: 'text-amber-700',
     SILVER: 'text-gray-400',
-    GOLD: 'text-gold',
+    GOLD: 'text-accent',
     PLATINUM: 'text-cyan-400',
     DIAMOND: 'text-blue-400',
   };
   return map[grade] || 'text-gray-400';
+}
+
+export function gradeBgColor(grade: string): string {
+  const map: Record<string, string> = {
+    BRONZE:   'bg-amber-100 text-amber-800',
+    SILVER:   'bg-slate-100 text-slate-500',
+    GOLD:     'bg-accent-light text-accent',
+    PLATINUM: 'bg-sky-50 text-sky-600',
+    DIAMOND:  'bg-violet-50 text-violet-600',
+  };
+  return map[grade] || 'bg-secondary text-muted-foreground';
 }
 
 export function gradeLabel(grade: string): string {

@@ -27,7 +27,7 @@ export function StoriesBar() {
           const author = story.author;
           return (
             <button key={story.id} className="flex flex-col items-center gap-1.5 flex-shrink-0">
-              <div className="story-ring">
+              <div className="ring-2 ring-primary ring-offset-1">
                 <Avatar className="h-14 w-14">
                   <AvatarImage src={author?.avatar} />
                   <AvatarFallback className="bg-secondary text-sm">

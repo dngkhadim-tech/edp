@@ -3,32 +3,60 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Home, Compass, Search, MessageCircle, User } from 'lucide-react';
+import { Home, Compass, Plus, Film, User } from 'lucide-react';
 
 const ITEMS = [
-  { href: '/feed', icon: Home },
-  { href: '/explore', icon: Compass },
-  { href: '/search', icon: Search },
-  { href: '/messages', icon: MessageCircle },
-  { href: '/profile/me', icon: User },
+  { href: '/feed',        icon: Home,    label: 'Accueil'  },
+  { href: '/explore',     icon: Compass, label: 'Découvrir' },
+  { href: '/reels',       icon: Film,    label: 'Reels'    },
+  { href: '/profile/me',  icon: User,    label: 'Profil'   },
 ];
 
 export function MobileNav() {
   const pathname = usePathname();
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border flex lg:hidden z-40">
-      {ITEMS.map(({ href, icon: Icon }) => (
-        <Link
-          key={href}
-          href={href}
-          className={cn(
-            'flex-1 flex items-center justify-center py-3 transition-colors',
-            pathname.startsWith(href) ? 'text-primary' : 'text-muted-foreground',
-          )}
-        >
-          <Icon size={24} />
-        </Link>
+    <nav
+      aria-label="Navigation principale"
+      className="fixed bottom-0 left-0 right-0 bg-background border-t border-border flex lg:hidden z-40"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+    >
+      {/* Accueil + Découvrir */}
+      {ITEMS.slice(0, 2).map(({ href, icon: Icon, label }) => (
+        <NavItem key={href} href={href} icon={Icon} label={label} active={pathname === href || pathname.startsWith(href + '/')} />
+      ))}
+
+      {/* Bouton central surélevé */}
+      <Link
+        href="/post/new"
+        aria-label="Publier"
+        className="flex-1 flex items-center justify-center -mt-3"
+      >
+        <span className="flex items-center justify-center w-14 h-14 rounded-full bg-primary shadow-[0_4px_12px_rgba(225,29,72,0.4)] transition-transform active:scale-95">
+          <Plus size={26} className="text-primary-foreground" strokeWidth={2.5} />
+        </span>
+      </Link>
+
+      {/* Reels + Profil */}
+      {ITEMS.slice(2).map(({ href, icon: Icon, label }) => (
+        <NavItem key={href} href={href} icon={Icon} label={label} active={pathname === href || pathname.startsWith(href + '/')} />
       ))}
     </nav>
+  );
+}
+
+function NavItem({ href, icon: Icon, label, active }: {
+  href: string; icon: React.ElementType; label: string; active: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        'flex-1 flex flex-col items-center justify-center gap-0.5 py-2 transition-colors',
+        active ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
+      )}
+    >
+      <Icon size={22} strokeWidth={active ? 2 : 1.5} />
+      <span className="text-[10px] font-sans font-medium leading-none">{label}</span>
+    </Link>
   );
 }

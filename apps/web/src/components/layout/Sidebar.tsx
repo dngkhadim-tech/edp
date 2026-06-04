@@ -30,11 +30,11 @@ export function Sidebar() {
   const { user, logout } = useAuthStore();
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-64 border-r border-border bg-card flex flex-col z-40 hidden lg:flex">
-      <div className="p-6">
+    <aside className="fixed left-0 top-0 h-full w-16 xl:w-64 border-r border-border bg-card flex flex-col z-40 hidden lg:flex">
+      <div className="p-3 xl:p-6">
         <Link href="/feed" className="block">
-          <h1 className="text-2xl font-display font-bold gold-text">EDP</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Eat • Drink • Pose</p>
+          <h1 className="text-xl xl:text-2xl font-display font-bold gold-text">EDP</h1>
+          <p className="hidden xl:block text-xs text-muted-foreground mt-0.5">Eat • Drink • Pose</p>
         </Link>
       </div>
 
@@ -46,15 +46,16 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              title={item.label}
               className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm font-medium',
+                'flex items-center justify-center xl:justify-start gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm font-medium',
                 active
                   ? 'bg-primary/10 text-primary'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted',
               )}
             >
               <Icon size={20} />
-              {item.label}
+              <span className="hidden xl:block">{item.label}</span>
             </Link>
           );
         })}
@@ -64,7 +65,7 @@ export function Sidebar() {
         <Button className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90" asChild>
           <Link href="/post/new">
             <Plus size={18} />
-            Publier
+            <span className="hidden xl:block ml-1">Publier</span>
           </Link>
         </Button>
 
@@ -79,7 +80,7 @@ export function Sidebar() {
                 {getInitials(user.firstName, user.lastName)}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1 min-w-0">
+            <div className="hidden xl:block flex-1 min-w-0">
               <p className="text-sm font-medium truncate">{user.firstName} {user.lastName}</p>
               <p className="text-xs text-muted-foreground truncate">@{user.username}</p>
             </div>

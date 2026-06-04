@@ -73,7 +73,7 @@ export default function LoyaltyPage() {
             </div>
             <div className="h-3 bg-secondary rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-primary to-gold-light rounded-full transition-all duration-500"
+                className="h-full bg-gradient-to-r from-primary to-accent-light rounded-full transition-all duration-500"
                 style={{ width: `${Math.min(progress, 100)}%` }}
               />
             </div>
