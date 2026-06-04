@@ -1,24 +1,20 @@
 'use client';
 
-import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import Image from 'next/image';
 import { useAuthStore } from '@/store/auth.store';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { LoyaltyBadge } from '@/components/profile/LoyaltyBadge';
-import { PostGrid } from '@/components/profile/PostGrid';
-import { formatNumber, getInitials } from '@/lib/utils';
-import { Grid3X3, Film, Bookmark, MapPin, Check, MessageCircle } from 'lucide-react';
-import { cn } from '@/lib/utils';
-
-type ProfileTab = 'posts' | 'reels' | 'saved';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { formatNumber, getInitials, gradeColor, gradeLabel } from '@/lib/utils';
+import { useState } from 'react';
+import { Grid3X3, Play, Trophy } from 'lucide-react';
 
 export default function ProfilePage({ params }: { params: any }) {
   const { username } = params as { username: string };
   const { user: me } = useAuthStore();
   const [following, setFollowing] = useState(false);
-  const [tab, setTab] = useState<ProfileTab>('posts');
 
   const { data: profile } = useQuery({
     queryKey: ['profile', username],
@@ -28,176 +24,113 @@ export default function ProfilePage({ params }: { params: any }) {
     }),
   });
 
-  const { data: postsData } = useQuery({
-    queryKey: ['posts', 'user', profile?.id, tab],
-    queryFn: () => {
-      if (tab === 'saved') return api.get(`/posts/saved`).then((r) => r.data);
-      if (tab === 'reels') return api.get(`/reels/user/${profile.id}`).then((r) => r.data);
-      return api.get(`/posts/user/${profile.id}`).then((r) => r.data);
-    },
+  const { data: posts } = useQuery({
+    queryKey: ['posts', 'user', profile?.id],
+    queryFn: () => api.get(`/posts/user/${profile.id}`).then((r) => r.data),
     enabled: !!profile?.id,
   });
 
-  const isMe = me?.username === username || username === 'me';
+  const isMe = me?.username === username;
 
   const handleFollow = async () => {
-    if (!profile) return;
-    setFollowing((f) => !f);
-    await (following
-      ? api.delete(`/follows/users/${profile.id}`)
-      : api.post(`/follows/users/${profile.id}`)
-    ).catch(() => setFollowing((f) => !f));
+    setFollowing(!following);
+    if (following) {
+      await api.delete(`/follows/users/${profile.id}`);
+    } else {
+      await api.post(`/follows/users/${profile.id}`);
+    }
   };
 
-  if (!profile) {
-    return (
-      <div className="animate-pulse px-4 pt-8 space-y-4">
-        <div className="flex gap-4 items-center">
-          <div className="w-[72px] h-[72px] rounded-full bg-muted flex-shrink-0" />
-          <div className="flex-1 space-y-2">
-            <div className="h-5 bg-muted rounded w-1/2" />
-            <div className="h-4 bg-muted rounded w-1/3" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Normaliser les posts vers le format PostGridItem
-  const rawPosts: any[] = postsData?.data ?? [];
-  const posts = rawPosts.map((p) => ({
-    id: p.id,
-    thumbnailUrl: p.thumbnailUrl ?? p.media?.[0]?.url,
-    type: p.type ?? (p.media?.[0]?.type === 'video' ? 'video' : 'image'),
-    duration: p.duration,
-    caption: p.caption,
-  }));
+  if (!profile) return null;
 
   return (
-    <div className="max-w-xl mx-auto pb-24 lg:pb-8">
-      {/* En-tête profil */}
-      <div className="px-4 pt-5 pb-4 space-y-4">
-        {/* Avatar + infos */}
-        <div className="flex items-start gap-4">
-          <Avatar
-            className={cn(
-              'h-[72px] w-[72px] flex-shrink-0',
-              profile.isVerified && 'ring-2 ring-primary ring-offset-2',
-            )}
-          >
-            <AvatarImage src={profile.avatar} />
-            <AvatarFallback className="bg-primary/10 text-primary font-heading font-bold text-xl">
-              {getInitials(profile.firstName, profile.lastName)}
-            </AvatarFallback>
-          </Avatar>
+    <div className="max-w-screen-md mx-auto px-4 py-8">
+      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8 mb-8">
+        <Avatar className="h-28 w-28">
+          <AvatarImage src={profile.avatar} />
+          <AvatarFallback className="bg-primary/20 text-primary text-3xl">
+            {getInitials(profile.firstName, profile.lastName)}
+          </AvatarFallback>
+        </Avatar>
 
-          <div className="flex-1 min-w-0 pt-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="font-heading font-bold text-lg text-foreground leading-tight">
-                {profile.firstName} {profile.lastName}
-              </h1>
-              {profile.isVerified && (
-                <span className="flex items-center justify-center w-4 h-4 rounded-full bg-primary">
-                  <Check size={10} className="text-primary-foreground" strokeWidth={3} />
-                </span>
-              )}
-            </div>
-            <p className="text-sm text-muted-foreground mt-0.5">@{profile.username}</p>
-            {profile.city && (
-              <p className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                <MapPin size={11} /> {profile.city}
-              </p>
-            )}
+        <div className="flex-1 text-center sm:text-left">
+          <div className="flex flex-col sm:flex-row items-center gap-3 mb-3">
+            <h1 className="text-xl font-semibold">{profile.firstName} {profile.lastName}</h1>
+            {profile.isVerified && <span className="text-primary text-sm">✓</span>}
+            <span className={`text-sm font-medium ${gradeColor(profile.loyaltyGrade)}`}>
+              <Trophy size={14} className="inline mr-1" />
+              {gradeLabel(profile.loyaltyGrade)}
+            </span>
           </div>
-        </div>
+          <p className="text-muted-foreground text-sm mb-1">@{profile.username}</p>
+          {profile.bio && <p className="text-sm mb-3 leading-relaxed">{profile.bio}</p>}
+          {profile.city && <p className="text-xs text-muted-foreground mb-4">📍 {profile.city}{profile.country ? `, ${profile.country}` : ''}</p>}
 
-        {/* Stats */}
-        <div className="flex justify-around">
-          {[
-            { value: profile.postsCount ?? 0,     label: 'publications' },
-            { value: profile.followersCount ?? 0,  label: 'abonnés' },
-            { value: profile.followingCount ?? 0,  label: 'abonnements' },
-          ].map(({ value, label }) => (
-            <div key={label} className="flex flex-col items-center gap-0.5">
-              <span className="font-heading font-bold text-lg tabular-nums">{formatNumber(value)}</span>
-              <span className="text-xs text-muted-foreground font-sans">{label}</span>
+          <div className="flex justify-center sm:justify-start gap-8 mb-4">
+            <div className="text-center">
+              <p className="font-bold">{formatNumber(profile.postsCount)}</p>
+              <p className="text-xs text-muted-foreground">publications</p>
             </div>
-          ))}
-        </div>
+            <div className="text-center">
+              <p className="font-bold">{formatNumber(profile.followersCount)}</p>
+              <p className="text-xs text-muted-foreground">abonnés</p>
+            </div>
+            <div className="text-center">
+              <p className="font-bold">{formatNumber(profile.followingCount)}</p>
+              <p className="text-xs text-muted-foreground">abonnements</p>
+            </div>
+          </div>
 
-        {/* Badge fidélité */}
-        {profile.loyaltyGrade && (
-          <LoyaltyBadge grade={profile.loyaltyGrade} points={profile.loyaltyPoints} />
-        )}
-
-        {/* Bio */}
-        {profile.bio && (
-          <p className="text-sm text-foreground leading-relaxed">{profile.bio}</p>
-        )}
-
-        {/* Boutons action */}
-        {isMe ? (
-          <Button
-            variant="outline"
-            className="w-full font-heading font-semibold border-border text-foreground h-10 rounded-xl"
-          >
-            Modifier le profil
-          </Button>
-        ) : (
-          <div className="flex gap-3">
+          {isMe ? (
+            <Button variant="outline" size="sm" asChild>
+              <a href="/settings">Modifier le profil</a>
+            </Button>
+          ) : (
             <Button
+              size="sm"
+              variant={following ? 'outline' : 'default'}
               onClick={handleFollow}
-              className={cn(
-                'flex-1 font-heading font-semibold h-10 rounded-xl transition-all duration-150',
-                following
-                  ? 'bg-background border border-primary text-primary hover:bg-primary/5'
-                  : 'bg-primary text-primary-foreground hover:bg-primary/90',
-              )}
             >
-              {following ? 'Suivi ✓' : 'Suivre'}
+              {following ? 'Se désabonner' : 'Suivre'}
             </Button>
-            <Button
-              variant="outline"
-              className="flex-1 font-heading font-semibold border-border text-foreground h-10 rounded-xl"
-            >
-              <MessageCircle size={16} className="mr-1.5" />
-              Message
-            </Button>
+          )}
+        </div>
+      </div>
+
+      <Tabs defaultValue="posts">
+        <TabsList className="w-full bg-secondary">
+          <TabsTrigger value="posts" className="flex-1 gap-2">
+            <Grid3X3 size={16} /> Publications
+          </TabsTrigger>
+          <TabsTrigger value="reels" className="flex-1 gap-2">
+            <Play size={16} /> Reels
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="posts" className="mt-4">
+          <div className="grid grid-cols-3 gap-1">
+            {posts?.data?.map((post: any) => (
+              <a key={post.id} href={`/post/${post.id}`} className="aspect-square relative block bg-secondary overflow-hidden group">
+                {post.media?.[0] && (
+                  <Image
+                    src={post.media[0].url}
+                    alt=""
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform"
+                  />
+                )}
+              </a>
+            ))}
           </div>
-        )}
-      </div>
+          {posts?.data?.length === 0 && (
+            <p className="text-center text-muted-foreground py-12">Aucune publication</p>
+          )}
+        </TabsContent>
 
-      {/* Tabs grille */}
-      <div
-        role="tablist"
-        aria-label="Publications de l'utilisateur"
-        className="sticky top-14 z-20 bg-background border-b border-border flex"
-      >
-        {[
-          { value: 'posts' as ProfileTab,  icon: Grid3X3, label: 'Publications' },
-          { value: 'reels' as ProfileTab,  icon: Film,    label: 'Reels'        },
-          { value: 'saved' as ProfileTab,  icon: Bookmark, label: 'Sauvegardés' },
-        ].map(({ value, icon: Icon, label }) => (
-          <button
-            key={value}
-            role="tab"
-            aria-selected={tab === value}
-            aria-label={label}
-            onClick={() => setTab(value)}
-            className={cn(
-              'flex-1 flex items-center justify-center py-3 border-b-2 transition-colors',
-              tab === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground',
-            )}
-          >
-            <Icon size={20} strokeWidth={tab === value ? 2 : 1.5} />
-          </button>
-        ))}
-      </div>
-
-      {/* Grille publications */}
-      <div data-testid="post-grid">
-        <PostGrid posts={posts} />
-      </div>
+        <TabsContent value="reels" className="mt-4">
+          <p className="text-center text-muted-foreground py-12">Aucun reel</p>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

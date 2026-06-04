@@ -7,7 +7,12 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: '**.amazonaws.com' },
       { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
       { protocol: 'https', hostname: 'graph.facebook.com' },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: 'i.pravatar.cc' },
+      { protocol: 'https', hostname: 'avatars.githubusercontent.com' },
+      { protocol: 'https', hostname: '**.cloudfront.net' },
     ],
+    unoptimized: process.env.NODE_ENV === 'development',
   },
   experimental: {
     serverActions: { allowedOrigins: ['localhost:3000'] },

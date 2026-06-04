@@ -83,4 +83,16 @@ export class PostsController {
   view(@Param('id') id: string) {
     return this.postsService.incrementViews(id);
   }
+
+  @Get('user/:userId')
+  @UseGuards(JwtAuthGuard)
+  getUserPosts(@Param('userId') userId: string, @Query() query: PaginationQuery) {
+    return this.postsService.getUserPosts(userId, query);
+  }
+
+  @Get('establishment/:estId')
+  @UseGuards(JwtAuthGuard)
+  getEstPosts(@Param('estId') estId: string, @Query() query: PaginationQuery) {
+    return this.postsService.getEstablishmentPosts(estId, query);
+  }
 }

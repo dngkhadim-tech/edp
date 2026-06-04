@@ -25,8 +25,8 @@ const MAP_STYLE_DARK = [
 
 export default function MapPage() {
   const mapRef = useRef<HTMLDivElement>(null);
-  const [map, setMap] = useState<google.maps.Map | null>(null);
-  const [markers, setMarkers] = useState<google.maps.Marker[]>([]);
+  const [map, setMap] = useState<any | null>(null);
+  const [markers, setMarkers] = useState<any[]>([]);
   const [selected, setSelected] = useState<any>(null);
   const [type, setType] = useState('');
   const [userLocation, setUserLocation] = useState(PARIS_CENTER);
@@ -55,7 +55,7 @@ export default function MapPage() {
     const loader = new Loader({ apiKey, version: 'weekly', libraries: ['places'] });
     loader.load().then(() => {
       if (!mapRef.current) return;
-      const gmap = new google.maps.Map(mapRef.current, {
+      const gmap = new (window as any).google.maps.Map(mapRef.current, {
         center: userLocation,
         zoom: 13,
         styles: MAP_STYLE_DARK,
@@ -71,12 +71,12 @@ export default function MapPage() {
     if (!map || !nearby) return;
     markers.forEach((m) => m.setMap(null));
     const newMarkers = nearby.map((est: any) => {
-      const marker = new google.maps.Marker({
+      const marker = new (window as any).google.maps.Marker({
         position: { lat: parseFloat(est.latitude), lng: parseFloat(est.longitude) },
         map,
         title: est.name,
         icon: {
-          path: google.maps.SymbolPath.CIRCLE,
+          path: (window as any).google.maps.SymbolPath.CIRCLE,
           scale: 10,
           fillColor: '#C9A84C',
           fillOpacity: 1,
