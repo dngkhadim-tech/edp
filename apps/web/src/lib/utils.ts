@@ -38,7 +38,7 @@ export function gradeColor(grade: string): string {
   const map: Record<string, string> = {
     BRONZE: 'text-amber-700',
     SILVER: 'text-gray-400',
-    GOLD: 'text-gold',
+    GOLD: 'text-accent',
     PLATINUM: 'text-cyan-400',
     DIAMOND: 'text-blue-400',
   };

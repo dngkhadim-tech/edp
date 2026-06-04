@@ -48,6 +48,11 @@ const config: Config = {
       keyframes: {
         fadeIn: { from: { opacity: '0' }, to: { opacity: '1' } },
         slideUp: { from: { transform: 'translateY(16px)', opacity: '0' }, to: { transform: 'translateY(0)', opacity: '1' } },
+        'like-pop': {
+          '0%':   { transform: 'scale(1)' },
+          '50%':  { transform: 'scale(1.35)' },
+          '100%': { transform: 'scale(1)' },
+        },
       },
     },
   },
