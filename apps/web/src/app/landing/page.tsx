@@ -74,12 +74,12 @@ const ESTABLISHMENTS = [
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-edp-black text-white overflow-x-hidden">
+    <div className="min-h-screen bg-[#0A0A0A] text-white overflow-x-hidden">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-black/80 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-2xl font-display font-bold gold-text">EDP</span>
+            <span className="text-2xl font-heading font-bold text-amber-400">EDP</span>
             <span className="text-xs text-muted-foreground hidden sm:block">Eat • Drink • Pose</span>
           </div>
           <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
@@ -119,9 +119,9 @@ export default function LandingPage() {
             Nouveau — Reels gastronomiques disponibles
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-display font-bold leading-tight mb-6">
-            <span className="gold-text">Eat.</span> <span className="gold-text">Drink.</span>{' '}
-            <span className="gold-text">Pose.</span>
+          <h1 className="text-5xl md:text-7xl font-heading font-bold leading-tight mb-6">
+            <span className="text-amber-400">Eat.</span> <span className="text-amber-400">Drink.</span>{' '}
+            <span className="text-amber-400">Pose.</span>
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-4 font-light">
             Le réseau social de la gastronomie.
@@ -149,7 +149,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-20 max-w-4xl mx-auto">
             {STATS.map((s) => (
               <div key={s.label} className="text-center">
-                <p className="text-3xl md:text-4xl font-bold gold-text">{s.value}</p>
+                <p className="text-3xl md:text-4xl font-bold text-amber-400">{s.value}</p>
                 <p className="text-muted-foreground text-sm mt-1">{s.label}</p>
               </div>
             ))}
@@ -161,7 +161,7 @@ export default function LandingPage() {
       <section className="py-24 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">Établissements d'exception</h2>
+            <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4">Établissements d'exception</h2>
             <p className="text-muted-foreground max-w-xl mx-auto">Les meilleures adresses sélectionnées par notre communauté</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -200,7 +200,7 @@ export default function LandingPage() {
       <section id="features" className="py-24 px-4 bg-card/20">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">Tout ce dont vous avez besoin</h2>
+            <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4">Tout ce dont vous avez besoin</h2>
             <p className="text-muted-foreground max-w-xl mx-auto">Une plateforme complète qui réunit Instagram, TripAdvisor et Booking en une seule app</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -224,7 +224,7 @@ export default function LandingPage() {
       <section id="testimonials" className="py-24 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">Ce qu'ils disent</h2>
+            <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4">Ce qu'ils disent</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {TESTIMONIALS.map((t) => (
@@ -251,7 +251,7 @@ export default function LandingPage() {
       {/* Pricing */}
       <section id="pricing" className="py-24 px-4 bg-card/20">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">Simple et transparent</h2>
+          <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4">Simple et transparent</h2>
           <p className="text-muted-foreground mb-16">Pour les utilisateurs, c'est gratuit. Pour les établissements, un seul abonnement.</p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -296,9 +296,9 @@ export default function LandingPage() {
       <section className="py-32 px-4 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-primary/10" />
         <div className="relative max-w-3xl mx-auto text-center">
-          <h2 className="text-4xl md:text-5xl font-display font-bold mb-6">
+          <h2 className="text-4xl md:text-5xl font-heading font-bold mb-6">
             Prêt à rejoindre<br />
-            <span className="gold-text">la table ?</span>
+            <span className="text-amber-400">la table ?</span>
           </h2>
           <p className="text-xl text-muted-foreground mb-10">
             Des milliers de foodies vous attendent sur EDP.
@@ -317,7 +317,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
             <div>
-              <h4 className="font-display font-bold gold-text text-xl mb-4">EDP</h4>
+              <h4 className="font-heading font-bold text-amber-400 text-xl mb-4">EDP</h4>
               <p className="text-muted-foreground text-sm leading-relaxed">
                 Partagez vos expériences, réservez vos moments.
               </p>

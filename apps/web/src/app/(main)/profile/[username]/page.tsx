@@ -30,11 +30,14 @@ interface GridPost {
 }
 
 export default function ProfilePage() {
-  const { username } = useParams<{ username: string }>();
+  const params = useParams<{ username: string }>();
   const { user: me } = useAuthStore();
   const router = useRouter();
   const [following, setFollowing] = useState(false);
   const [gridTab, setGridTab] = useState<GridTab>('posts');
+
+  // /profile/me → redirect to the actual username
+  const username = params.username === 'me' && me?.username ? me.username : params.username;
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile', username],

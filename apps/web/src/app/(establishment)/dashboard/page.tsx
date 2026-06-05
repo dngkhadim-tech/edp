@@ -68,7 +68,7 @@ export default function EstablishmentDashboard() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-display font-bold">Dashboard</h1>
+          <h1 className="text-3xl font-heading font-bold">Dashboard</h1>
           <p className="text-muted-foreground mt-1">
             {myEst ? myEst.name : 'Chargement...'}
             {myEst?.isVerified && <span className="ml-2 text-primary text-sm">✓ Vérifié</span>}

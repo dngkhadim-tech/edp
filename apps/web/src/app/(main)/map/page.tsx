@@ -99,7 +99,7 @@ export default function MapPage() {
   return (
     <div className="h-screen flex flex-col">
       <div className="p-4 border-b border-border bg-card z-10 flex items-center gap-3">
-        <h1 className="font-display font-bold text-xl hidden md:block">Carte</h1>
+        <h1 className="font-heading font-bold text-xl hidden md:block">Carte</h1>
         <div className="flex gap-2 flex-1 overflow-x-auto">
           {TYPES.map((t) => (
             <button
