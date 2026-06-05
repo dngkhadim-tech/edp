@@ -39,13 +39,11 @@ export class PostsController {
       ? (dto.caption.match(/#\w+/g) || []).map((h: string) => h.slice(1))
       : [];
 
-    if (dto.type === PostType.STORY) {
-      const expiresAt = new Date();
-      expiresAt.setHours(expiresAt.getHours() + 24);
-      dto.expiresAt = expiresAt;
-    }
+    const expiresAt = dto.type === PostType.STORY
+      ? new Date(Date.now() + 24 * 60 * 60 * 1000)
+      : undefined;
 
-    return this.postsService.create(req.user.id, 'USER', { ...dto, media, hashtags });
+    return this.postsService.create(req.user.id, 'USER', { ...dto, media, hashtags, expiresAt });
   }
 
   @Get('trending')
