@@ -5,9 +5,9 @@ import { api } from '@/lib/api';
 import { useAuthStore } from '@/store/auth.store';
 import { gradeColor, gradeLabel, formatNumber } from '@/lib/utils';
 import { LoyaltyGrade, LOYALTY_THRESHOLDS } from '@edp/shared';
-import { Trophy, Star, Zap, Gift, Crown } from 'lucide-react';
+import { Trophy, Star, Zap, Gift, Crown, type LucideIcon } from 'lucide-react';
 
-const GRADE_ICONS: Record<string, React.ComponentType<any>> = {
+const GRADE_ICONS: Record<string, LucideIcon> = {
   BRONZE: Trophy,
   SILVER: Star,
   GOLD: Zap,
@@ -15,18 +15,77 @@ const GRADE_ICONS: Record<string, React.ComponentType<any>> = {
   DIAMOND: Crown,
 };
 
-const GRADE_BENEFITS: Record<string, string[]> = {
-  BRONZE: ['Badge Bronze'],
-  SILVER: ['Badge Silver', 'Réductions partenaires'],
-  GOLD: ['Badge Gold', 'Réductions partenaires', 'Réservations prioritaires'],
-  PLATINUM: ['Badge Platinum', 'Offres exclusives', 'Réservations prioritaires'],
-  DIAMOND: ['Badge Diamond', 'Expériences VIP', 'Offres exclusives', 'Réservations prioritaires'],
+const GRADE_HERO_GRADIENT: Record<string, string> = {
+  BRONZE:   'from-amber-100 to-amber-200',
+  SILVER:   'from-slate-100 to-slate-200',
+  GOLD:     'from-yellow-50 to-amber-100',
+  PLATINUM: 'from-sky-50 to-sky-100',
+  DIAMOND:  'from-violet-50 to-purple-100',
 };
+
+const GRADE_HERO_TEXT: Record<string, string> = {
+  BRONZE:   'text-amber-800',
+  SILVER:   'text-slate-600',
+  GOLD:     'text-amber-700',
+  PLATINUM: 'text-sky-700',
+  DIAMOND:  'text-violet-700',
+};
+
+interface LoyaltyTransaction {
+  id: string;
+  description: string;
+  points: number;
+  createdAt: string;
+}
+
+interface LeaderboardEntry {
+  id: string;
+  firstName: string;
+  lastName: string;
+  username: string;
+  loyaltyPoints: number;
+  loyaltyGrade: string;
+}
+
+function groupByDate(txs: LoyaltyTransaction[]): Record<string, LoyaltyTransaction[]> {
+  return txs.reduce<Record<string, LoyaltyTransaction[]>>((acc, tx) => {
+    const key = new Date(tx.createdAt).toLocaleDateString('fr-FR', {
+      day: 'numeric', month: 'long', year: 'numeric',
+    });
+    (acc[key] ??= []).push(tx);
+    return acc;
+  }, {});
+}
+
+function Podium({ entries, currentUserId }: { entries: LeaderboardEntry[]; currentUserId?: string }) {
+  const order = [entries[1], entries[0], entries[2]].filter(Boolean);
+  const heights = ['h-16', 'h-24', 'h-12'];
+  const ranks = [2, 1, 3];
+
+  return (
+    <div className="flex items-end justify-center gap-3 mb-6" role="list" aria-label="Podium top 3">
+      {order.map((entry, i) => (
+        <div key={entry.id} role="listitem" className="flex flex-col items-center gap-2">
+          <span className="text-2xl font-heading font-bold text-muted-foreground" aria-hidden="true">
+            {ranks[i] === 1 ? '①' : ranks[i] === 2 ? '②' : '③'}
+          </span>
+          <div className="text-center">
+            <p className="text-xs font-semibold truncate max-w-[72px]">{entry.firstName}</p>
+            <p className="text-xs text-muted-foreground tabular-nums">{formatNumber(entry.loyaltyPoints)} pts</p>
+          </div>
+          <div className={`${heights[i]} w-16 rounded-t-lg bg-gradient-to-t from-primary/30 to-primary/10 border border-primary/20 flex items-end justify-center pb-1`}>
+            <span className="text-xs font-bold text-primary tabular-nums" aria-label={`Rang ${ranks[i]}`}>{ranks[i]}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function LoyaltyPage() {
   const { user } = useAuthStore();
 
-  const { data: history } = useQuery({
+  const { data: historyData } = useQuery({
     queryKey: ['loyalty', 'history'],
     queryFn: () => api.get('/loyalty/history').then((r) => r.data),
   });
@@ -37,112 +96,116 @@ export default function LoyaltyPage() {
   });
 
   const grades = Object.values(LoyaltyGrade);
-  const currentGradeIndex = grades.indexOf(user?.loyaltyGrade as LoyaltyGrade);
-  const nextGrade = grades[currentGradeIndex + 1];
-  const nextThreshold = nextGrade ? LOYALTY_THRESHOLDS[nextGrade as LoyaltyGrade] : null;
+  const currentIndex = grades.indexOf(user?.loyaltyGrade as LoyaltyGrade);
+  const nextGrade = grades[currentIndex + 1] as LoyaltyGrade | undefined;
+  const nextThreshold = nextGrade ? LOYALTY_THRESHOLDS[nextGrade] : null;
   const progress = nextThreshold
-    ? ((user?.loyaltyPoints || 0) / nextThreshold) * 100
+    ? Math.min(((user?.loyaltyPoints ?? 0) / nextThreshold) * 100, 100)
     : 100;
+
+  const grade = user?.loyaltyGrade ?? 'BRONZE';
+  const heroGradient = GRADE_HERO_GRADIENT[grade] ?? 'from-amber-100 to-amber-200';
+  const heroText = GRADE_HERO_TEXT[grade] ?? 'text-amber-800';
+  const GradeIcon: LucideIcon = GRADE_ICONS[grade] ?? Trophy;
+
+  const transactions: LoyaltyTransaction[] = historyData?.data ?? [];
+  const grouped = groupByDate(transactions);
+  const entries: LeaderboardEntry[] = leaderboard ?? [];
 
   return (
     <div className="max-w-screen-lg mx-auto px-4 py-8 space-y-8">
       <div>
-        <h1 className="text-3xl font-display font-bold">Programme de fidélité</h1>
+        <h1 className="text-3xl font-heading font-bold">Programme de fidélité</h1>
         <p className="text-muted-foreground mt-1">Gagnez des points et débloquez des avantages exclusifs</p>
       </div>
 
       {user && (
-        <div className="bg-gradient-to-br from-primary/20 via-card to-card border border-primary/20 rounded-2xl p-6 space-y-4">
+        <div className={`bg-gradient-to-br ${heroGradient} rounded-2xl p-6 space-y-5`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Votre grade</p>
-              <h2 className={`text-3xl font-display font-bold ${gradeColor(user.loyaltyGrade)}`}>
+              <p className={`text-sm font-medium ${heroText} opacity-70`}>Votre grade</p>
+              <h2 className={`text-4xl font-heading font-bold ${heroText}`}>
                 {gradeLabel(user.loyaltyGrade)}
               </h2>
             </div>
-            {(() => {
-              const Icon = GRADE_ICONS[user.loyaltyGrade] || Trophy;
-              return <Icon size={48} className={gradeColor(user.loyaltyGrade)} />;
-            })()}
+            <GradeIcon size={52} className={heroText} aria-hidden="true" />
           </div>
 
           <div>
             <div className="flex justify-between text-sm mb-2">
-              <span className="font-semibold">{formatNumber(user.loyaltyPoints)} points</span>
-              {nextGrade && <span className="text-muted-foreground">{formatNumber(nextThreshold!)} pour {gradeLabel(nextGrade)}</span>}
+              <span className={`font-semibold ${heroText} tabular-nums`}>
+                {formatNumber(user.loyaltyPoints)} points
+              </span>
+              {nextGrade && nextThreshold && (
+                <span className={`${heroText} opacity-70 tabular-nums`}>
+                  {formatNumber(nextThreshold)} pour {gradeLabel(nextGrade)}
+                </span>
+              )}
             </div>
-            <div className="h-3 bg-secondary rounded-full overflow-hidden">
+            <div className="h-3 bg-black/10 rounded-full overflow-hidden" role="progressbar" aria-valuenow={Math.round(progress)} aria-valuemin={0} aria-valuemax={100}>
               <div
-                className="h-full bg-gradient-to-r from-primary to-accent-light rounded-full transition-all duration-500"
-                style={{ width: `${Math.min(progress, 100)}%` }}
+                className="h-full bg-primary rounded-full transition-all duration-700"
+                style={{ width: `${progress}%` }}
               />
             </div>
           </div>
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        {grades.map((grade) => {
-          const Icon = GRADE_ICONS[grade] || Trophy;
-          const isActive = grade === user?.loyaltyGrade;
-          const isAchieved = grades.indexOf(grade) <= currentGradeIndex;
-          return (
-            <div
-              key={grade}
-              className={`rounded-xl border p-4 text-center space-y-2 transition-all ${
-                isActive
-                  ? 'border-primary bg-primary/10 shadow-lg shadow-primary/20'
-                  : isAchieved
-                  ? 'border-border bg-card'
-                  : 'border-border bg-card opacity-40'
-              }`}
-            >
-              <Icon size={28} className={`mx-auto ${gradeColor(grade)}`} />
-              <p className={`font-semibold text-sm ${gradeColor(grade)}`}>{gradeLabel(grade)}</p>
-              <p className="text-xs text-muted-foreground">{formatNumber(LOYALTY_THRESHOLDS[grade as LoyaltyGrade])} pts</p>
-              <ul className="text-xs text-left space-y-1 mt-2">
-                {GRADE_BENEFITS[grade]?.map((b) => (
-                  <li key={b} className="text-muted-foreground flex items-center gap-1">
-                    <span className="text-primary">•</span> {b}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          );
-        })}
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div>
-          <h2 className="text-xl font-semibold mb-4">Historique des points</h2>
-          <div className="space-y-3">
-            {history?.data?.map((tx: any) => (
-              <div key={tx.id} className="flex items-center justify-between p-3 bg-card border border-border rounded-lg">
-                <div>
-                  <p className="text-sm font-medium">{tx.description}</p>
-                  <p className="text-xs text-muted-foreground">{new Date(tx.createdAt).toLocaleDateString('fr-FR')}</p>
+          <h2 className="text-xl font-heading font-semibold mb-4">Historique des points</h2>
+          {Object.keys(grouped).length === 0 ? (
+            <p className="text-sm text-muted-foreground">Aucun historique disponible.</p>
+          ) : (
+            <div className="space-y-5">
+              {Object.entries(grouped).map(([date, txs]) => (
+                <div key={date}>
+                  <p className="text-xs text-muted-foreground font-medium mb-2 uppercase tracking-wide">{date}</p>
+                  <div className="space-y-2">
+                    {txs.map((tx) => (
+                      <div key={tx.id} className="flex items-center gap-3 p-3 bg-card border border-border rounded-lg">
+                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                          <Zap size={14} className="text-primary" aria-hidden="true" />
+                        </div>
+                        <p className="flex-1 text-sm">{tx.description}</p>
+                        <span className="font-bold text-sm text-success shrink-0 tabular-nums">+{tx.points}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <span className="font-bold text-primary">+{tx.points}</span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div>
-          <h2 className="text-xl font-semibold mb-4">Classement</h2>
-          <div className="space-y-3">
-            {leaderboard?.map((u: any, i: number) => (
-              <div key={u.id} className="flex items-center gap-3 p-3 bg-card border border-border rounded-lg">
-                <span className={`text-lg font-bold w-8 text-center ${i < 3 ? 'text-primary' : 'text-muted-foreground'}`}>
-                  {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}
+          <h2 className="text-xl font-heading font-semibold mb-4">Classement</h2>
+          {entries.length >= 3 && (
+            <Podium entries={entries.slice(0, 3)} currentUserId={user?.id} />
+          )}
+          <div className="space-y-2">
+            {entries.slice(entries.length >= 3 ? 3 : 0).map((entry, i) => (
+              <div
+                key={entry.id}
+                className={`flex items-center gap-3 p-3 border rounded-lg ${
+                  entry.id === user?.id
+                    ? 'bg-primary/5 border-primary/30'
+                    : 'bg-card border-border'
+                }`}
+              >
+                <span className="text-sm font-bold w-7 text-center text-muted-foreground tabular-nums">
+                  #{(entries.length >= 3 ? i + 4 : i + 1)}
                 </span>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">{u.firstName} {u.lastName}</p>
-                  <p className="text-xs text-muted-foreground">@{u.username}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{entry.firstName} {entry.lastName}</p>
+                  <p className="text-xs text-muted-foreground">@{entry.username}</p>
                 </div>
-                <div className="text-right">
-                  <p className="font-bold text-sm">{formatNumber(u.loyaltyPoints)}</p>
-                  <p className={`text-xs font-medium ${gradeColor(u.loyaltyGrade)}`}>{gradeLabel(u.loyaltyGrade)}</p>
+                <div className="text-right shrink-0">
+                  <p className="font-bold text-sm tabular-nums">{formatNumber(entry.loyaltyPoints)}</p>
+                  <p className={`text-xs font-medium ${gradeColor(entry.loyaltyGrade)}`}>
+                    {gradeLabel(entry.loyaltyGrade)}
+                  </p>
                 </div>
               </div>
             ))}
