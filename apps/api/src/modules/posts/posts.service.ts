@@ -14,7 +14,7 @@ export class PostsService {
     private readonly loyaltyService: LoyaltyService,
   ) {}
 
-  async create(authorId: string, authorType: 'USER' | 'ESTABLISHMENT', dto: CreatePostDto): Promise<PostEntity> {
+  async create(authorId: string, authorType: 'USER' | 'ESTABLISHMENT', dto: CreatePostDto & { media?: { url: string; type: string }[]; expiresAt?: Date }): Promise<PostEntity> {
     const post = this.postRepo.create({ ...dto, authorId, authorType });
     const saved = (await this.postRepo.save(post)) as unknown as PostEntity;
 

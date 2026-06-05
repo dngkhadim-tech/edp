@@ -22,6 +22,4 @@ export class CreatePostDto {
   @IsString({ each: true })
   hashtags?: string[];
 
-  media?: { url: string; type: 'image' | 'video' }[];
-  expiresAt?: Date;
 }
