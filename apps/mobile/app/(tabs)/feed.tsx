@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from 'react';
 import {
-  View, Text, FlatList, RefreshControl, StyleSheet, ActivityIndicator,
+  View, Text, FlatList, RefreshControl, StyleSheet, ActivityIndicator, Animated,
 } from 'react-native';
+import { usePulse } from '../../src/hooks/usePulse';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Bell, Search } from 'lucide-react-native';
@@ -42,6 +43,7 @@ export default function FeedScreen() {
 
   const posts: Post[] = data?.pages.flatMap((p) => p.data) ?? [];
   const reels: Reel[] = reelsData ?? [];
+  const pulseOpacity = usePulse();
 
   const renderItem = useCallback(({ item, index }: { item: Post; index: number }) => (
     <>
@@ -63,9 +65,24 @@ export default function FeedScreen() {
       </View>
 
       {isLoading ? (
-        <View style={styles.skeletonWrap}>
-          {[0, 1, 2].map((i) => <View key={i} style={styles.skeleton} />)}
-        </View>
+        <Animated.View style={[styles.skeletonWrap, { opacity: pulseOpacity }]}>
+          {[0, 1, 2].map((i) => (
+            <View key={i} style={styles.skeleton}>
+              <View style={styles.skeletonHeader}>
+                <View style={styles.skeletonAvatar} />
+                <View style={styles.skeletonMeta}>
+                  <View style={[styles.skeletonLine, { width: '50%' }]} />
+                  <View style={[styles.skeletonLine, { width: '30%', marginTop: 4 }]} />
+                </View>
+              </View>
+              <View style={styles.skeletonImage} />
+              <View style={{ padding: 12, gap: 6 }}>
+                <View style={[styles.skeletonLine, { width: '80%' }]} />
+                <View style={[styles.skeletonLine, { width: '60%' }]} />
+              </View>
+            </View>
+          ))}
+        </Animated.View>
       ) : (
         <FlatList
           data={posts}
@@ -106,5 +123,10 @@ const styles = StyleSheet.create({
   logo: { fontFamily: fonts.heading.black, fontSize: 22, color: colors.primary, letterSpacing: 2 },
   icons: { flexDirection: 'row', gap: spacing.md },
   skeletonWrap: { padding: spacing.md, gap: spacing.md },
-  skeleton: { height: 300, backgroundColor: colors.surface, borderRadius: 12 },
+  skeleton: { backgroundColor: colors.card, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: colors.border },
+  skeletonHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12 },
+  skeletonAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.surface },
+  skeletonMeta: { flex: 1, gap: 0 },
+  skeletonLine: { height: 10, borderRadius: 5, backgroundColor: colors.surface },
+  skeletonImage: { height: 260, backgroundColor: colors.surface },
 });
