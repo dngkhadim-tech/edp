@@ -16,7 +16,7 @@ export default function FeedPage() {
   const { ref, inView } = useInView();
   const [category, setCategory] = useState<FeedCategory>('all');
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError, refetch } = useInfiniteQuery({
     queryKey: ['feed', category],
     queryFn: ({ pageParam = 1 }) =>
       api.get(`/feed?page=${pageParam}&limit=10${category !== 'all' ? `&type=${category}` : ''}`).then((r) => r.data),
@@ -35,6 +35,21 @@ export default function FeedPage() {
   }, [inView, hasNextPage, fetchNextPage]);
 
   const posts = data?.pages.flatMap((p) => p.data) ?? [];
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center px-4">
+        <p className="font-heading font-bold text-foreground">Impossible de charger le feed</p>
+        <p className="text-sm text-muted-foreground">Vérifiez votre connexion et réessayez.</p>
+        <button
+          onClick={() => refetch()}
+          className="px-4 py-2 rounded-xl border border-border text-sm font-medium hover:bg-muted transition-colors"
+        >
+          Réessayer
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-xl mx-auto pb-24 lg:pb-8">
