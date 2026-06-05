@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { Calendar, Users, Loader2 } from 'lucide-react';
+import { Calendar, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
@@ -183,8 +183,21 @@ export default function ReservationsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <Loader2 className="animate-spin text-primary" size={32} aria-hidden="true" />
+      <div className="max-w-screen-md mx-auto px-4 py-6 space-y-4">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="bg-card border border-border rounded-2xl p-5 space-y-3 animate-pulse">
+            <div className="flex items-center justify-between">
+              <div className="h-4 bg-muted rounded w-1/3" />
+              <div className="h-5 bg-muted rounded-full w-20" />
+            </div>
+            <div className="h-3 bg-muted rounded w-1/2" />
+            <div className="h-3 bg-muted rounded w-2/5" />
+            <div className="flex gap-2 pt-1">
+              <div className="h-8 bg-muted rounded-lg flex-1" />
+              <div className="h-8 bg-muted rounded-lg w-24" />
+            </div>
+          </div>
+        ))}
       </div>
     );
   }
