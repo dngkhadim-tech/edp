@@ -28,8 +28,13 @@ interface OtherUser {
   avatar?: string;
 }
 
-export default function ConversationPage(props: any) {
-  const userId = (props.params as { userId: string }).userId;
+type ConversationPageProps = {
+  params: Promise<{ userId: string }>;
+};
+
+export default function ConversationPage({ params }: ConversationPageProps) {
+  // Note: In client components, params is passed as a resolved object, not a Promise
+  const userId = (params as any).userId;
   const { user } = useAuthStore();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
