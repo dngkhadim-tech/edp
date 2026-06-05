@@ -1,0 +1,93 @@
+version: '3.9'
+
+# Stack de production locale ou VPS simple (hors Kubernetes).
+# Usage : docker compose -f docker-compose.prod.yml --env-file .env.production up -d
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: edp_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-edp_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-edp_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-edp_user} -d ${POSTGRES_DB:-edp_db}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - edp_internal
+
+  redis:
+    image: redis:7-alpine
+    container_name: edp_redis
+    restart: always
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - edp_internal
+
+  api:
+    image: ghcr.io/dngkhadim-tech/edp-api:${IMAGE_TAG:-latest}
+    container_name: edp_api
+    restart: always
+    env_file: .env.production
+    ports:
+      - '4000:4000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - edp_internal
+      - edp_public
+
+  web:
+    image: ghcr.io/dngkhadim-tech/edp-web:${IMAGE_TAG:-latest}
+    container_name: edp_web
+    restart: always
+    env_file: .env.production
+    ports:
+      - '3000:3000'
+    depends_on:
+      - api
+    networks:
+      - edp_public
+
+  nginx:
+    image: nginx:alpine
+    container_name: edp_nginx
+    restart: always
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./infrastructure/docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - nginx_certs:/etc/letsencrypt
+    depends_on:
+      - web
+      - api
+    networks:
+      - edp_public
+
+volumes:
+  postgres_data:
+  redis_data:
+  nginx_certs:
+
+networks:
+  edp_internal:
+    internal: true
+  edp_public:

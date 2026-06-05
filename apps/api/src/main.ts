@@ -8,12 +8,15 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
+  const isProd = configService.get('NODE_ENV') === 'production';
+
+  const allowedOrigins = [
+    configService.get('APP_URL', 'http://localhost:3000'),
+    ...(isProd ? [] : ['http://localhost:3001']),
+  ];
 
   app.enableCors({
-    origin: [
-      configService.get('APP_URL', 'http://localhost:3000'),
-      'http://localhost:3001',
-    ],
+    origin: allowedOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -33,19 +36,20 @@ async function bootstrap() {
 
   app.useWebSocketAdapter(new IoAdapter(app));
 
-  const config = new DocumentBuilder()
-    .setTitle('EDP API')
-    .setDescription('EDP – Eat • Drink • Pose — API Documentation')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+  if (!isProd) {
+    const config = new DocumentBuilder()
+      .setTitle('EDP API')
+      .setDescription('EDP – Eat • Drink • Pose — API Documentation')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api/docs', app, document);
+  }
 
   const port = configService.get<number>('PORT', 4000);
-  await app.listen(port);
-  console.log(`EDP API running on http://localhost:${port}`);
-  console.log(`Swagger docs: http://localhost:${port}/api/docs`);
+  await app.listen(port, '0.0.0.0');
+  console.log(`EDP API running on port ${port} [${configService.get('NODE_ENV')}]`);
 }
 
 bootstrap();

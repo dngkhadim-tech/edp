@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
   transpilePackages: ['@edp/shared'],
   images: {
     remotePatterns: [
@@ -15,7 +16,13 @@ const nextConfig: NextConfig = {
     unoptimized: process.env.NODE_ENV === 'development',
   },
   experimental: {
-    serverActions: { allowedOrigins: ['localhost:3000'] },
+    serverActions: {
+      allowedOrigins: [
+        'localhost:3000',
+        'edp.app',
+        process.env.NEXT_PUBLIC_APP_URL ?? '',
+      ].filter(Boolean),
+    },
   },
 };
 

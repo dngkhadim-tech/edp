@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
         - name: edp-api
-          image: ghcr.io/your-org/edp-api:latest
+          image: ghcr.io/dngkhadim-tech/edp-api:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 4000

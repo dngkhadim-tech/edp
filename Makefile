@@ -1,4 +1,6 @@
-.PHONY: start stop restart dev build seed test clean logs help
+.PHONY: start stop restart dev build seed test clean logs help \
+        prod-up prod-down prod-deploy prod-migrate prod-logs prod-status \
+        k8s-apply k8s-secrets k8s-migrate k8s-status docker-build docker-push
 
 # ───────────────────────────────────────────────────────────────
 # Variables
@@ -136,6 +138,80 @@ web-start:
 	  apps/web/node_modules/.bin/next start $(shell pwd)/apps/web -p $(WEB_PORT) > /tmp/edp-web.log 2>&1 &
 	@until grep -qE "Ready" /tmp/edp-web.log 2>/dev/null; do sleep 2; done
 	@echo "Web démarré sur http://localhost:$(WEB_PORT)"
+
+# ───────────────────────────────────────────────────────────────
+# Production (docker-compose.prod.yml)
+# ───────────────────────────────────────────────────────────────
+IMAGE_TAG ?= latest
+REGISTRY  := ghcr.io/dngkhadim-tech
+
+## Démarrer la stack de production (VPS/local)
+prod-up:
+	@docker compose -f docker-compose.prod.yml --env-file .env.production up -d
+
+## Arrêter la stack de production
+prod-down:
+	@docker compose -f docker-compose.prod.yml down
+
+## Redéployer avec une nouvelle image (IMAGE_TAG=sha)
+prod-deploy:
+	@IMAGE_TAG=$(IMAGE_TAG) docker compose -f docker-compose.prod.yml --env-file .env.production pull
+	@IMAGE_TAG=$(IMAGE_TAG) docker compose -f docker-compose.prod.yml --env-file .env.production up -d --no-build
+
+## Logs de production
+prod-logs:
+	@docker compose -f docker-compose.prod.yml logs -f --tail=100
+
+## Statut de production
+prod-status:
+	@docker compose -f docker-compose.prod.yml ps
+
+# ───────────────────────────────────────────────────────────────
+# Build & push images Docker
+# ───────────────────────────────────────────────────────────────
+
+## Builder les images Docker localement
+docker-build:
+	@echo "Build API..."
+	@docker build -f apps/api/Dockerfile -t $(REGISTRY)/edp-api:$(IMAGE_TAG) .
+	@echo "Build Web..."
+	@docker build -f apps/web/Dockerfile -t $(REGISTRY)/edp-web:$(IMAGE_TAG) .
+	@echo "Images buildées : $(REGISTRY)/edp-api:$(IMAGE_TAG) et $(REGISTRY)/edp-web:$(IMAGE_TAG)"
+
+## Pousser les images vers ghcr.io
+docker-push:
+	@docker push $(REGISTRY)/edp-api:$(IMAGE_TAG)
+	@docker push $(REGISTRY)/edp-web:$(IMAGE_TAG)
+
+# ───────────────────────────────────────────────────────────────
+# Kubernetes
+# ───────────────────────────────────────────────────────────────
+
+## Appliquer tous les manifests Kubernetes (namespace, configmap, deployments)
+k8s-apply:
+	@kubectl apply -f infrastructure/kubernetes/namespace.yaml
+	@kubectl apply -f infrastructure/kubernetes/configmap.yaml
+	@kubectl apply -f infrastructure/kubernetes/postgres.yaml -n edp
+	@kubectl apply -f infrastructure/kubernetes/redis.yaml -n edp
+	@kubectl apply -f infrastructure/kubernetes/api-deployment.yaml -n edp
+	@kubectl apply -f infrastructure/kubernetes/web-deployment.yaml -n edp
+	@echo "Manifests appliqués."
+
+## Créer le secret Kubernetes depuis .env.production
+k8s-secrets:
+	@kubectl create secret generic edp-secrets --from-env-file=.env.production -n edp --dry-run=client -o yaml | kubectl apply -f -
+	@echo "Secret edp-secrets mis à jour."
+
+## Lancer la migration DB en Kubernetes
+k8s-migrate:
+	@kubectl delete job edp-migration -n edp --ignore-not-found
+	@sed "s/IMAGE_TAG/$(IMAGE_TAG)/g" infrastructure/kubernetes/migration-job.yaml | kubectl apply -f - -n edp
+	@kubectl wait --for=condition=complete job/edp-migration -n edp --timeout=120s
+	@echo "Migration terminée."
+
+## Statut des pods Kubernetes
+k8s-status:
+	@kubectl get pods,svc,ingress -n edp
 
 ## Aide
 help:

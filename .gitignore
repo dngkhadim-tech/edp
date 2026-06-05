@@ -50,3 +50,7 @@ coverage/
 *.orig.*
 web-build/
 .worktrees/
+
+# Production secrets
+.env.production
+infrastructure/kubernetes/secrets.yaml

@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: edp-migration
+  namespace: edp
+  labels:
+    app: edp-migration
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: migration
+          image: ghcr.io/dngkhadim-tech/edp-api:IMAGE_TAG
+          imagePullPolicy: Always
+          command: ["node", "node_modules/.bin/typeorm", "migration:run", "-d", "dist/database/data-source.js"]
+          envFrom:
+            - secretRef:
+                name: edp-secrets
+            - configMapRef:
+                name: edp-config
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"

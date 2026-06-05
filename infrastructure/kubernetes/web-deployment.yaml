@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: edp-web
-          image: ghcr.io/your-org/edp-web:latest
+          image: ghcr.io/dngkhadim-tech/edp-web:latest
           ports:
             - containerPort: 3000
           envFrom:
