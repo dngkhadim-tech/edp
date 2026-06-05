@@ -1,24 +1,78 @@
 'use client';
 
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { Bell, Heart, MessageCircle, Star, Calendar, Trophy } from 'lucide-react';
-import { timeAgo } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import {
+  Heart, MessageCircle, UserPlus, Calendar, Star, Trophy, Bell,
+} from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { timeAgo, getInitials } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
-const NOTIF_ICONS: Record<string, any> = {
+interface Notification {
+  id: string;
+  type: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+  actor?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    avatar?: string;
+  };
+}
+
+const NOTIF_ICONS: Record<string, React.ElementType> = {
   LIKE: Heart,
   COMMENT: MessageCircle,
-  FOLLOW: Bell,
-  REVIEW: Star,
+  FOLLOW: UserPlus,
   RESERVATION_CONFIRMED: Calendar,
+  REVIEW: Star,
   LOYALTY_UPGRADE: Trophy,
 };
+
+function NotifItem({ notif }: { notif: Notification }) {
+  const Icon = NOTIF_ICONS[notif.type] ?? Bell;
+  return (
+    <div
+      className={cn(
+        'flex items-center gap-3 px-4 py-3 rounded-xl transition-colors',
+        !notif.isRead && 'bg-primary/5',
+      )}
+    >
+      <div className="relative flex-shrink-0">
+        <Avatar className="h-10 w-10">
+          <AvatarImage src={notif.actor?.avatar} />
+          <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
+            {notif.actor
+              ? getInitials(notif.actor.firstName, notif.actor.lastName)
+              : 'EDP'}
+          </AvatarFallback>
+        </Avatar>
+        <span className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary/10">
+          <Icon size={11} className="text-primary" aria-hidden="true" />
+        </span>
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <p className="text-sm leading-snug line-clamp-2">{notif.message}</p>
+        <p className="text-xs text-muted-foreground mt-0.5">{timeAgo(notif.createdAt)}</p>
+      </div>
+
+      {!notif.isRead && (
+        <span className="h-2 w-2 rounded-full bg-primary flex-shrink-0" aria-label="Non lu" />
+      )}
+    </div>
+  );
+}
 
 export default function NotificationsPage() {
   const queryClient = useQueryClient();
 
-  const { data } = useQuery({
+  const { data } = useQuery<{ data: Notification[] }>({
     queryKey: ['notifications'],
     queryFn: () => api.get('/notifications').then((r) => r.data),
   });
@@ -28,43 +82,63 @@ export default function NotificationsPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
   });
 
+  const all = data?.data ?? [];
+  const unread = all.filter((n) => !n.isRead);
+
   return (
     <div className="max-w-screen-sm mx-auto px-4 py-8 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-display font-bold">Notifications</h1>
-        <Button variant="ghost" size="sm" onClick={() => markAllRead()}>
-          Tout marquer comme lu
-        </Button>
+        <h1 className="text-2xl font-heading font-bold">Notifications</h1>
+        <button
+          onClick={() => markAllRead()}
+          className="text-sm font-medium text-primary hover:opacity-80 transition-opacity"
+        >
+          Tout marquer lu
+        </button>
       </div>
 
-      <div className="space-y-2">
-        {data?.data?.map((notif: any) => {
-          const Icon = NOTIF_ICONS[notif.type] || Bell;
-          return (
-            <div
-              key={notif.id}
-              className={`flex items-start gap-3 p-4 rounded-xl border transition-colors ${
-                !notif.isRead ? 'bg-primary/5 border-primary/20' : 'bg-card border-border'
-              }`}
-            >
-              <div className={`p-2 rounded-lg flex-shrink-0 ${!notif.isRead ? 'bg-primary/10' : 'bg-secondary'}`}>
-                <Icon size={16} className={!notif.isRead ? 'text-primary' : 'text-muted-foreground'} />
+      <Tabs defaultValue="all">
+        <TabsList className="w-full">
+          <TabsTrigger value="all" className="flex-1">
+            Toutes
+            {all.length > 0 && (
+              <span className="ml-1.5 text-xs text-muted-foreground tabular-nums">({all.length})</span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="unread" className="flex-1">
+            Non lues
+            {unread.length > 0 && (
+              <span className="ml-1.5 text-xs font-semibold text-primary tabular-nums">({unread.length})</span>
+            )}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="all">
+          <div className="space-y-1 mt-2">
+            {all.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                <Bell size={48} className="mb-4 opacity-20" aria-hidden="true" />
+                <p className="text-sm">Aucune notification</p>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm">{notif.message}</p>
-                <p className="text-xs text-muted-foreground mt-1">{timeAgo(notif.createdAt)}</p>
-              </div>
-              {!notif.isRead && <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-1.5" />}
-            </div>
-          );
-        })}
-        {data?.data?.length === 0 && (
-          <div className="text-center py-16 text-muted-foreground">
-            <Bell size={48} className="mx-auto mb-4 opacity-20" />
-            <p>Aucune notification</p>
+            ) : (
+              all.map((n) => <NotifItem key={n.id} notif={n} />)
+            )}
           </div>
-        )}
-      </div>
+        </TabsContent>
+
+        <TabsContent value="unread">
+          <div className="space-y-1 mt-2">
+            {unread.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                <Bell size={48} className="mb-4 opacity-20" aria-hidden="true" />
+                <p className="text-sm">Tout est lu !</p>
+              </div>
+            ) : (
+              unread.map((n) => <NotifItem key={n.id} notif={n} />)
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
