@@ -8,6 +8,7 @@ import { PostsService } from './posts.service';
 import { MediaService } from '../media/media.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PostType, PaginationQuery } from '@edp/shared';
+import { CreatePostDto } from './dto/create-post.dto';
 
 @ApiTags('Posts')
 @Controller('posts')
@@ -23,7 +24,7 @@ export class PostsController {
   @UseInterceptors(FilesInterceptor('files', 10))
   async create(
     @Request() req,
-    @Body() dto: any,
+    @Body() dto: CreatePostDto,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
     const media = [];

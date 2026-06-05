@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PostEntity } from '../../database/entities/post.entity';
 import { PostType, LoyaltyActionType, PaginationQuery } from '@edp/shared';
+import { CreatePostDto } from './dto/create-post.dto';
 import { LoyaltyService } from '../loyalty/loyalty.service';
 
 @Injectable()
@@ -13,7 +14,7 @@ export class PostsService {
     private readonly loyaltyService: LoyaltyService,
   ) {}
 
-  async create(authorId: string, authorType: 'USER' | 'ESTABLISHMENT', dto: any): Promise<PostEntity> {
+  async create(authorId: string, authorType: 'USER' | 'ESTABLISHMENT', dto: CreatePostDto): Promise<PostEntity> {
     const post = this.postRepo.create({ ...dto, authorId, authorType });
     const saved = (await this.postRepo.save(post)) as unknown as PostEntity;
 

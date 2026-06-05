@@ -6,6 +6,7 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ReservationsService } from './reservations.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PaginationQuery } from '@edp/shared';
+import { CreateReservationDto } from './dto/create-reservation.dto';
 
 @ApiTags('Reservations')
 @Controller('reservations')
@@ -15,7 +16,7 @@ export class ReservationsController {
   @Post()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  create(@Request() req, @Body() dto: any) {
+  create(@Request() req, @Body() dto: CreateReservationDto) {
     return this.service.create(req.user.id, dto);
   }
 

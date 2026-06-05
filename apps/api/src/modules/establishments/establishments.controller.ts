@@ -7,6 +7,8 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { EstablishmentsService } from './establishments.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { SearchQuery } from '@edp/shared';
+import { CreateEstablishmentDto } from './dto/create-establishment.dto';
+import { UpdateEstablishmentDto } from './dto/update-establishment.dto';
 
 @ApiTags('Establishments')
 @Controller('establishments')
@@ -16,7 +18,7 @@ export class EstablishmentsController {
   @Post()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  create(@Request() req, @Body() dto: any) {
+  create(@Request() req, @Body() dto: CreateEstablishmentDto) {
     return this.service.create(req.user.id, dto);
   }
 
@@ -49,7 +51,7 @@ export class EstablishmentsController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  update(@Param('id') id: string, @Request() req, @Body() dto: any) {
+  update(@Param('id') id: string, @Request() req, @Body() dto: UpdateEstablishmentDto) {
     return this.service.update(id, req.user.id, dto);
   }
 }

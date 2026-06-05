@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ReservationEntity } from '../../database/entities/reservation.entity';
 import { ReservationStatus, LoyaltyActionType, PaginationQuery } from '@edp/shared';
+import { CreateReservationDto } from './dto/create-reservation.dto';
 import { LoyaltyService } from '../loyalty/loyalty.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../../database/entities/notification.entity';
@@ -16,7 +17,7 @@ export class ReservationsService {
     private readonly notificationsService: NotificationsService,
   ) {}
 
-  async create(userId: string, dto: any): Promise<ReservationEntity> {
+  async create(userId: string, dto: CreateReservationDto): Promise<ReservationEntity> {
     const reservation = this.reservationRepo.create({ ...dto, userId });
     return (await this.reservationRepo.save(reservation)) as unknown as ReservationEntity;
   }

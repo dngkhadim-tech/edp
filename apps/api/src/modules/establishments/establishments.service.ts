@@ -7,6 +7,8 @@ import slugify from 'slugify';
 import { EstablishmentEntity } from '../../database/entities/establishment.entity';
 import { FollowEntity } from '../../database/entities/follow.entity';
 import { SearchQuery } from '@edp/shared';
+import { CreateEstablishmentDto } from './dto/create-establishment.dto';
+import { UpdateEstablishmentDto } from './dto/update-establishment.dto';
 
 @Injectable()
 export class EstablishmentsService {
@@ -17,7 +19,7 @@ export class EstablishmentsService {
     private readonly followRepo: Repository<FollowEntity>,
   ) {}
 
-  async create(userId: string, dto: any): Promise<EstablishmentEntity> {
+  async create(userId: string, dto: CreateEstablishmentDto): Promise<EstablishmentEntity> {
     const slug = await this.generateSlug(dto.name);
     const est = this.estRepo.create({ ...dto, userId, slug });
     return this.estRepo.save(est) as unknown as Promise<EstablishmentEntity>;
@@ -44,7 +46,7 @@ export class EstablishmentsService {
     return this.findById(est.id, currentUserId);
   }
 
-  async update(id: string, userId: string, dto: any): Promise<EstablishmentEntity> {
+  async update(id: string, userId: string, dto: UpdateEstablishmentDto): Promise<EstablishmentEntity> {
     const est = await this.findById(id);
     if (est.userId !== userId) throw new ForbiddenException();
     await this.estRepo.update(id, dto);
