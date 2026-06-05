@@ -65,11 +65,17 @@ build-web: build-shared
 	@cd apps/web && NEXT_PUBLIC_API_URL=http://localhost:$(API_PORT) \
 	  node_modules/.bin/next build $(shell pwd)/apps/web
 
-## Seeder la base de données
+## Seeder la base de données (données de base)
 seed:
-	@echo "Seeding..."
+	@echo "Seeding données de base..."
 	@cd apps/api && node src/database/seeds/rich-seed.js
 	@echo "Seed terminé."
+
+## Enrichir la base (follows, réservations, commentaires, loyalty)
+seed-enrich:
+	@echo "Enrichissement des données..."
+	@docker exec -i edp_postgres psql -U edp_user -d edp_db < apps/api/src/database/seeds/enrich.sql
+	@echo "Enrichissement terminé."
 
 ## Lancer les tests unitaires
 test:
