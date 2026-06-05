@@ -119,71 +119,42 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  deploy-staging:
-    name: Deploy to Staging
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/develop'
-    environment: staging
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-1
-
-      - name: Update kubeconfig
-        run: aws eks update-kubeconfig --name edp-staging --region eu-west-1
-
-      - name: Run database migrations
+      - name: Make packages public
         run: |
-          kubectl delete job edp-migration -n edp --ignore-not-found
-          sed "s/IMAGE_TAG/${{ github.sha }}/g" infrastructure/kubernetes/migration-job.yaml | kubectl apply -f - -n edp
-          kubectl wait --for=condition=complete job/edp-migration -n edp --timeout=120s
-
-      - name: Deploy to staging
-        run: |
-          kubectl set image deployment/edp-api edp-api=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-api:${{ github.sha }} -n edp
-          kubectl set image deployment/edp-web edp-web=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-web:${{ github.sha }} -n edp
-          kubectl rollout status deployment/edp-api -n edp
-          kubectl rollout status deployment/edp-web -n edp
+          gh api -X PATCH /user/packages/container/edp-api -f visibility=public || true
+          gh api -X PATCH /user/packages/container/edp-web -f visibility=public || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   deploy-production:
-    name: Deploy to Production
+    name: Deploy to Railway
     needs: build-and-push
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     environment: production
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-1
-
-      - name: Update kubeconfig
-        run: aws eks update-kubeconfig --name edp-production --region eu-west-1
-
-      - name: Run database migrations
+      - name: Redeploy API on Railway
         run: |
-          kubectl delete job edp-migration -n edp --ignore-not-found
-          sed "s/IMAGE_TAG/${{ github.sha }}/g" infrastructure/kubernetes/migration-job.yaml | kubectl apply -f - -n edp
-          kubectl wait --for=condition=complete job/edp-migration -n edp --timeout=120s
+          curl -s -X POST https://backboard.railway.com/graphql/v2 \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.RAILWAY_TOKEN }}" \
+            -d '{"query": "mutation { serviceInstanceRedeploy(environmentId: \"692a4ceb-495c-446c-b2fa-2e600d24c1a0\", serviceId: \"bacd558c-2fcc-4665-a756-9528fc42feb5\") }"}'
 
-      - name: Deploy to production
+      - name: Redeploy Web on Railway
         run: |
-          kubectl set image deployment/edp-api edp-api=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-api:${{ github.sha }} -n edp
-          kubectl set image deployment/edp-web edp-web=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-web:${{ github.sha }} -n edp
-          kubectl rollout status deployment/edp-api -n edp
-          kubectl rollout status deployment/edp-web -n edp
+          curl -s -X POST https://backboard.railway.com/graphql/v2 \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.RAILWAY_TOKEN }}" \
+            -d '{"query": "mutation { serviceInstanceRedeploy(environmentId: \"692a4ceb-495c-446c-b2fa-2e600d24c1a0\", serviceId: \"655e4c5d-f826-4453-8c39-fb21a7e4aa6f\") }"}'
+
+      - name: Update API image tag
+        run: |
+          curl -s -X POST https://backboard.railway.com/graphql/v2 \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.RAILWAY_TOKEN }}" \
+            -d "{\"query\": \"mutation { serviceUpdate(id: \\\"bacd558c-2fcc-4665-a756-9528fc42feb5\\\", input: { source: { image: \\\"ghcr.io/dngkhadim-tech/edp-api:${{ github.sha }}\\\" } }) { id } }\"}"
+        continue-on-error: true
 
       - name: Notify Slack
         if: always()
