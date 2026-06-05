@@ -8,17 +8,44 @@ import { Video, ResizeMode } from 'expo-av';
 import { Heart, MessageCircle, Share2, Music2 } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatNumber } from '../../src/lib/utils';
+import { colors } from '../../src/constants/theme';
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
-function ReelItem({ item, isActive }: { item: any; isActive: boolean }) {
+interface ReelMedia {
+  url: string;
+  type: 'video' | 'image';
+}
+
+interface ReelAuthor {
+  username: string;
+  avatar?: string;
+}
+
+interface Reel {
+  id: string;
+  media?: ReelMedia[];
+  caption?: string;
+  hashtags?: string[];
+  isLiked: boolean;
+  likesCount: number;
+  commentsCount: number;
+  author?: ReelAuthor;
+}
+
+interface ReelItemProps {
+  item: Reel;
+  isActive: boolean;
+}
+
+function ReelItem({ item, isActive }: ReelItemProps) {
   const videoRef = useRef<Video>(null);
   const [liked, setLiked] = useState(item.isLiked);
   const [likesCount, setLikesCount] = useState(item.likesCount);
 
   const handleLike = async () => {
-    setLiked(!liked);
-    setLikesCount((c: number) => liked ? c - 1 : c + 1);
+    setLiked((prev) => !prev);
+    setLikesCount((c) => liked ? c - 1 : c + 1);
     await api.post(`/posts/${item.id}/like`).catch(() => {});
   };
 
@@ -51,10 +78,14 @@ function ReelItem({ item, isActive }: { item: any; isActive: boolean }) {
         </View>
         <View style={styles.bottomInfo}>
           <Text style={styles.username}>@{item.author?.username}</Text>
-          {item.caption && <Text style={styles.caption} numberOfLines={2}>{item.caption}</Text>}
-          {item.hashtags?.length > 0 && (
-            <Text style={styles.hashtags}>{item.hashtags.map((t: string) => `#${t}`).join(' ')}</Text>
-          )}
+          {item.caption ? (
+            <Text style={styles.caption} numberOfLines={2}>{item.caption}</Text>
+          ) : null}
+          {item.hashtags && item.hashtags.length > 0 ? (
+            <Text style={styles.hashtags}>
+              {item.hashtags.map((t) => `#${t}`).join(' ')}
+            </Text>
+          ) : null}
           <View style={styles.musicRow}>
             <Music2 size={12} color="#ccc" />
             <Text style={styles.music}>EDP Original Audio</Text>
@@ -65,12 +96,20 @@ function ReelItem({ item, isActive }: { item: any; isActive: boolean }) {
   );
 }
 
+interface ReelsPage {
+  data: Reel[];
+  meta: { page: number; totalPages: number };
+}
+
 export default function ReelsScreen() {
   const [activeIndex, setActiveIndex] = useState(0);
-  const { data } = useInfiniteQuery({
+
+  const { data } = useInfiniteQuery<ReelsPage>({
     queryKey: ['reels'],
-    queryFn: ({ pageParam = 1 }) => api.get(`/feed/reels?page=${pageParam}&limit=5`).then((r) => r.data),
-    getNextPageParam: (last) => last.meta.page < last.meta.totalPages ? last.meta.page + 1 : undefined,
+    queryFn: ({ pageParam = 1 }) =>
+      api.get(`/feed/reels?page=${pageParam}&limit=5`).then((r) => r.data),
+    getNextPageParam: (last) =>
+      last.meta.page < last.meta.totalPages ? last.meta.page + 1 : undefined,
     initialPageParam: 1,
   });
 
@@ -81,7 +120,9 @@ export default function ReelsScreen() {
       <FlatList
         data={reels}
         keyExtractor={(item) => item.id}
-        renderItem={({ item, index }) => <ReelItem item={item} isActive={index === activeIndex} />}
+        renderItem={({ item, index }) => (
+          <ReelItem item={item} isActive={index === activeIndex} />
+        )}
         pagingEnabled
         showsVerticalScrollIndicator={false}
         snapToInterval={SCREEN_HEIGHT}
@@ -110,7 +151,7 @@ const styles = StyleSheet.create({
   bottomInfo: { flex: 1, justifyContent: 'flex-end', paddingRight: 60 },
   username: { color: '#fff', fontWeight: '700', fontSize: 15, marginBottom: 4 },
   caption: { color: '#fff', fontSize: 13, lineHeight: 18, marginBottom: 4 },
-  hashtags: { color: '#C9A84C', fontSize: 12, marginBottom: 4 },
+  hashtags: { color: colors.primary, fontSize: 12, marginBottom: 4 },
   musicRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   music: { color: '#ccc', fontSize: 12 },
 });
