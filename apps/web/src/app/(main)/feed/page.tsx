@@ -8,6 +8,7 @@ import { PostCard } from '@/components/feed/PostCard';
 import { CategoryPills, type FeedCategory } from '@/components/feed/CategoryPills';
 import { ReelsRow } from '@/components/feed/ReelsRow';
 import { Loader2 } from 'lucide-react';
+import { PostCardSkeleton } from '@/components/feed/PostCardSkeleton';
 
 const REELS_AFTER_N_POSTS = 3;
 
@@ -46,8 +47,8 @@ export default function FeedPage() {
       <CategoryPills value={category} onChange={setCategory} />
 
       {isLoading ? (
-        <div className="flex justify-center py-16">
-          <Loader2 className="animate-spin text-primary" size={28} />
+        <div className="space-y-4 px-4">
+          {[0, 1, 2].map((i) => <PostCardSkeleton key={i} />)}
         </div>
       ) : (
         <div className="space-y-4 px-4">

@@ -7,6 +7,7 @@ import { EstablishmentCard, type Establishment } from '@/components/establishmen
 import { SearchBar } from '@/components/shared/SearchBar';
 import { FilterPills, type FilterOption } from '@/components/shared/FilterPills';
 import { SlidersHorizontal, SearchX } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const FILTER_OPTIONS: FilterOption[] = [
   { value: '', label: 'Tout' },
@@ -67,7 +68,11 @@ export default function ExplorePage() {
         {isLoading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="aspect-[4/3] bg-secondary rounded-2xl animate-pulse" />
+              <div key={i} className="space-y-2">
+                <Skeleton className="aspect-[4/3] rounded-2xl w-full" />
+                <Skeleton className="h-3 w-3/4" />
+                <Skeleton className="h-2.5 w-1/2" />
+              </div>
             ))}
           </div>
         ) : establishments.length > 0 ? (
