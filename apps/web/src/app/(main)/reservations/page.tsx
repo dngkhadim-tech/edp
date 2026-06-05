@@ -1,24 +1,169 @@
 'use client';
 
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { Calendar, MapPin, Users, Clock, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Calendar, Users, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog';
 import { formatDate } from '@/lib/utils';
 
-const STATUS_COLORS: Record<string, string> = {
-  PENDING: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
-  CONFIRMED: 'bg-green-500/10 text-green-500 border-green-500/20',
-  CANCELLED: 'bg-red-500/10 text-red-500 border-red-500/20',
-  COMPLETED: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
+const STATUS_BADGE: Record<string, string> = {
+  PENDING:   'bg-yellow-50 text-yellow-700 border border-yellow-200',
+  CONFIRMED: 'bg-green-50 text-green-700 border border-green-200',
+  CANCELLED: 'bg-red-50 text-red-700 border border-red-200',
+  COMPLETED: 'bg-blue-50 text-blue-700 border border-blue-200',
+  NO_SHOW:   'bg-gray-50 text-gray-600 border border-gray-200',
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  PENDING: 'En attente',
+const STATUS_LABEL: Record<string, string> = {
+  PENDING:   'En attente',
   CONFIRMED: 'Confirmée',
   CANCELLED: 'Annulée',
   COMPLETED: 'Terminée',
+  NO_SHOW:   'Absent',
+};
+
+interface ReservationDetails {
+  date?: string;
+  time?: string;
+  checkIn?: string;
+  checkOut?: string;
+  partySize?: number;
+  adults?: number;
+}
+
+interface ReservationItem {
+  id: string;
+  status: string;
+  type: string;
+  details: ReservationDetails;
+  establishment?: {
+    name: string;
+    category?: string;
+    logo?: string;
+  };
+  loyaltyPointsEarned?: number;
+}
+
+function ReservationCard({
+  res,
+  onCancel,
+}: {
+  res: ReservationItem;
+  onCancel: (id: string) => void;
+}) {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const canCancel = res.status === 'PENDING' || res.status === 'CONFIRMED';
+
+  const dateLabel =
+    res.type === 'RESTAURANT'
+      ? `${res.details.date} à ${res.details.time}`
+      : `${res.details.checkIn} → ${res.details.checkOut}`;
+
+  const guestsCount = res.type === 'RESTAURANT' ? res.details.partySize : res.details.adults;
+  const guestsLabel = guestsCount != null
+    ? `${guestsCount} ${res.type === 'RESTAURANT' ? 'personne' : 'adulte'}${guestsCount > 1 ? 's' : ''}`
+    : null;
+
+  return (
+    <div className="bg-card border border-border rounded-xl p-5 space-y-4">
+      <div className="flex items-start gap-3">
+        <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+          {res.establishment?.logo ? (
+            <img src={res.establishment.logo} alt="" className="h-12 w-12 object-cover" />
+          ) : (
+            <span className="text-lg font-heading font-bold text-muted-foreground">
+              {res.establishment?.name?.[0] ?? '?'}
+            </span>
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold truncate">{res.establishment?.name}</p>
+          {res.establishment?.category && (
+            <p className="text-xs text-muted-foreground">{res.establishment.category}</p>
+          )}
+        </div>
+        <span className={`text-xs font-medium px-2.5 py-1 rounded-full shrink-0 ${STATUS_BADGE[res.status] ?? ''}`}>
+          {STATUS_LABEL[res.status] ?? res.status}
+        </span>
+      </div>
+
+      <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+        <span className="flex items-center gap-1.5">
+          <Calendar size={14} className="text-primary" aria-hidden="true" />
+          {dateLabel}
+        </span>
+        {guestsLabel && (
+          <span className="flex items-center gap-1.5">
+            <Users size={14} className="text-primary" aria-hidden="true" />
+            {guestsLabel}
+          </span>
+        )}
+      </div>
+
+      {res.loyaltyPointsEarned != null && res.loyaltyPointsEarned > 0 && (
+        <p className="text-xs text-primary tabular-nums">+{res.loyaltyPointsEarned} points de fidélité</p>
+      )}
+
+      <div className="flex gap-2">
+        {canCancel && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-destructive border-destructive/30 hover:bg-destructive/10"
+            onClick={() => setDialogOpen(true)}
+          >
+            Annuler
+          </Button>
+        )}
+        <Button variant="outline" size="sm">
+          Détails
+        </Button>
+      </div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Annuler la réservation</DialogTitle>
+            <DialogDescription>
+              Voulez-vous annuler votre réservation chez{' '}
+              <strong>{res.establishment?.name}</strong> ? Cette action est irréversible.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Retour</Button>
+            </DialogClose>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                onCancel(res.id);
+                setDialogOpen(false);
+              }}
+            >
+              Confirmer l'annulation
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+const TAB_FILTER: Record<string, (status: string) => boolean> = {
+  upcoming:  (s) => s === 'PENDING' || s === 'CONFIRMED',
+  past:      (s) => s === 'COMPLETED' || s === 'NO_SHOW',
+  cancelled: (s) => s === 'CANCELLED',
 };
 
 export default function ReservationsPage() {
@@ -34,87 +179,53 @@ export default function ReservationsPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['reservations'] }),
   });
 
-  if (isLoading) return (
-    <div className="flex justify-center items-center h-64">
-      <Loader2 className="animate-spin text-primary" size={32} />
-    </div>
-  );
+  const reservations: ReservationItem[] = data?.data ?? [];
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="animate-spin text-primary" size={32} aria-hidden="true" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-screen-md mx-auto px-4 py-8 space-y-6">
-      <h1 className="text-2xl font-display font-bold">Mes réservations</h1>
+      <h1 className="text-2xl font-heading font-bold">Mes réservations</h1>
 
-      <div className="space-y-4">
-        {data?.data?.map((res: any) => (
-          <div key={res.id} className="bg-card border border-border rounded-xl p-5 space-y-4">
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="font-semibold">{res.establishment?.name}</h3>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                  <MapPin size={12} />
-                  {res.establishment?.city}
+      <Tabs defaultValue="upcoming">
+        <TabsList className="w-full">
+          <TabsTrigger value="upcoming" className="flex-1">À venir</TabsTrigger>
+          <TabsTrigger value="past" className="flex-1">Passées</TabsTrigger>
+          <TabsTrigger value="cancelled" className="flex-1">Annulées</TabsTrigger>
+        </TabsList>
+
+        {(['upcoming', 'past', 'cancelled'] as const).map((tab) => {
+          const items = reservations.filter((r) => TAB_FILTER[tab](r.status));
+          return (
+            <TabsContent key={tab} value={tab} className="mt-4 space-y-4">
+              {items.length === 0 ? (
+                <div className="text-center py-16 text-muted-foreground">
+                  <Calendar size={48} className="mx-auto mb-4 opacity-20" aria-hidden="true" />
+                  <p className="font-medium">Aucune réservation</p>
+                  {tab === 'upcoming' && (
+                    <>
+                      <p className="text-sm mt-1">Explorez les établissements pour réserver</p>
+                      <Button className="mt-4" asChild>
+                        <a href="/explore">Explorer</a>
+                      </Button>
+                    </>
+                  )}
                 </div>
-              </div>
-              <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${STATUS_COLORS[res.status]}`}>
-                {STATUS_LABELS[res.status]}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              {res.type === 'RESTAURANT' ? (
-                <>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Calendar size={14} className="text-primary" />
-                    {res.details?.date} à {res.details?.time}
-                  </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Users size={14} className="text-primary" />
-                    {res.details?.partySize} personnes
-                  </div>
-                </>
               ) : (
-                <>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Calendar size={14} className="text-primary" />
-                    {res.details?.checkIn} → {res.details?.checkOut}
-                  </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Users size={14} className="text-primary" />
-                    {res.details?.adults} adultes
-                  </div>
-                </>
+                items.map((res) => (
+                  <ReservationCard key={res.id} res={res} onCancel={cancel} />
+                ))
               )}
-            </div>
-
-            {res.loyaltyPointsEarned > 0 && (
-              <p className="text-xs text-primary">+{res.loyaltyPointsEarned} points de fidélité</p>
-            )}
-
-            {res.status === 'PENDING' && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => cancel(res.id)}
-                className="text-destructive border-destructive/20 hover:bg-destructive/10"
-              >
-                <XCircle size={14} />
-                Annuler
-              </Button>
-            )}
-          </div>
-        ))}
-
-        {data?.data?.length === 0 && (
-          <div className="text-center py-16 text-muted-foreground">
-            <Calendar size={48} className="mx-auto mb-4 opacity-20" />
-            <p className="font-medium">Aucune réservation</p>
-            <p className="text-sm mt-1">Explorez les établissements pour réserver</p>
-            <Button className="mt-4" asChild>
-              <a href="/explore">Explorer</a>
-            </Button>
-          </div>
-        )}
-      </div>
+            </TabsContent>
+          );
+        })}
+      </Tabs>
     </div>
   );
 }
