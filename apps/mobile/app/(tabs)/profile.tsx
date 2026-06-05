@@ -4,9 +4,10 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { useAuthStore } from '../../src/store/auth.store';
 import {
-  Settings, Trophy, CalendarDays, HelpCircle, LogOut,
+  Settings, Trophy, CalendarDays, HelpCircle, LogOut, MessageCircle,
   ChevronRight, LayoutGrid, Film, Bookmark, Star,
 } from 'lucide-react-native';
 import { formatNumber, getInitials, gradeLabel } from '../../src/lib/utils';
@@ -25,16 +26,18 @@ const GRADE_STYLES: Record<string, { bg: string; color: string }> = {
 };
 
 const MENU_ITEMS = [
-  { label: 'Programme de fidélité', icon: Trophy },
-  { label: 'Mes réservations',      icon: CalendarDays },
-  { label: 'Paramètres',            icon: Settings },
-  { label: 'Aide & Support',        icon: HelpCircle },
+  { label: 'Messages',              icon: MessageCircle, href: '/(tabs)/messages' as const },
+  { label: 'Programme de fidélité', icon: Trophy,        href: null },
+  { label: 'Mes réservations',      icon: CalendarDays,  href: null },
+  { label: 'Paramètres',            icon: Settings,      href: null },
+  { label: 'Aide & Support',        icon: HelpCircle,    href: null },
 ] as const;
 
 type Tab = 'posts' | 'reels' | 'saved';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuthStore();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>('posts');
 
   if (!user) return null;
@@ -128,8 +131,12 @@ export default function ProfileScreen() {
 
         {/* Menu */}
         <View style={styles.menu}>
-          {MENU_ITEMS.map(({ label, icon: Icon }) => (
-            <TouchableOpacity key={label} style={styles.menuItem}>
+          {MENU_ITEMS.map(({ label, icon: Icon, href }) => (
+            <TouchableOpacity
+              key={label}
+              style={styles.menuItem}
+              onPress={() => href && router.push(href)}
+            >
               <Icon size={18} color={colors.muted} strokeWidth={1.5} />
               <Text style={styles.menuLabel}>{label}</Text>
               <ChevronRight size={18} color={colors.muted} strokeWidth={1.5} />
