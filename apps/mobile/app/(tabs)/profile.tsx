@@ -10,7 +10,7 @@ import {
   ChevronRight, LayoutGrid, Film, Bookmark, Star,
 } from 'lucide-react-native';
 import { formatNumber, getInitials, gradeLabel } from '../../src/lib/utils';
-import { colors, radius, spacing } from '../../src/constants/theme';
+import { colors, radius } from '../../src/constants/theme';
 import { fonts } from '../../src/constants/fonts';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
