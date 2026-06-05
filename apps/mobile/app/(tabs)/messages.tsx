@@ -1,17 +1,29 @@
 import React from 'react';
-import {
-  View, Text, FlatList, TouchableOpacity, Image, StyleSheet,
-} from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import { Image } from 'expo-image';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../src/lib/api';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { getInitials, timeAgo } from '../../src/lib/utils';
+import { colors, radius } from '../../src/constants/theme';
+import { fonts } from '../../src/constants/fonts';
+
+interface Conversation {
+  conversation_id: string;
+  sender_id: string;
+  first_name: string;
+  last_name: string;
+  avatar?: string;
+  content: string;
+  created_at: string;
+  unread_count?: number;
+}
 
 export default function MessagesScreen() {
   const router = useRouter();
 
-  const { data } = useQuery({
+  const { data } = useQuery<Conversation[]>({
     queryKey: ['conversations'],
     queryFn: () => api.get('/messages').then((r) => r.data),
   });
@@ -25,29 +37,39 @@ export default function MessagesScreen() {
       <FlatList
         data={data || []}
         keyExtractor={(item) => item.conversation_id}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.conv}
-            onPress={() => router.push(`/chat/${item.sender_id}`)}
-          >
-            {item.avatar ? (
-              <Image source={{ uri: item.avatar }} style={styles.avatar} />
-            ) : (
-              <View style={[styles.avatar, styles.avatarFallback]}>
-                <Text style={styles.avatarText}>
-                  {getInitials(item.first_name, item.last_name)}
+        renderItem={({ item }) => {
+          const hasUnread = item.unread_count != null && item.unread_count > 0;
+          return (
+            <TouchableOpacity
+              style={styles.conv}
+              onPress={() => router.push(`/chat/${item.sender_id}`)}
+            >
+              {item.avatar ? (
+                <Image source={{ uri: item.avatar }} style={styles.avatar} contentFit="cover" />
+              ) : (
+                <View style={[styles.avatar, styles.avatarFallback]}>
+                  <Text style={styles.avatarText}>
+                    {getInitials(item.first_name, item.last_name)}
+                  </Text>
+                </View>
+              )}
+
+              <View style={styles.convBody}>
+                <View style={styles.convHeader}>
+                  <Text style={[styles.convName, hasUnread && styles.convNameUnread]}>
+                    {item.first_name} {item.last_name}
+                  </Text>
+                  <Text style={styles.convTime}>{timeAgo(item.created_at)}</Text>
+                </View>
+                <Text style={styles.convPreview} numberOfLines={1}>
+                  {item.content}
                 </Text>
               </View>
-            )}
-            <View style={styles.convBody}>
-              <View style={styles.convHeader}>
-                <Text style={styles.convName}>{item.first_name} {item.last_name}</Text>
-                <Text style={styles.convTime}>{timeAgo(item.created_at)}</Text>
-              </View>
-              <Text style={styles.convPreview} numberOfLines={1}>{item.content}</Text>
-            </View>
-          </TouchableOpacity>
-        )}
+
+              {hasUnread && <View style={styles.unreadDot} />}
+            </TouchableOpacity>
+          );
+        }}
         ListEmptyComponent={
           <Text style={styles.empty}>Aucune conversation</Text>
         }
@@ -57,17 +79,53 @@ export default function MessagesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0A' },
-  header: { padding: 16, borderBottomWidth: 1, borderBottomColor: '#1A1A1A' },
-  title: { fontSize: 22, fontWeight: '700', color: '#fff' },
-  conv: { flexDirection: 'row', gap: 12, padding: 16, borderBottomWidth: 1, borderBottomColor: '#111' },
-  avatar: { width: 50, height: 50, borderRadius: 25 },
-  avatarFallback: { backgroundColor: '#C9A84C20', alignItems: 'center', justifyContent: 'center' },
-  avatarText: { color: '#C9A84C', fontWeight: '700', fontSize: 16 },
-  convBody: { flex: 1, justifyContent: 'center' },
-  convHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 3 },
-  convName: { color: '#fff', fontWeight: '600', fontSize: 15 },
-  convTime: { color: '#666', fontSize: 12 },
-  convPreview: { color: '#888', fontSize: 13 },
-  empty: { color: '#555', textAlign: 'center', marginTop: 60, fontSize: 15 },
+  container: { flex: 1, backgroundColor: colors.background },
+  header: {
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  title: { fontFamily: fonts.heading.bold, fontSize: 20, color: colors.foreground },
+  conv: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  avatar: { width: 48, height: 48, borderRadius: 24 },
+  avatarFallback: {
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: { fontFamily: fonts.heading.bold, fontSize: 16, color: colors.primary },
+  convBody: { flex: 1, minWidth: 0 },
+  convHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 3,
+  },
+  convName: { fontFamily: fonts.heading.semibold, fontSize: 14, color: colors.foreground },
+  convNameUnread: { fontFamily: fonts.heading.bold },
+  convTime: { fontFamily: fonts.body.regular, fontSize: 11, color: colors.muted },
+  convPreview: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.muted },
+  unreadDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.primary,
+    flexShrink: 0,
+  },
+  empty: {
+    fontFamily: fonts.body.regular,
+    fontSize: 14,
+    color: colors.muted,
+    textAlign: 'center',
+    marginTop: 60,
+  },
 });
