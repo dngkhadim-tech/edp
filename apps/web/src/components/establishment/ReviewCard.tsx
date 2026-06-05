@@ -2,8 +2,29 @@ import { Star } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatDate, getInitials } from '@/lib/utils';
 
+interface ReviewUser {
+  firstName: string;
+  lastName: string;
+  avatar?: string;
+}
+
+interface EstablishmentResponse {
+  content: string;
+}
+
+interface ReviewProps {
+  id: string;
+  rating: number;
+  title?: string;
+  content: string;
+  isVerified?: boolean;
+  createdAt: string | Date;
+  user?: ReviewUser;
+  establishmentResponse?: EstablishmentResponse;
+}
+
 interface Props {
-  review: any;
+  review: ReviewProps;
 }
 
 export function ReviewCard({ review }: Props) {

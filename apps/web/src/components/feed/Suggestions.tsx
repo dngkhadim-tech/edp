@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { getInitials } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth.store';
 import Link from 'next/link';
+import type { Establishment } from '@edp/shared';
 
 export function Suggestions() {
   const { user } = useAuthStore();
@@ -51,7 +52,7 @@ export function Suggestions() {
         </div>
 
         <div className="space-y-4">
-          {data?.slice(0, 5).map((est: any) => (
+          {(data as Establishment[] | undefined)?.slice(0, 5).map((est) => (
             <div key={est.id} className="flex items-center gap-3">
               <Avatar className="h-10 w-10 rounded-lg">
                 <AvatarImage src={est.logo} />

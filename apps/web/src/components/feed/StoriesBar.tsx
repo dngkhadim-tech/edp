@@ -7,6 +7,17 @@ import { Plus } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { getInitials } from '@/lib/utils';
 
+interface StoryAuthor {
+  firstName: string;
+  lastName: string;
+  avatar?: string;
+}
+
+interface Story {
+  id: string;
+  author?: StoryAuthor;
+}
+
 export function StoriesBar() {
   const { data } = useQuery({
     queryKey: ['stories'],
@@ -23,7 +34,7 @@ export function StoriesBar() {
           <span className="text-xs text-muted-foreground">Votre story</span>
         </button>
 
-        {data?.map((story: any) => {
+        {(data as Story[] | undefined)?.map((story) => {
           const author = story.author;
           return (
             <button key={story.id} className="flex flex-col items-center gap-1.5 flex-shrink-0">

@@ -9,8 +9,47 @@ import { cn, formatNumber, timeAgo, getInitials } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 
+interface PostAuthor {
+  id?: string;
+  firstName: string;
+  lastName: string;
+  username?: string;
+  avatar?: string;
+}
+
+interface PostEstablishment {
+  id?: string;
+  name: string;
+  slug: string;
+  avatar?: string;
+  logo?: string;
+}
+
+interface PostMedia {
+  url: string;
+  type: 'image' | 'video';
+  thumbnail?: string;
+  duration?: number;
+}
+
+interface FeedPost {
+  id: string;
+  authorType: 'USER' | 'ESTABLISHMENT';
+  caption?: string;
+  hashtags: string[];
+  location?: string;
+  media?: PostMedia[];
+  likesCount: number;
+  commentsCount: number;
+  isLiked?: boolean;
+  isSaved?: boolean;
+  createdAt: string | Date;
+  author?: PostAuthor;
+  establishment?: PostEstablishment;
+}
+
 interface PostCardProps {
-  post: any;
+  post: FeedPost;
 }
 
 export function PostCard({ post }: PostCardProps) {
@@ -159,7 +198,7 @@ export function PostCard({ post }: PostCardProps) {
 
         {post.hashtags?.length > 0 && (
           <div className="flex flex-wrap gap-1">
-            {post.hashtags.map((tag: string) => (
+            {post.hashtags.map((tag) => (
               <Link
                 key={tag}
                 href={`/hashtag/${tag}`}
