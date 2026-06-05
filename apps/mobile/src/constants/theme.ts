@@ -11,7 +11,7 @@ export const colors = {
   success:      '#16A34A',
   destructive:  '#DC2626',
   card:         '#FFFFFF',
-};
+} as const;
 
 export const spacing = {
   xs:  4,
