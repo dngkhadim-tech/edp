@@ -18,3 +18,14 @@ export function timeAgo(date: string | Date): string {
 export function getInitials(first: string, last: string): string {
   return `${first?.[0] || ''}${last?.[0] || ''}`.toUpperCase();
 }
+
+export function gradeLabel(grade: string): string {
+  const map: Record<string, string> = {
+    BRONZE: 'Bronze',
+    SILVER: 'Silver',
+    GOLD: 'Gold',
+    PLATINUM: 'Platinum',
+    DIAMOND: 'Diamond',
+  };
+  return map[grade] || grade;
+}
