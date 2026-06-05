@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import {
   Star, MapPin, Clock, Navigation, Bookmark,
   ChevronLeft, MoreHorizontal, Check,
@@ -35,10 +35,8 @@ interface ReviewWithUser {
   establishmentResponse?: { content: string };
 }
 
-type EstablishmentPageProps = { params: Promise<{ slug: string }> | { slug: string } };
-
-export default function EstablishmentPage({ params }: EstablishmentPageProps) {
-  const { slug } = params as { slug: string };
+export default function EstablishmentPage() {
+  const { slug } = useParams<{ slug: string }>();
   const router = useRouter();
   const [tab, setTab] = useState<Tab>('À propos');
   const [scrolled, setScrolled] = useState(false);

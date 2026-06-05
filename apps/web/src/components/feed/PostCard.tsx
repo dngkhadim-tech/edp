@@ -15,6 +15,9 @@ interface PostAuthor {
   lastName: string;
   username?: string;
   avatar?: string;
+  name?: never;
+  slug?: never;
+  logo?: never;
 }
 
 interface PostEstablishment {
@@ -23,6 +26,9 @@ interface PostEstablishment {
   slug: string;
   avatar?: string;
   logo?: string;
+  firstName?: never;
+  lastName?: never;
+  username?: never;
 }
 
 interface PostMedia {

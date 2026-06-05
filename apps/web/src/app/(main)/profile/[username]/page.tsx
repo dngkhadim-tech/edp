@@ -13,6 +13,7 @@ import { ProfileSkeleton } from '@/components/profile/ProfileSkeleton';
 import { formatNumber, getInitials } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
+import { useParams } from 'next/navigation';
 import { ChevronLeft, MoreHorizontal, Grid3X3, Film, Bookmark, Play, MapPin, MessageCircle } from 'lucide-react';
 
 type GridTab = 'posts' | 'reels' | 'saved';
@@ -28,10 +29,8 @@ interface GridPost {
   media?: PostMedia[];
 }
 
-type ProfilePageProps = { params: Promise<{ username: string }> | { username: string } };
-
-export default function ProfilePage({ params }: ProfilePageProps) {
-  const { username } = params;
+export default function ProfilePage() {
+  const { username } = useParams<{ username: string }>();
   const { user: me } = useAuthStore();
   const router = useRouter();
   const [following, setFollowing] = useState(false);

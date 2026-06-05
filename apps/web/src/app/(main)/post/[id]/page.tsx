@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Heart, MessageCircle, Bookmark, Send, ArrowLeft, MapPin } from 'lucide-react';
 import { formatNumber, getInitials, timeAgo } from '@/lib/utils';
 import { useState } from 'react';
+import { useParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 interface CommentAuthor {
@@ -25,10 +26,8 @@ interface Comment {
   author?: CommentAuthor;
 }
 
-type PostPageProps = { params: Promise<{ id: string }> | { id: string } };
-
-export default function PostPage({ params }: PostPageProps) {
-  const { id } = params;
+export default function PostPage() {
+  const { id } = useParams<{ id: string }>();
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const [newComment, setNewComment] = useState('');

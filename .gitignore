@@ -49,3 +49,4 @@ coverage/
 *.mobileprovision
 *.orig.*
 web-build/
+.worktrees/

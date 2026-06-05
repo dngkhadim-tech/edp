@@ -17,7 +17,7 @@ export function MobileNav() {
   return (
     <nav
       aria-label="Navigation principale"
-      className="fixed bottom-0 left-0 right-0 bg-background border-t border-border flex lg:hidden z-40"
+      className="fixed bottom-0 left-0 right-0 bg-background border-t border-border flex md:hidden z-40"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       {/* Accueil + Découvrir */}

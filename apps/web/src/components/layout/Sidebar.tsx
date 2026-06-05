@@ -30,11 +30,25 @@ export function Sidebar() {
   const { user, logout } = useAuthStore();
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-16 xl:w-64 border-r border-border bg-card flex flex-col z-40 hidden lg:flex">
-      <div className="p-3 xl:p-6">
-        <Link href="/feed" className="block">
-          <h1 className="text-xl xl:text-2xl font-display font-bold gold-text">EDP</h1>
-          <p className="hidden xl:block text-xs text-muted-foreground mt-0.5">Eat • Drink • Pose</p>
+    <aside className="fixed left-0 top-0 h-full w-16 lg:w-60 border-r border-border bg-card flex flex-col z-40 hidden md:flex">
+      <div className="p-3 lg:p-6">
+        <Link href="/feed" className="block" aria-label="EDP — Eat Drink Pose">
+          {/* Narrow (icon-only): compact text */}
+          <span className="lg:hidden text-xl font-heading font-extrabold text-primary">E</span>
+          {/* Wide: full SVG logo using currentColor → inherits text-primary */}
+          <svg
+            className="hidden lg:block h-8 w-auto text-primary"
+            viewBox="0 0 560 200"
+            fill="none"
+            aria-hidden="true"
+          >
+            <polyline points="135,20 28,20 28,180 135,180" stroke="currentColor" strokeWidth="13" strokeLinecap="square" strokeLinejoin="miter" fill="none"/>
+            <line x1="28" y1="95" x2="115" y2="95" stroke="currentColor" strokeWidth="13" strokeLinecap="square"/>
+            <line x1="178" y1="20" x2="178" y2="180" stroke="currentColor" strokeWidth="13" strokeLinecap="square"/>
+            <path d="M178 20 H238 Q318 20 318 100 Q318 180 238 180 H178" stroke="currentColor" strokeWidth="13" strokeLinejoin="round" fill="none"/>
+            <line x1="368" y1="20" x2="368" y2="180" stroke="currentColor" strokeWidth="13" strokeLinecap="square"/>
+            <path d="M368 20 H428 Q508 20 508 92 Q508 100 428 100 H368" stroke="currentColor" strokeWidth="13" strokeLinejoin="round" fill="none"/>
+          </svg>
         </Link>
       </div>
 
@@ -48,14 +62,14 @@ export function Sidebar() {
               href={item.href}
               title={item.label}
               className={cn(
-                'flex items-center justify-center xl:justify-start gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm font-medium',
+                'flex items-center justify-center lg:justify-start gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm font-medium',
                 active
                   ? 'bg-primary/10 text-primary'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted',
               )}
             >
               <Icon size={20} />
-              <span className="hidden xl:block">{item.label}</span>
+              <span className="hidden lg:block">{item.label}</span>
             </Link>
           );
         })}
@@ -65,7 +79,7 @@ export function Sidebar() {
         <Button className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90" asChild>
           <Link href="/post/new">
             <Plus size={18} />
-            <span className="hidden xl:block ml-1">Publier</span>
+            <span className="hidden lg:block ml-1">Publier</span>
           </Link>
         </Button>
 
@@ -80,7 +94,7 @@ export function Sidebar() {
                 {getInitials(user.firstName, user.lastName)}
               </AvatarFallback>
             </Avatar>
-            <div className="hidden xl:block flex-1 min-w-0">
+            <div className="hidden lg:block flex-1 min-w-0">
               <p className="text-sm font-medium truncate">{user.firstName} {user.lastName}</p>
               <p className="text-xs text-muted-foreground truncate">@{user.username}</p>
             </div>
@@ -89,10 +103,11 @@ export function Sidebar() {
 
         <button
           onClick={logout}
-          className="flex items-center gap-3 px-3 py-2 w-full text-sm text-muted-foreground hover:text-destructive transition-colors rounded-lg hover:bg-muted"
+          title="Déconnexion"
+          className="flex items-center justify-center lg:justify-start gap-3 px-3 py-2 w-full text-sm text-muted-foreground hover:text-destructive transition-colors rounded-lg hover:bg-muted"
         >
           <LogOut size={18} />
-          Déconnexion
+          <span className="hidden lg:inline">Déconnexion</span>
         </button>
       </div>
     </aside>

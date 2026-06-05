@@ -12,7 +12,7 @@ test.describe('Feed', () => {
   test.beforeEach(async ({ page }) => { await login(page); });
 
   test('affiche le feed avec des posts', async ({ page }) => {
-    await expect(page.locator('article')).toHaveCount({ minimum: 1 }, { timeout: 10000 });
+    await expect(page.locator('article').first()).toBeVisible({ timeout: 10000 });
   });
 
   test('affiche la barre des stories', async ({ page }) => {
@@ -37,7 +37,7 @@ test.describe('Explore', () => {
 
   test('affiche les établissements', async ({ page }) => {
     await page.goto('/explore');
-    await expect(page.locator('article')).toHaveCount({ minimum: 1 }, { timeout: 10000 });
+    await expect(page.locator('article').first()).toBeVisible({ timeout: 10000 });
   });
 
   test('filtre par type fonctionne', async ({ page }) => {
@@ -51,6 +51,6 @@ test.describe('Explore', () => {
     await page.fill('input[placeholder*="restaurant"]', 'Paris');
     await page.keyboard.press('Enter');
     await page.waitForTimeout(1000);
-    await expect(page.locator('article')).toHaveCount({ minimum: 1 }, { timeout: 10000 });
+    await expect(page.locator('article').first()).toBeVisible({ timeout: 10000 });
   });
 });
