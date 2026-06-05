@@ -12,7 +12,7 @@ import { ArrowLeft, MoreHorizontal, Send } from 'lucide-react-native';
 import { api, storage } from '../../src/lib/api';
 import { useAuthStore } from '../../src/store/auth.store';
 import { getInitials, timeAgo } from '../../src/lib/utils';
-import { colors, radius } from '../../src/constants/theme';
+import { colors } from '../../src/constants/theme';
 import { fonts } from '../../src/constants/fonts';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
