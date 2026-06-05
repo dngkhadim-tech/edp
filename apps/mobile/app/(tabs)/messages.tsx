@@ -23,7 +23,7 @@ interface Conversation {
 export default function MessagesScreen() {
   const router = useRouter();
 
-  const { data } = useQuery<Conversation[]>({
+  const { data, isLoading } = useQuery<Conversation[]>({
     queryKey: ['conversations'],
     queryFn: () => api.get('/messages').then((r) => r.data),
   });
@@ -34,46 +34,60 @@ export default function MessagesScreen() {
         <Text style={styles.title}>Messages</Text>
       </View>
 
-      <FlatList
-        data={data || []}
-        keyExtractor={(item) => item.conversation_id}
-        renderItem={({ item }) => {
-          const hasUnread = item.unread_count != null && item.unread_count > 0;
-          return (
-            <TouchableOpacity
-              style={styles.conv}
-              onPress={() => router.push(`/chat/${item.sender_id}`)}
-            >
-              {item.avatar ? (
-                <Image source={{ uri: item.avatar }} style={styles.avatar} contentFit="cover" />
-              ) : (
-                <View style={[styles.avatar, styles.avatarFallback]}>
-                  <Text style={styles.avatarText}>
-                    {getInitials(item.first_name, item.last_name)}
-                  </Text>
-                </View>
-              )}
-
-              <View style={styles.convBody}>
-                <View style={styles.convHeader}>
-                  <Text style={[styles.convName, hasUnread && styles.convNameUnread]}>
-                    {item.first_name} {item.last_name}
-                  </Text>
-                  <Text style={styles.convTime}>{timeAgo(item.created_at)}</Text>
-                </View>
-                <Text style={styles.convPreview} numberOfLines={1}>
-                  {item.content}
-                </Text>
+      {isLoading ? (
+        <View style={styles.skeletonList}>
+          {[0, 1, 2, 3, 4].map((i) => (
+            <View key={i} style={styles.skeletonRow}>
+              <View style={styles.skeletonAvatar} />
+              <View style={styles.skeletonBody}>
+                <View style={[styles.skeletonLine, { width: '40%', marginBottom: 6 }]} />
+                <View style={[styles.skeletonLine, { width: '70%' }]} />
               </View>
+            </View>
+          ))}
+        </View>
+      ) : (
+        <FlatList
+          data={data || []}
+          keyExtractor={(item) => item.conversation_id}
+          renderItem={({ item }) => {
+            const hasUnread = item.unread_count != null && item.unread_count > 0;
+            return (
+              <TouchableOpacity
+                style={styles.conv}
+                onPress={() => router.push(`/chat/${item.sender_id}`)}
+              >
+                {item.avatar ? (
+                  <Image source={{ uri: item.avatar }} style={styles.avatar} contentFit="cover" />
+                ) : (
+                  <View style={[styles.avatar, styles.avatarFallback]}>
+                    <Text style={styles.avatarText}>
+                      {getInitials(item.first_name, item.last_name)}
+                    </Text>
+                  </View>
+                )}
 
-              {hasUnread && <View style={styles.unreadDot} />}
-            </TouchableOpacity>
-          );
-        }}
-        ListEmptyComponent={
-          <Text style={styles.empty}>Aucune conversation</Text>
-        }
-      />
+                <View style={styles.convBody}>
+                  <View style={styles.convHeader}>
+                    <Text style={[styles.convName, hasUnread && styles.convNameUnread]}>
+                      {item.first_name} {item.last_name}
+                    </Text>
+                    <Text style={styles.convTime}>{timeAgo(item.created_at)}</Text>
+                  </View>
+                  <Text style={styles.convPreview} numberOfLines={1}>
+                    {item.content}
+                  </Text>
+                </View>
+
+                {hasUnread && <View style={styles.unreadDot} />}
+              </TouchableOpacity>
+            );
+          }}
+          ListEmptyComponent={
+            <Text style={styles.empty}>Aucune conversation</Text>
+          }
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -127,5 +141,28 @@ const styles = StyleSheet.create({
     color: colors.muted,
     textAlign: 'center',
     marginTop: 60,
+  },
+  skeletonList: { paddingTop: 4 },
+  skeletonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  skeletonAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.surface,
+    flexShrink: 0,
+  },
+  skeletonBody: { flex: 1, gap: 0 },
+  skeletonLine: {
+    height: 11,
+    borderRadius: 6,
+    backgroundColor: colors.surface,
   },
 });

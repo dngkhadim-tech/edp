@@ -71,7 +71,11 @@ export default function ExploreScreen() {
       {isLoading ? (
         <View style={styles.skeletonGrid}>
           {[0, 1, 2, 3, 4, 5].map((i) => (
-            <View key={i} style={styles.skeleton} />
+            <View key={i} style={styles.skeletonCard}>
+              <View style={styles.skeletonCardImage} />
+              <View style={styles.skeletonCardLine} />
+              <View style={[styles.skeletonCardLine, { width: '60%' }]} />
+            </View>
           ))}
         </View>
       ) : items.length === 0 ? (
@@ -132,7 +136,9 @@ const styles = StyleSheet.create({
   cardWrap: { flex: 1 },
   listContent: { paddingTop: spacing.sm, paddingBottom: 80 },
   skeletonGrid: { flexDirection: 'row', flexWrap: 'wrap', padding: spacing.md, gap: spacing.md },
-  skeleton: { width: '47%', aspectRatio: 3 / 4, backgroundColor: colors.surface, borderRadius: radius.card },
+  skeletonCard: { width: '47%' },
+  skeletonCardImage: { aspectRatio: 4 / 3, borderRadius: radius.card, backgroundColor: colors.surface, marginBottom: 8 },
+  skeletonCardLine: { height: 10, borderRadius: 5, backgroundColor: colors.surface, marginBottom: 5, width: '80%' },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm, padding: spacing.xl },
   emptyTitle: { fontFamily: fonts.heading.semibold, fontSize: 16, color: colors.foreground, textAlign: 'center' },
   emptySubtitle: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.muted, textAlign: 'center' },
