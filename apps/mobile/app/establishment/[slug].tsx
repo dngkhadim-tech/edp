@@ -20,6 +20,16 @@ const HERO_HEIGHT = W * (3 / 4);
 
 type Tab = 'about' | 'reviews' | 'menu';
 
+interface ReviewUser { firstName: string; lastName: string; avatar?: string; }
+interface ReviewItem {
+  id: string; rating: number; content: string; title?: string;
+  createdAt: string | Date; isVerified?: boolean; user?: ReviewUser;
+  establishmentResponse?: { content: string };
+}
+
+interface MenuItem { name: string; description?: string; price: number; currency: string; }
+interface MenuSection { id?: string; category: string; items?: MenuItem[]; }
+
 export default function EstablishmentScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const router = useRouter();
@@ -164,7 +174,7 @@ export default function EstablishmentScreen() {
           {tab === 'reviews' && (
             <View style={styles.section}>
               {reviews?.data?.length > 0 ? (
-                reviews.data.map((r: any) => (
+                (reviews.data as ReviewItem[]).map((r) => (
                   <View key={r.id} style={styles.reviewCard}>
                     <View style={styles.reviewHeader}>
                       <Text style={styles.reviewAuthor}>{r.user?.firstName} {r.user?.lastName}</Text>
@@ -186,10 +196,10 @@ export default function EstablishmentScreen() {
           {tab === 'menu' && (
             <View style={styles.section}>
               {est.menu?.length > 0 ? (
-                est.menu.map((section: any) => (
+                (est.menu as MenuSection[]).map((section) => (
                   <View key={section.name} style={styles.menuSection}>
                     <Text style={styles.menuSectionTitle}>{section.name}</Text>
-                    {section.items?.map((item: any) => (
+                    {section.items?.map((item) => (
                       <View key={item.name} style={styles.menuItem}>
                         <View style={{ flex: 1 }}>
                           <Text style={styles.menuItemName}>{item.name}</Text>

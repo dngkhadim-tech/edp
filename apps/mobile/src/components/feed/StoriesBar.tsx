@@ -4,6 +4,9 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { Plus } from 'lucide-react-native';
 
+interface StoryAuthor { firstName: string; lastName: string; avatar?: string; }
+interface Story { id: string; author?: StoryAuthor; }
+
 export function StoriesBar() {
   const { data } = useQuery({
     queryKey: ['stories'],
@@ -26,7 +29,7 @@ export function StoriesBar() {
         <Text style={styles.name}>Votre story</Text>
       </TouchableOpacity>
 
-      {data?.map((story: any) => {
+      {(data as Story[] | undefined)?.map((story) => {
         const author = story.author;
         return (
           <TouchableOpacity key={story.id} style={styles.storyItem}>
