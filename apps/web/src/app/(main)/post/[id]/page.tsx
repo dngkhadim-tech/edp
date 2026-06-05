@@ -25,7 +25,7 @@ interface Comment {
   author?: CommentAuthor;
 }
 
-type PostPageProps = { params: { id: string } };
+type PostPageProps = { params: Promise<{ id: string }> | { id: string } };
 
 export default function PostPage({ params }: PostPageProps) {
   const { id } = params;

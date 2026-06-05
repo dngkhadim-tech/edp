@@ -35,10 +35,10 @@ interface ReviewWithUser {
   establishmentResponse?: { content: string };
 }
 
-type EstablishmentPageProps = { params: { slug: string } };
+type EstablishmentPageProps = { params: Promise<{ slug: string }> | { slug: string } };
 
 export default function EstablishmentPage({ params }: EstablishmentPageProps) {
-  const { slug } = params;
+  const { slug } = params as { slug: string };
   const router = useRouter();
   const [tab, setTab] = useState<Tab>('À propos');
   const [scrolled, setScrolled] = useState(false);
@@ -77,7 +77,7 @@ export default function EstablishmentPage({ params }: EstablishmentPageProps) {
   const isOpen = est.isOpen ?? false;
   const images: string[] = [est.banner, ...(est.gallery ?? [])].filter(Boolean);
   const menuSections = est.menu ?? [];
-  const avgRating: number = est.avgRating ?? est.averageRating ?? 0;
+  const avgRating: number = Number(est.avgRating ?? est.averageRating ?? 0);
   const reviewsCount: number = est.reviewsCount ?? reviews?.meta?.total ?? 0;
 
   return (

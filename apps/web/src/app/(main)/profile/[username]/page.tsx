@@ -28,7 +28,7 @@ interface GridPost {
   media?: PostMedia[];
 }
 
-type ProfilePageProps = { params: { username: string } };
+type ProfilePageProps = { params: Promise<{ username: string }> | { username: string } };
 
 export default function ProfilePage({ params }: ProfilePageProps) {
   const { username } = params;
