@@ -1,11 +1,21 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Star, MapPin, Users } from 'lucide-react';
-import { formatNumber } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
+import { Star, MapPin } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-interface Props {
-  establishment: any;
+export interface Establishment {
+  id: string;
+  slug: string;
+  name: string;
+  banner?: string | null;
+  type: string;
+  averageRating: number;
+  city: string;
+  country: string;
+  isVerified?: boolean;
+  isOpen?: boolean;
+  followersCount?: number;
+  reviewsCount?: number;
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -17,11 +27,16 @@ const TYPE_LABELS: Record<string, string> = {
   EXPERIENCE: 'Expérience',
 };
 
+interface Props {
+  establishment: Establishment;
+}
+
 export function EstablishmentCard({ establishment: est }: Props) {
   return (
     <Link href={`/establishment/${est.slug}`} className="group block">
-      <article className="bg-card border border-border rounded-xl overflow-hidden transition-shadow hover:shadow-lg hover:shadow-primary/10">
-        <div className="relative h-44 bg-muted overflow-hidden">
+      <article className="bg-card border border-border rounded-2xl overflow-hidden transition-shadow hover:shadow-card-hover">
+        {/* 4:3 photo */}
+        <div className="relative w-full aspect-[4/3] bg-muted overflow-hidden">
           {est.banner ? (
             <Image
               src={est.banner}
@@ -31,41 +46,43 @@ export function EstablishmentCard({ establishment: est }: Props) {
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-              <span className="text-4xl font-display font-bold text-primary/30">{est.name?.[0]}</span>
+              <span className="text-4xl font-heading font-bold text-primary/30">
+                {est.name?.[0]}
+              </span>
             </div>
           )}
-          <div className="absolute top-3 left-3">
-            <Badge variant="secondary" className="bg-black/70 text-white border-none text-xs">
-              {TYPE_LABELS[est.type] || est.type}
-            </Badge>
-          </div>
+          {/* Type badge pill — bottom-left */}
+          <span className="absolute bottom-2 left-2 px-2.5 py-0.5 rounded-full bg-black/70 text-white text-xs font-medium">
+            {TYPE_LABELS[est.type] ?? est.type}
+          </span>
           {est.isVerified && (
-            <div className="absolute top-3 right-3">
-              <Badge className="bg-primary/90 text-primary-foreground border-none text-xs">✓ Vérifié</Badge>
-            </div>
+            <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-primary/90 text-white text-xs font-medium">
+              ✓ Vérifié
+            </span>
           )}
         </div>
 
-        <div className="p-4 space-y-2">
-          <div className="flex items-start justify-between">
-            <h3 className="font-semibold truncate">{est.name}</h3>
-            <div className="flex items-center gap-1 text-sm flex-shrink-0 ml-2">
-              <Star size={14} className="fill-primary text-primary" />
-              <span className="font-medium">{Number(est.averageRating).toFixed(1)}</span>
-            </div>
-          </div>
+        <div className="p-3 space-y-1">
+          {/* Name — Outfit 700 15px */}
+          <h3 className="font-heading font-bold text-[15px] leading-tight truncate">{est.name}</h3>
 
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <MapPin size={12} />
-            <span className="truncate">{est.city}, {est.country}</span>
-          </div>
-
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <Users size={12} />
-              {formatNumber(est.followersCount)} abonnés
+          {/* Stars — gold */}
+          <div className="flex items-center gap-1">
+            <Star size={13} className="fill-accent text-accent" />
+            <span className="text-sm font-medium text-accent">
+              {Number(est.averageRating).toFixed(1)}
             </span>
-            <span>{est.reviewsCount} avis</span>
+          </div>
+
+          {/* City / status — DM Sans 12px muted */}
+          <div className="flex items-center gap-1 text-xs text-muted-foreground font-sans">
+            <MapPin size={11} />
+            <span className="truncate">{est.city}, {est.country}</span>
+            {est.isOpen !== undefined && (
+              <span className={cn('ml-auto flex-shrink-0', est.isOpen ? 'text-green-600' : 'text-red-500')}>
+                {est.isOpen ? 'Ouvert' : 'Fermé'}
+              </span>
+            )}
           </div>
         </div>
       </article>
