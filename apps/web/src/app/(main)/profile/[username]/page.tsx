@@ -9,6 +9,7 @@ import { useAuthStore } from '@/store/auth.store';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { LoyaltyBadge } from '@/components/profile/LoyaltyBadge';
+import { ProfileSkeleton } from '@/components/profile/ProfileSkeleton';
 import { formatNumber, getInitials } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
@@ -36,7 +37,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   const [following, setFollowing] = useState(false);
   const [gridTab, setGridTab] = useState<GridTab>('posts');
 
-  const { data: profile } = useQuery({
+  const { data: profile, isLoading } = useQuery({
     queryKey: ['profile', username],
     queryFn: () => api.get(`/users/${username}`).then((r) => {
       setFollowing(r.data.isFollowing);
@@ -67,6 +68,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
     }
   };
 
+  if (isLoading) return <ProfileSkeleton />;
   if (!profile) return null;
 
   const gridItems = gridTab === 'saved' ? (savedPosts?.data ?? []) : (posts?.data ?? []);
