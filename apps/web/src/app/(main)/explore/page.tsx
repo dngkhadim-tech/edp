@@ -1,94 +1,97 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { EstablishmentCard } from '@/components/establishment/EstablishmentCard';
-import { Search, Filter } from 'lucide-react';
-import { EstablishmentType } from '@edp/shared';
+import { EstablishmentCard, type Establishment } from '@/components/establishment/EstablishmentCard';
+import { SearchBar } from '@/components/shared/SearchBar';
+import { FilterPills, type FilterOption } from '@/components/shared/FilterPills';
+import { SlidersHorizontal, SearchX } from 'lucide-react';
 
-const TYPES = [
-  { value: '', label: 'Tous' },
-  { value: EstablishmentType.RESTAURANT, label: 'Restaurants' },
-  { value: EstablishmentType.HOTEL, label: 'Hôtels' },
-  { value: EstablishmentType.BAR, label: 'Bars' },
-  { value: EstablishmentType.CAFE, label: 'Cafés' },
-  { value: EstablishmentType.TOURIST_SPOT, label: 'Tourisme' },
+const FILTER_OPTIONS: FilterOption[] = [
+  { value: '', label: 'Tout' },
+  { value: 'RESTAURANT', label: 'Restaurant' },
+  { value: 'BAR', label: 'Bar' },
+  { value: 'HOTEL', label: 'Hôtel' },
+  { value: 'CAFE', label: 'Café' },
+  { value: 'TOURIST_SPOT', label: 'À visiter' },
 ];
 
 export default function ExplorePage() {
-  const [search, setSearch] = useState('');
+  const [q, setQ] = useState('');
   const [type, setType] = useState('');
-  const [query, setQuery] = useState({ q: '', type: '' });
+
+  const handleSearch = useCallback((value: string) => setQ(value), []);
+  const handleTypeChange = useCallback((value: string) => setType(value), []);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['establishments', 'search', query],
+    queryKey: ['establishments', 'search', q, type],
     queryFn: () =>
-      api.get('/establishments/search', { params: query }).then((r) => r.data),
+      api
+        .get<{ data: Establishment[] }>('/establishments/search', {
+          params: { q, type, limit: 20 },
+        })
+        .then((r) => r.data),
   });
 
-  const handleSearch = () => setQuery({ q: search, type });
+  const establishments = data?.data ?? [];
 
   return (
-    <div className="max-w-screen-lg mx-auto px-4 py-8 space-y-6">
-      <div>
-        <h1 className="text-3xl font-display font-bold">Explorer</h1>
-        <p className="text-muted-foreground mt-1">Découvrez les meilleurs établissements</p>
-      </div>
+    <div className="flex flex-col min-h-screen bg-background">
+      {/* Sticky header */}
+      <header className="sticky top-0 z-10 bg-background border-b border-border px-4 py-3 flex items-center justify-between">
+        <h1 className="font-heading font-bold text-[18px]">Découvrir</h1>
+        <button
+          type="button"
+          className="p-2 rounded-full hover:bg-secondary transition-colors"
+          aria-label="Filtres avancés"
+        >
+          <SlidersHorizontal size={18} className="text-muted-foreground" aria-hidden="true" />
+        </button>
+      </header>
 
-      <div className="flex gap-3">
-        <div className="relative flex-1">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            placeholder="Rechercher restaurant, hôtel, ville..."
-            className="pl-10 bg-secondary"
-          />
-        </div>
-        <Button onClick={handleSearch} className="gap-2">
-          <Search size={16} />
-          Chercher
-        </Button>
-      </div>
+      <div className="px-4 pt-4 space-y-4 max-w-screen-xl mx-auto w-full pb-8">
+        <SearchBar
+          placeholder="Rechercher restaurant, hôtel, ville…"
+          onSearch={handleSearch}
+          debounceMs={300}
+        />
 
-      <div className="flex gap-2 flex-wrap">
-        {TYPES.map((t) => (
-          <button
-            key={t.value}
-            onClick={() => setType(t.value)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              type === t.value
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-secondary text-muted-foreground hover:bg-muted'
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+        <FilterPills
+          options={FILTER_OPTIONS}
+          value={type}
+          onChange={handleTypeChange}
+        />
 
-      {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-64 bg-secondary rounded-xl animate-pulse" />
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {data?.data?.map((est: any) => (
-            <EstablishmentCard key={est.id} establishment={est} />
-          ))}
-          {data?.data?.length === 0 && (
-            <p className="col-span-full text-center text-muted-foreground py-12">
-              Aucun résultat trouvé
-            </p>
-          )}
-        </div>
-      )}
+        {/* Grid */}
+        {isLoading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="aspect-[4/3] bg-secondary rounded-2xl animate-pulse" />
+            ))}
+          </div>
+        ) : establishments.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {establishments.map((est) => (
+              <EstablishmentCard key={est.id} establishment={est} />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
+            <SearchX size={48} className="opacity-30" aria-hidden="true" />
+            {q ? (
+              <p className="text-sm font-sans text-center">
+                Aucun résultat pour «&nbsp;<span className="font-medium text-foreground">{q}</span>&nbsp;»
+              </p>
+            ) : (
+              <p className="text-sm font-sans">Aucun établissement trouvé</p>
+            )}
+            {q && (
+              <p className="text-xs text-muted-foreground">Essayez un autre mot-clé ou changez les filtres</p>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
