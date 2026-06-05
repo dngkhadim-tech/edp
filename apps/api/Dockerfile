@@ -16,13 +16,15 @@ COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_module
 COPY . .
 RUN pnpm --filter @edp/shared build
 RUN pnpm --filter @edp/api build
+# pnpm deploy crée un répertoire avec node_modules plat (pas de symlinks pnpm)
+RUN pnpm --filter @edp/api deploy --prod /app/api-deploy
 
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+COPY --from=builder /app/api-deploy/node_modules ./node_modules
 COPY --from=builder /app/apps/api/dist ./dist
-COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
-COPY --from=deps /app/node_modules ./node_modules
+COPY --from=builder /app/packages/shared/dist ./node_modules/@edp/shared/dist
 COPY apps/api/package.json ./package.json
 EXPOSE 4000
 CMD ["node", "dist/main"]
