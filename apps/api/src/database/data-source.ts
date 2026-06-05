@@ -3,7 +3,8 @@ import { join } from 'path';
 
 // Load env for standalone CLI usage
 if (process.env.NODE_ENV !== 'production') {
-  try { require('dotenv').config(); } catch {}
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  try { require('dotenv').config(); } catch (_) {}
 }
 
 export const AppDataSource = new DataSource({
