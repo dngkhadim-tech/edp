@@ -30,8 +30,25 @@ const hotelSchema = z.object({
   specialRequests: z.string().optional(),
 });
 
+interface ReservationEstablishment {
+  id: string;
+  name: string;
+  type: string;
+}
+
+interface ReservationFormData {
+  date?: string;
+  time?: string;
+  partySize?: number;
+  checkIn?: string;
+  checkOut?: string;
+  adults?: number;
+  children?: number;
+  specialRequests?: string;
+}
+
 interface Props {
-  establishment: any;
+  establishment: ReservationEstablishment;
   onClose: () => void;
 }
 
@@ -43,7 +60,7 @@ export function ReservationForm({ establishment, onClose }: Props) {
   const schema = isHotel ? hotelSchema : restaurantSchema;
   const { register, handleSubmit, formState: { errors } } = useForm({ resolver: zodResolver(schema) });
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: ReservationFormData) => {
     setLoading(true);
     try {
       await api.post('/reservations', {
@@ -53,8 +70,8 @@ export function ReservationForm({ establishment, onClose }: Props) {
       });
       toast({ title: 'Réservation envoyée', description: 'Vous serez notifié de la confirmation.' });
       onClose();
-    } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Erreur', description: err?.response?.data?.message });
+    } catch {
+      toast({ variant: 'destructive', title: 'Erreur', description: 'Une erreur est survenue.' });
     } finally {
       setLoading(false);
     }

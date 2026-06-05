@@ -18,8 +18,27 @@ import { Button } from '@/components/ui/button';
 const TABS = ['À propos', 'Menu', 'Avis', 'Photos'] as const;
 type Tab = (typeof TABS)[number];
 
-export default function EstablishmentPage({ params }: { params: any }) {
-  const { slug } = params as { slug: string };
+interface ReviewUser {
+  firstName: string;
+  lastName: string;
+  avatar?: string;
+}
+
+interface ReviewWithUser {
+  id: string;
+  rating: number;
+  title?: string;
+  content: string;
+  isVerified?: boolean;
+  createdAt: string | Date;
+  user?: ReviewUser;
+  establishmentResponse?: { content: string };
+}
+
+type EstablishmentPageProps = { params: { slug: string } };
+
+export default function EstablishmentPage({ params }: EstablishmentPageProps) {
+  const { slug } = params;
   const router = useRouter();
   const [tab, setTab] = useState<Tab>('À propos');
   const [scrolled, setScrolled] = useState(false);
@@ -67,7 +86,7 @@ export default function EstablishmentPage({ params }: { params: any }) {
       <header
         className={cn(
           'fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 transition-all duration-200',
-          'lg:left-64',
+          'md:left-16 lg:left-60',
           scrolled
             ? 'bg-background/95 backdrop-blur-sm border-b border-border h-14 shadow-card'
             : 'bg-transparent h-14',
@@ -260,7 +279,7 @@ export default function EstablishmentPage({ params }: { params: any }) {
 
         {tab === 'Avis' && (
           <div className="px-4 space-y-3">
-            {reviews?.data?.map((r: any) => (
+            {reviews?.data?.map((r: ReviewWithUser) => (
               <ReviewCard key={r.id} review={r} />
             ))}
             {reviewsCount > 3 && (
