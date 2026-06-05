@@ -68,7 +68,7 @@ export function EstablishmentCard({ establishment: est }: Props) {
 
           {/* Stars — gold */}
           <div className="flex items-center gap-1">
-            <Star size={13} className="fill-accent text-accent" />
+            <Star size={13} className="fill-accent text-accent" aria-hidden="true" />
             <span className="text-sm font-medium text-accent">
               {Number(est.averageRating).toFixed(1)}
             </span>
@@ -76,10 +76,10 @@ export function EstablishmentCard({ establishment: est }: Props) {
 
           {/* City / status — DM Sans 12px muted */}
           <div className="flex items-center gap-1 text-xs text-muted-foreground font-sans">
-            <MapPin size={11} />
+            <MapPin size={11} aria-hidden="true" />
             <span className="truncate">{est.city}, {est.country}</span>
             {est.isOpen !== undefined && (
-              <span className={cn('ml-auto flex-shrink-0', est.isOpen ? 'text-green-600' : 'text-red-500')}>
+              <span className={cn('ml-auto flex-shrink-0', est.isOpen ? 'text-success' : 'text-destructive')}>
                 {est.isOpen ? 'Ouvert' : 'Fermé'}
               </span>
             )}
