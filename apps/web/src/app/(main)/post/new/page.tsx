@@ -79,9 +79,9 @@ export default function NewPostPage() {
       hashtags.forEach((h) => form.append('hashtags', h));
       await api.post('/posts', form, { headers: { 'Content-Type': 'multipart/form-data' } });
       setPublishState('success');
-    } catch (err: any) {
+    } catch (err) {
       setPublishState('error');
-      toast({ variant: 'destructive', title: err?.response?.data?.message ?? 'Erreur de publication' });
+      toast({ variant: 'destructive', title: 'Erreur de publication' });
     }
   };
 
