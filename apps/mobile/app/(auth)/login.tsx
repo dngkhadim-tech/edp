@@ -3,9 +3,12 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator, Alert,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { Eye, EyeOff } from 'lucide-react-native';
 import { useAuthStore } from '../../src/store/auth.store';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { colors, spacing, radius } from '../../src/constants/theme';
+import { fonts } from '../../src/constants/fonts';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -22,108 +25,214 @@ export default function LoginScreen() {
     try {
       await login(email, password);
       router.replace('/(tabs)/feed');
-    } catch (err: any) {
-      Alert.alert('Erreur', err?.response?.data?.message || 'Identifiants invalides');
+    } catch {
+      Alert.alert('Connexion échouée', 'Email ou mot de passe invalide');
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <View style={styles.header}>
-            <Text style={styles.logo}>EDP</Text>
-            <Text style={styles.tagline}>Eat • Drink • Pose</Text>
-          </View>
+    <KeyboardAvoidingView
+      style={styles.root}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        {/* Hero */}
+        <LinearGradient
+          colors={['#FFE4E6', '#FECDD3']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.hero}
+        >
+          <Text style={styles.logo}>EDP</Text>
+          <Text style={styles.tagline}>Eat · Drink · Pose</Text>
+        </LinearGradient>
 
+        {/* Formulaire */}
+        <View style={styles.form}>
           <Text style={styles.title}>Connexion</Text>
           <Text style={styles.subtitle}>Bienvenue sur EDP</Text>
 
-          <View style={styles.form}>
-            <View style={styles.field}>
-              <Text style={styles.label}>Email</Text>
-              <TextInput
-                style={styles.input}
-                value={email}
-                onChangeText={setEmail}
-                placeholder="vous@exemple.com"
-                placeholderTextColor="#555"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-            </View>
+          <View style={styles.field}>
+            <Text style={styles.label}>Email</Text>
+            <TextInput
+              style={styles.input}
+              value={email}
+              onChangeText={setEmail}
+              placeholder="vous@exemple.com"
+              placeholderTextColor={colors.muted}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+          </View>
 
-            <View style={styles.field}>
-              <Text style={styles.label}>Mot de passe</Text>
+          <View style={styles.field}>
+            <Text style={styles.label}>Mot de passe</Text>
+            <View style={styles.passwordRow}>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { flex: 1, marginBottom: 0 }]}
                 value={password}
                 onChangeText={setPassword}
                 placeholder="••••••••"
-                placeholderTextColor="#555"
+                placeholderTextColor={colors.muted}
                 secureTextEntry={!showPass}
               />
+              <TouchableOpacity
+                onPress={() => setShowPass((v) => !v)}
+                accessibilityLabel={showPass ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                style={styles.eyeBtn}
+              >
+                {showPass
+                  ? <EyeOff size={18} color={colors.muted} />
+                  : <Eye size={18} color={colors.muted} />}
+              </TouchableOpacity>
             </View>
-
-            <TouchableOpacity
-              style={[styles.button, isLoading && styles.buttonDisabled]}
-              onPress={handleLogin}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#0A0A0A" />
-              ) : (
-                <Text style={styles.buttonText}>Se connecter</Text>
-              )}
-            </TouchableOpacity>
           </View>
+
+          <TouchableOpacity
+            style={[styles.primaryBtn, isLoading && styles.btnDisabled]}
+            onPress={handleLogin}
+            disabled={isLoading}
+          >
+            {isLoading
+              ? <ActivityIndicator color="#FFFFFF" />
+              : <Text style={styles.primaryBtnText}>Se connecter</Text>}
+          </TouchableOpacity>
+
+          <View style={styles.separator}>
+            <View style={styles.sepLine} />
+            <Text style={styles.sepText}>ou</Text>
+            <View style={styles.sepLine} />
+          </View>
+
+          <TouchableOpacity style={styles.outlineBtn}>
+            <Text style={styles.outlineBtnText}>G  Continuer avec Google</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.outlineBtn, { marginTop: spacing.sm }]}>
+            <Text style={styles.outlineBtnText}>f  Continuer avec Facebook</Text>
+          </TouchableOpacity>
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>Pas encore de compte ? </Text>
             <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
-              <Text style={styles.link}>S'inscrire</Text>
+              <Text style={styles.link}>S'inscrire →</Text>
             </TouchableOpacity>
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0A' },
-  content: { flexGrow: 1, padding: 24, justifyContent: 'center' },
-  header: { alignItems: 'center', marginBottom: 40 },
-  logo: { fontSize: 48, fontWeight: '800', color: '#C9A84C', letterSpacing: 4 },
-  tagline: { color: '#888', fontSize: 14, marginTop: 4 },
-  title: { fontSize: 28, fontWeight: '700', color: '#fff', marginBottom: 4 },
-  subtitle: { color: '#888', marginBottom: 32 },
-  form: { gap: 16 },
-  field: { gap: 6 },
-  label: { color: '#ccc', fontSize: 13, fontWeight: '500' },
-  input: {
-    backgroundColor: '#1A1A1A',
-    borderRadius: 12,
-    padding: 14,
-    color: '#fff',
-    fontSize: 15,
-    borderWidth: 1,
-    borderColor: '#2A2A2A',
-  },
-  button: {
-    backgroundColor: '#C9A84C',
-    borderRadius: 12,
-    padding: 16,
+  root:   { flex: 1, backgroundColor: colors.background },
+  scroll: { flexGrow: 1 },
+  hero: {
+    height: 220,
     alignItems: 'center',
-    marginTop: 8,
+    justifyContent: 'center',
+    gap: 6,
   },
-  buttonDisabled: { opacity: 0.6 },
-  buttonText: { color: '#0A0A0A', fontWeight: '700', fontSize: 16 },
-  footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 32 },
-  footerText: { color: '#888', fontSize: 14 },
-  link: { color: '#C9A84C', fontSize: 14, fontWeight: '600' },
+  logo: {
+    fontSize: 48,
+    fontFamily: fonts.heading.black,
+    color: colors.primary,
+    letterSpacing: 3,
+  },
+  tagline: {
+    fontSize: 14,
+    fontFamily: fonts.body.regular,
+    color: colors.primaryHover,
+  },
+  form: {
+    flex: 1,
+    padding: spacing.lg,
+    gap: spacing.md,
+  },
+  title: {
+    fontSize: 24,
+    fontFamily: fonts.heading.bold,
+    color: colors.foreground,
+  },
+  subtitle: {
+    fontSize: 14,
+    fontFamily: fonts.body.regular,
+    color: colors.muted,
+    marginTop: -spacing.sm,
+  },
+  field:  { gap: 6 },
+  label: {
+    fontSize: 13,
+    fontFamily: fonts.body.medium,
+    color: colors.foreground,
+  },
+  input: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.button,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 13,
+    fontFamily: fonts.body.regular,
+    fontSize: 15,
+    color: colors.foreground,
+  },
+  passwordRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  eyeBtn: { padding: 10 },
+  primaryBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.button,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  btnDisabled: { opacity: 0.6 },
+  primaryBtnText: {
+    color: '#FFFFFF',
+    fontFamily: fonts.heading.bold,
+    fontSize: 16,
+  },
+  separator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  sepLine: { flex: 1, height: 1, backgroundColor: colors.border },
+  sepText: {
+    fontSize: 12,
+    fontFamily: fonts.body.regular,
+    color: colors.muted,
+  },
+  outlineBtn: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.button,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  outlineBtnText: {
+    fontFamily: fonts.body.medium,
+    fontSize: 14,
+    color: colors.foreground,
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    paddingBottom: spacing.lg,
+  },
+  footerText: {
+    fontFamily: fonts.body.regular,
+    fontSize: 14,
+    color: colors.muted,
+  },
+  link: {
+    fontFamily: fonts.body.bold,
+    fontSize: 14,
+    color: colors.primary,
+  },
 });
