@@ -1,105 +1,96 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-  View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet,
-  Image, ActivityIndicator,
+  View, Text, TextInput, FlatList, StyleSheet, TouchableOpacity,
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '../../src/lib/api';
-import { Search, Star, MapPin } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { Search, SlidersHorizontal, SearchX } from 'lucide-react-native';
+import { api } from '../../src/lib/api';
+import { EstablishmentCard, type Establishment } from '../../src/components/establishment/EstablishmentCard';
+import { CategoryPills, type PillOption } from '../../src/components/feed/CategoryPills';
+import { colors, spacing, radius } from '../../src/constants/theme';
+import { fonts } from '../../src/constants/fonts';
 
-function EstCard({ item }: { item: any }) {
-  const router = useRouter();
-  return (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => router.push(`/establishment/${item.slug}`)}
-    >
-      <View style={styles.cardImage}>
-        {item.banner ? (
-          <Image source={{ uri: item.banner }} style={StyleSheet.absoluteFill} resizeMode="cover" />
-        ) : (
-          <Text style={styles.cardInitial}>{item.name?.[0]}</Text>
-        )}
-      </View>
-      <View style={styles.cardBody}>
-        <Text style={styles.cardName} numberOfLines={1}>{item.name}</Text>
-        <View style={styles.cardRow}>
-          <MapPin size={12} color="#888" />
-          <Text style={styles.cardCity}>{item.city}</Text>
-        </View>
-        <View style={styles.cardRow}>
-          <Star size={12} color="#C9A84C" fill="#C9A84C" />
-          <Text style={styles.cardRating}>{Number(item.averageRating).toFixed(1)}</Text>
-          <Text style={styles.cardReviews}>({item.reviewsCount} avis)</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-}
+const TYPES: PillOption[] = [
+  { value: '', label: 'Tout' },
+  { value: 'RESTAURANT', label: 'Restaurant' },
+  { value: 'BAR', label: 'Bar' },
+  { value: 'HOTEL', label: 'Hôtel' },
+  { value: 'CAFE', label: 'Café' },
+  { value: 'TOURIST_SPOT', label: 'À visiter' },
+];
 
 export default function ExploreScreen() {
   const [search, setSearch] = useState('');
-  const [activeType, setActiveType] = useState('');
-  const [query, setQuery] = useState({ q: '', type: '' });
+  const [type, setType] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(t);
+  }, [search]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['mobile-establishments', query],
-    queryFn: () => api.get('/establishments/search', { params: query }).then((r) => r.data),
+    queryKey: ['mobile-establishments', debouncedSearch, type],
+    queryFn: () =>
+      api.get('/establishments/search', { params: { q: debouncedSearch, type, limit: 20 } })
+        .then((r) => r.data),
   });
 
-  const TYPES = [
-    { value: '', label: 'Tous' },
-    { value: 'RESTAURANT', label: 'Restaurants' },
-    { value: 'HOTEL', label: 'Hôtels' },
-    { value: 'BAR', label: 'Bars' },
-    { value: 'TOURIST_SPOT', label: 'Tourisme' },
-  ];
+  const items: Establishment[] = data?.data ?? [];
+
+  const renderItem = useCallback(({ item }: { item: Establishment }) => (
+    <View style={styles.cardWrap}>
+      <EstablishmentCard establishment={item} />
+    </View>
+  ), []);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.title}>Explorer</Text>
+        <Text style={styles.title}>Découvrir</Text>
+        <TouchableOpacity accessibilityLabel="Filtres avancés" hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <SlidersHorizontal size={20} color={colors.muted} />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.searchRow}>
-        <Search size={18} color="#888" style={styles.searchIcon} />
+        <Search size={16} color={colors.muted} />
         <TextInput
-          style={styles.searchInput}
           value={search}
           onChangeText={setSearch}
-          onSubmitEditing={() => setQuery({ q: search, type: activeType })}
-          placeholder="Restaurant, hôtel, ville..."
-          placeholderTextColor="#555"
-          returnKeyType="search"
+          placeholder="Restaurants, bars, hôtels..."
+          placeholderTextColor={colors.muted}
+          style={styles.searchInput}
+          autoCorrect={false}
         />
       </View>
 
-      <View style={styles.types}>
-        {TYPES.map((t) => (
-          <TouchableOpacity
-            key={t.value}
-            onPress={() => { setActiveType(t.value); setQuery({ q: search, type: t.value }); }}
-            style={[styles.typeBtn, activeType === t.value && styles.typeBtnActive]}
-          >
-            <Text style={[styles.typeText, activeType === t.value && styles.typeTextActive]}>
-              {t.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      <CategoryPills options={TYPES} value={type} onChange={setType} />
 
       {isLoading ? (
-        <ActivityIndicator color="#C9A84C" style={{ marginTop: 40 }} />
+        <View style={styles.skeletonGrid}>
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <View key={i} style={styles.skeleton} />
+          ))}
+        </View>
+      ) : items.length === 0 ? (
+        <View style={styles.empty}>
+          <SearchX size={48} color={colors.muted} />
+          <Text style={styles.emptyTitle}>
+            {debouncedSearch ? `Aucun résultat pour «${debouncedSearch}»` : 'Aucun établissement'}
+          </Text>
+          <Text style={styles.emptySubtitle}>Essayez un autre mot-clé ou changez les filtres</Text>
+        </View>
       ) : (
         <FlatList
-          data={data?.data}
+          data={items}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <EstCard item={item} />}
-          contentContainerStyle={{ padding: 16, gap: 12 }}
+          renderItem={renderItem}
+          numColumns={2}
+          columnWrapperStyle={styles.row}
+          contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-          ListEmptyComponent={<Text style={styles.empty}>Aucun résultat</Text>}
         />
       )}
     </SafeAreaView>
@@ -107,33 +98,42 @@ export default function ExploreScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0A' },
-  header: { padding: 16, paddingBottom: 8 },
-  title: { fontSize: 24, fontWeight: '700', color: '#fff' },
+  container: { flex: 1, backgroundColor: colors.background },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  title: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.foreground },
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1A1A1A',
-    margin: 16,
-    marginTop: 8,
-    borderRadius: 12,
-    paddingHorizontal: 12,
+    marginHorizontal: spacing.md,
+    marginVertical: spacing.sm,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.button,
+    paddingHorizontal: spacing.md,
+    height: 44,
+    gap: spacing.sm,
   },
-  searchIcon: { marginRight: 8 },
-  searchInput: { flex: 1, color: '#fff', height: 44, fontSize: 15 },
-  types: { flexDirection: 'row', paddingHorizontal: 16, gap: 8, flexWrap: 'wrap', marginBottom: 8 },
-  typeBtn: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, backgroundColor: '#1A1A1A' },
-  typeBtnActive: { backgroundColor: '#C9A84C20', borderWidth: 1, borderColor: '#C9A84C' },
-  typeText: { color: '#888', fontSize: 13, fontWeight: '500' },
-  typeTextActive: { color: '#C9A84C' },
-  card: { flexDirection: 'row', backgroundColor: '#141414', borderRadius: 12, overflow: 'hidden' },
-  cardImage: { width: 90, height: 90, backgroundColor: '#1A1A1A', alignItems: 'center', justifyContent: 'center' },
-  cardInitial: { fontSize: 32, fontWeight: '700', color: '#C9A84C40' },
-  cardBody: { flex: 1, padding: 12, gap: 4 },
-  cardName: { color: '#fff', fontWeight: '600', fontSize: 15 },
-  cardRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  cardCity: { color: '#888', fontSize: 12 },
-  cardRating: { color: '#C9A84C', fontSize: 12, fontWeight: '600' },
-  cardReviews: { color: '#666', fontSize: 11 },
-  empty: { color: '#666', textAlign: 'center', marginTop: 40 },
+  searchInput: {
+    flex: 1,
+    fontFamily: fonts.body.regular,
+    fontSize: 15,
+    color: colors.foreground,
+  },
+  row: { paddingHorizontal: spacing.md, gap: spacing.md, marginBottom: spacing.md },
+  cardWrap: { flex: 1 },
+  listContent: { paddingTop: spacing.sm, paddingBottom: 80 },
+  skeletonGrid: { flexDirection: 'row', flexWrap: 'wrap', padding: spacing.md, gap: spacing.md },
+  skeleton: { width: '47%', aspectRatio: 3 / 4, backgroundColor: colors.surface, borderRadius: radius.card },
+  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm, padding: spacing.xl },
+  emptyTitle: { fontFamily: fonts.heading.semibold, fontSize: 16, color: colors.foreground, textAlign: 'center' },
+  emptySubtitle: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.muted, textAlign: 'center' },
 });
