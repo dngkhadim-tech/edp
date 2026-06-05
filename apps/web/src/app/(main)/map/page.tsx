@@ -8,26 +8,25 @@ import { EstablishmentCard } from '@/components/establishment/EstablishmentCard'
 import { MapPin, Search, Filter } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import type { Establishment } from '@edp/shared';
 import { EstablishmentType } from '@edp/shared';
 
 const PARIS_CENTER = { lat: 48.8566, lng: 2.3522 };
-const MAP_STYLE_DARK = [
-  { elementType: 'geometry', stylers: [{ color: '#1a1a2e' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#1a1a2e' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
-  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#2d2d44' }] },
-  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#1a1a2e' }] },
-  { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#9ca5b3' }] },
-  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0e1626' }] },
-  { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#515c6d' }] },
+const MAP_STYLE_LIGHT = [
   { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+  { featureType: 'transit', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#f5f5f5' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#e9e9e9' }] },
+  { featureType: 'landscape', elementType: 'geometry', stylers: [{ color: '#f9fafb' }] },
 ];
 
 export default function MapPage() {
   const mapRef = useRef<HTMLDivElement>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [map, setMap] = useState<any | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [markers, setMarkers] = useState<any[]>([]);
-  const [selected, setSelected] = useState<any>(null);
+  const [selected, setSelected] = useState<Establishment | null>(null);
   const [type, setType] = useState('');
   const [userLocation, setUserLocation] = useState(PARIS_CENTER);
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -58,7 +57,7 @@ export default function MapPage() {
       const gmap = new (window as any).google.maps.Map(mapRef.current, {
         center: userLocation,
         zoom: 13,
-        styles: MAP_STYLE_DARK,
+        styles: MAP_STYLE_LIGHT,
         disableDefaultUI: true,
         zoomControl: true,
       });
@@ -70,15 +69,15 @@ export default function MapPage() {
   useEffect(() => {
     if (!map || !nearby) return;
     markers.forEach((m) => m.setMap(null));
-    const newMarkers = nearby.map((est: any) => {
+    const newMarkers = (nearby as Establishment[]).map((est) => {
       const marker = new (window as any).google.maps.Marker({
-        position: { lat: parseFloat(est.latitude), lng: parseFloat(est.longitude) },
+        position: { lat: est.latitude, lng: est.longitude },
         map,
         title: est.name,
         icon: {
           path: (window as any).google.maps.SymbolPath.CIRCLE,
           scale: 10,
-          fillColor: '#C9A84C',
+          fillColor: '#E11D48',
           fillOpacity: 1,
           strokeColor: '#fff',
           strokeWeight: 2,
@@ -125,7 +124,7 @@ export default function MapPage() {
               <p className="text-sm mt-1">Configurez NEXT_PUBLIC_GOOGLE_MAPS_API_KEY pour activer la carte</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-6 max-w-4xl w-full">
-              {nearby?.slice(0, 6).map((est: any) => (
+              {(nearby as Establishment[] | undefined)?.slice(0, 6).map((est) => (
                 <EstablishmentCard key={est.id} establishment={est} />
               ))}
             </div>
