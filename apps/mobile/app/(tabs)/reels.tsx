@@ -6,7 +6,6 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { api } from '../../src/lib/api';
 import { Video, ResizeMode } from 'expo-av';
 import { Heart, MessageCircle, Share2, Music2 } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatNumber } from '../../src/lib/utils';
 import { colors } from '../../src/constants/theme';
 
