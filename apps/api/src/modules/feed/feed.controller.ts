@@ -18,7 +18,7 @@ export class FeedController {
 
   @Get('explore')
   @UseGuards(JwtAuthGuard)
-  explore(@Query() query: any) {
+  explore(@Query() query: PaginationQuery) {
     return this.feedService.getExploreFeed(query);
   }
 

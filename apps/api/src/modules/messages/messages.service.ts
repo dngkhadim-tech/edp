@@ -15,7 +15,7 @@ export class MessagesService {
     return [userA, userB].sort().join(':');
   }
 
-  async sendMessage(senderId: string, receiverId: string, content: string, media?: any[]) {
+  async sendMessage(senderId: string, receiverId: string, content: string, media?: { url: string; type: string }[]) {
     const conversationId = this.getConversationId(senderId, receiverId);
     const message = this.messageRepo.create({
       conversationId,

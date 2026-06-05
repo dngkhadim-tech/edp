@@ -46,7 +46,7 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
   @SubscribeMessage('send_message')
   async handleMessage(
     @ConnectedSocket() socket: Socket,
-    @MessageBody() data: { receiverId: string; content: string; media?: any[] },
+    @MessageBody() data: { receiverId: string; content: string; media?: { url: string; type: string }[] },
   ) {
     const senderId = socket.data.userId;
     const message = await this.messagesService.sendMessage(
