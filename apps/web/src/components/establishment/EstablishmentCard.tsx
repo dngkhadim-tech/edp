@@ -34,7 +34,7 @@ interface Props {
 export function EstablishmentCard({ establishment: est }: Props) {
   return (
     <Link href={`/establishment/${est.slug}`} className="group block">
-      <article className="bg-card border border-border rounded-2xl overflow-hidden transition-shadow hover:shadow-card-hover">
+      <article className="bg-card border border-border rounded-2xl overflow-hidden hover:scale-[1.02] transition-all hover:shadow-card-hover">
         {/* 4:3 photo */}
         <div className="relative w-full aspect-[4/3] bg-muted overflow-hidden">
           {est.banner ? (
@@ -52,7 +52,7 @@ export function EstablishmentCard({ establishment: est }: Props) {
             </div>
           )}
           {/* Type badge pill — bottom-left */}
-          <span className="absolute bottom-2 left-2 px-2.5 py-0.5 rounded-full bg-black/70 text-white text-xs font-medium">
+          <span className="absolute bottom-2 left-2 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
             {TYPE_LABELS[est.type] ?? est.type}
           </span>
           {est.isVerified && (
