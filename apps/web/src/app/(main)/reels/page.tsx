@@ -11,7 +11,30 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { api as apiClient } from '@/lib/api';
 
-function ReelItem({ reel, isActive }: { reel: any; isActive: boolean }) {
+interface ReelAuthor {
+  username?: string;
+  avatar?: string;
+  firstName?: string;
+  lastName?: string;
+}
+
+interface ReelMedia {
+  url: string;
+  type: 'image' | 'video';
+}
+
+interface Reel {
+  id: string;
+  isLiked: boolean;
+  likesCount: number;
+  commentsCount: number;
+  caption?: string;
+  hashtags?: string[];
+  author?: ReelAuthor;
+  media?: ReelMedia[];
+}
+
+function ReelItem({ reel, isActive }: { reel: Reel; isActive: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [liked, setLiked] = useState(reel.isLiked);
   const [likesCount, setLikesCount] = useState(reel.likesCount);
@@ -140,7 +163,7 @@ export default function ReelsPage() {
       className="h-screen overflow-y-scroll snap-y snap-mandatory"
       onScroll={handleScroll}
     >
-      {reels.map((reel: any, i: number) => (
+      {reels.map((reel: Reel, i: number) => (
         <ReelItem key={reel.id} reel={reel} isActive={i === activeIndex} />
       ))}
     </div>

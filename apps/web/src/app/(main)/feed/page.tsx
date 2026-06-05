@@ -51,7 +51,7 @@ export default function FeedPage() {
         </div>
       ) : (
         <div className="space-y-4 px-4">
-          {posts.map((post: any, i: number) => (
+          {posts.map((post, i) => (
             <div key={post.id}>
               <PostCard post={post} />
               {/* Insérer ReelsRow après le Nième post */}

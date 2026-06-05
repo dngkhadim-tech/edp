@@ -34,7 +34,7 @@ type ConversationPageProps = {
 
 export default function ConversationPage({ params }: ConversationPageProps) {
   // Note: In client components, params is passed as a resolved object, not a Promise
-  const userId = (params as any).userId;
+  const { userId } = params as unknown as { userId: string };
   const { user } = useAuthStore();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
