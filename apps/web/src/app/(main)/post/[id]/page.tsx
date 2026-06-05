@@ -12,8 +12,23 @@ import { formatNumber, getInitials, timeAgo } from '@/lib/utils';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
-export default function PostPage({ params }: { params: any }) {
-  const { id } = params as { id: string };
+interface CommentAuthor {
+  firstName: string;
+  lastName: string;
+  avatar?: string;
+}
+
+interface Comment {
+  id: string;
+  content: string;
+  createdAt: string | Date;
+  author?: CommentAuthor;
+}
+
+type PostPageProps = { params: { id: string } };
+
+export default function PostPage({ params }: PostPageProps) {
+  const { id } = params;
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const [newComment, setNewComment] = useState('');
@@ -98,7 +113,7 @@ export default function PostPage({ params }: { params: any }) {
               </div>
             )}
 
-            {commentsData?.data?.map((comment: any) => (
+            {commentsData?.data?.map((comment: Comment) => (
               <div key={comment.id} className="flex gap-3">
                 <Avatar className="h-8 w-8 flex-shrink-0">
                   <AvatarImage src={comment.author?.avatar} />
