@@ -12,6 +12,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { getInitials } from '@/lib/utils';
+import { UserRole } from '@edp/shared';
 
 const NAV_ITEMS = [
   { href: '/feed', icon: Home, label: 'Accueil' },
@@ -76,6 +77,24 @@ export function Sidebar() {
       </nav>
 
       <div className="p-4 border-t border-border space-y-3">
+        {user?.role === UserRole.ESTABLISHMENT && (
+          <Button variant="outline" className="w-full gap-2" asChild>
+            <Link href="/establishment/dashboard" title="Mon établissement">
+              <Store size={18} />
+              <span className="hidden lg:block ml-1">Mon établissement</span>
+            </Link>
+          </Button>
+        )}
+
+        {user?.role === UserRole.ADMIN && (
+          <Button variant="outline" className="w-full gap-2" asChild>
+            <Link href="/admin/dashboard" title="Administration">
+              <Settings size={18} />
+              <span className="hidden lg:block ml-1">Administration</span>
+            </Link>
+          </Button>
+        )}
+
         <Button className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90" asChild>
           <Link href="/post/new">
             <Plus size={18} />
