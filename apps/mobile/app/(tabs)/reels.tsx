@@ -8,6 +8,7 @@ import { Video, ResizeMode } from 'expo-av';
 import { Heart, MessageCircle, Share2, Music2 } from 'lucide-react-native';
 import { formatNumber } from '../../src/lib/utils';
 import { colors } from '../../src/constants/theme';
+import { fonts } from '../../src/constants/fonts';
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -43,8 +44,10 @@ function ReelItem({ item, isActive }: ReelItemProps) {
   const [likesCount, setLikesCount] = useState(item.likesCount);
 
   const handleLike = async () => {
-    setLiked((prev) => !prev);
-    setLikesCount((c) => liked ? c - 1 : c + 1);
+    setLiked((prev) => {
+      setLikesCount((c) => (prev ? c - 1 : c + 1));
+      return !prev;
+    });
     await api.post(`/posts/${item.id}/like`).catch(() => {});
   };
 
@@ -146,11 +149,11 @@ const styles = StyleSheet.create({
     gap: 20,
   },
   action: { alignItems: 'center', gap: 4 },
-  actionText: { color: '#fff', fontSize: 12, fontWeight: '600' },
+  actionText: { fontFamily: fonts.body.bold, color: '#fff', fontSize: 12 },
   bottomInfo: { flex: 1, justifyContent: 'flex-end', paddingRight: 60 },
-  username: { color: '#fff', fontWeight: '700', fontSize: 15, marginBottom: 4 },
-  caption: { color: '#fff', fontSize: 13, lineHeight: 18, marginBottom: 4 },
-  hashtags: { color: colors.primary, fontSize: 12, marginBottom: 4 },
+  username: { fontFamily: fonts.heading.bold, color: '#fff', fontSize: 15, marginBottom: 4 },
+  caption: { fontFamily: fonts.body.regular, color: '#fff', fontSize: 13, lineHeight: 18, marginBottom: 4 },
+  hashtags: { fontFamily: fonts.body.regular, color: colors.primary, fontSize: 12, marginBottom: 4 },
   musicRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  music: { color: '#ccc', fontSize: 12 },
+  music: { fontFamily: fonts.body.regular, color: '#ccc', fontSize: 12 },
 });
