@@ -6,7 +6,7 @@ import { api } from '../../src/lib/api';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { getInitials, timeAgo } from '../../src/lib/utils';
-import { colors, radius } from '../../src/constants/theme';
+import { colors } from '../../src/constants/theme';
 import { fonts } from '../../src/constants/fonts';
 
 interface Conversation {
