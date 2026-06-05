@@ -6,22 +6,37 @@ import { api } from '@/lib/api';
 import { useAuthStore } from '@/store/auth.store';
 import { io, Socket } from 'socket.io-client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, ArrowLeft } from 'lucide-react';
+import { Send, ArrowLeft, MoreHorizontal } from 'lucide-react';
 import { getInitials, timeAgo } from '@/lib/utils';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
-export default function ConversationPage({ params }: { params: any }) {
-  const { userId } = params as { userId: string };
+interface Message {
+  id: string | number;
+  senderId: string;
+  receiverId?: string;
+  content: string;
+  createdAt: string | Date;
+}
+
+interface OtherUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  username: string;
+  avatar?: string;
+}
+
+export default function ConversationPage(props: any) {
+  const userId = (props.params as { userId: string }).userId;
   const { user } = useAuthStore();
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [socket, setSocket] = useState<Socket | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const { data: conversation } = useQuery({
+  const { data: conversation } = useQuery<{ data: Message[] }>({
     queryKey: ['messages', userId],
     queryFn: () => api.get(`/messages/${userId}`).then((r) => r.data),
   });
@@ -30,7 +45,7 @@ export default function ConversationPage({ params }: { params: any }) {
     if (conversation?.data) setMessages(conversation.data);
   }, [conversation]);
 
-  const { data: otherUser } = useQuery({
+  const { data: otherUser } = useQuery<OtherUser>({
     queryKey: ['profile', userId],
     queryFn: () => api.get(`/users/${userId}`).then((r) => r.data),
   });
@@ -38,7 +53,7 @@ export default function ConversationPage({ params }: { params: any }) {
   useEffect(() => {
     const token = localStorage.getItem('edp_access_token');
     const s = io(`${process.env.NEXT_PUBLIC_API_URL}/messages`, { auth: { token } });
-    s.on('new_message', (msg: any) => {
+    s.on('new_message', (msg: Message) => {
       if (msg.senderId === userId || msg.receiverId === userId) {
         setMessages((prev) => [...prev, msg]);
       }
@@ -54,45 +69,69 @@ export default function ConversationPage({ params }: { params: any }) {
   const sendMessage = () => {
     if (!input.trim() || !socket) return;
     socket.emit('send_message', { receiverId: userId, content: input });
-    setMessages((prev) => [...prev, {
-      id: Date.now(), senderId: user?.id, content: input, createdAt: new Date(),
-    }]);
+    setMessages((prev) => [
+      ...prev,
+      { id: Date.now(), senderId: user?.id ?? '', content: input, createdAt: new Date() },
+    ]);
     setInput('');
   };
 
   return (
-    <div className="flex flex-col h-screen max-h-screen">
-      <header className="flex items-center gap-3 p-4 border-b border-border bg-card">
-        <Link href="/messages" className="text-muted-foreground hover:text-foreground">
-          <ArrowLeft size={20} />
+    <div className="flex flex-col h-screen max-h-screen bg-background">
+      {/* Header */}
+      <header className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card flex-shrink-0">
+        <Link
+          href="/messages"
+          className="text-muted-foreground hover:text-foreground transition-colors"
+          aria-label="Retour aux messages"
+        >
+          <ArrowLeft size={20} aria-hidden="true" />
         </Link>
+
         {otherUser && (
           <>
-            <Avatar className="h-9 w-9">
+            <Avatar className="h-9 w-9 flex-shrink-0">
               <AvatarImage src={otherUser.avatar} />
-              <AvatarFallback className="bg-primary/20 text-primary text-sm">
+              <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
                 {getInitials(otherUser.firstName, otherUser.lastName)}
               </AvatarFallback>
             </Avatar>
-            <div>
-              <p className="font-semibold text-sm">{otherUser.firstName} {otherUser.lastName}</p>
-              <p className="text-xs text-muted-foreground">@{otherUser.username}</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-heading font-semibold truncate">
+                {otherUser.firstName} {otherUser.lastName}
+              </p>
             </div>
           </>
         )}
+
+        <button
+          className="text-muted-foreground hover:text-foreground transition-colors ml-auto"
+          aria-label="Plus d'options"
+        >
+          <MoreHorizontal size={20} aria-hidden="true" />
+        </button>
       </header>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {messages.map((msg: any) => {
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
+        {messages.map((msg) => {
           const isMe = msg.senderId === user?.id;
           return (
             <div key={msg.id} className={cn('flex', isMe ? 'justify-end' : 'justify-start')}>
-              <div className={cn(
-                'max-w-xs px-4 py-2 rounded-2xl text-sm',
-                isMe ? 'bg-primary text-primary-foreground rounded-br-sm' : 'bg-secondary text-foreground rounded-bl-sm',
-              )}>
-                {msg.content}
-                <p className={cn('text-xs mt-1', isMe ? 'text-primary-foreground/70' : 'text-muted-foreground')}>
+              <div
+                className={cn(
+                  'max-w-[72%] px-4 py-2.5 text-sm',
+                  isMe ? 'bg-primary text-primary-foreground' : 'bg-secondary text-foreground',
+                )}
+                style={{
+                  borderRadius: isMe ? '16px 4px 16px 16px' : '4px 16px 16px 16px',
+                }}
+              >
+                <p>{msg.content}</p>
+                <p className={cn(
+                  'text-xs mt-1',
+                  isMe ? 'text-primary-foreground/60 text-right' : 'text-muted-foreground',
+                )}>
                   {timeAgo(msg.createdAt)}
                 </p>
               </div>
@@ -102,12 +141,26 @@ export default function ConversationPage({ params }: { params: any }) {
         <div ref={bottomRef} />
       </div>
 
-      <div className="p-4 border-t border-border bg-card flex gap-2">
-        <Input value={input} onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-          placeholder="Votre message..." className="bg-secondary" />
-        <Button onClick={sendMessage} disabled={!input.trim()} className="px-4">
-          <Send size={18} />
+      {/* Input */}
+      <div className="flex-shrink-0 px-4 py-3 border-t border-border bg-card flex gap-2 items-center">
+        <div className="flex-1 flex items-center bg-secondary rounded-full px-4 h-11">
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+            placeholder="Votre message..."
+            aria-label="Message"
+            className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+          />
+        </div>
+        <Button
+          onClick={sendMessage}
+          disabled={!input.trim()}
+          size="icon"
+          className="h-11 w-11 rounded-full flex-shrink-0"
+          aria-label="Envoyer"
+        >
+          <Send size={18} aria-hidden="true" />
         </Button>
       </div>
     </div>
