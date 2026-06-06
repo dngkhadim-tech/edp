@@ -27,12 +27,16 @@ export class EmailService {
   ): Promise<void> {
     const appUrl = this.config.get<string>('APP_URL', 'http://localhost:3000');
     const link = `${appUrl}/auth/verify-email?token=${token}`;
-    await this.transporter.sendMail({
-      from: this.from,
-      to: user.email,
-      subject: 'Vérifie ton adresse email — EDP',
-      html: verificationTemplate(user.firstName, link),
-    });
+    try {
+      await this.transporter.sendMail({
+        from: this.from,
+        to: user.email,
+        subject: 'Vérifie ton adresse email — EDP',
+        html: verificationTemplate(user.firstName, link),
+      });
+    } catch (err) {
+      console.error('[EmailService] sendVerificationEmail failed:', err);
+    }
   }
 
   async sendPasswordResetEmail(
@@ -41,11 +45,15 @@ export class EmailService {
   ): Promise<void> {
     const appUrl = this.config.get<string>('APP_URL', 'http://localhost:3000');
     const link = `${appUrl}/auth/reset-password?token=${token}`;
-    await this.transporter.sendMail({
-      from: this.from,
-      to: user.email,
-      subject: 'Réinitialise ton mot de passe — EDP',
-      html: passwordResetTemplate(user.firstName, link),
-    });
+    try {
+      await this.transporter.sendMail({
+        from: this.from,
+        to: user.email,
+        subject: 'Réinitialise ton mot de passe — EDP',
+        html: passwordResetTemplate(user.firstName, link),
+      });
+    } catch (err) {
+      console.error('[EmailService] sendPasswordResetEmail failed:', err);
+    }
   }
 }
