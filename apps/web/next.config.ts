@@ -12,6 +12,7 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'i.pravatar.cc' },
       { protocol: 'https', hostname: 'avatars.githubusercontent.com' },
       { protocol: 'https', hostname: '**.cloudfront.net' },
+      { protocol: 'https', hostname: '**.supabase.co' },
     ],
     unoptimized: process.env.NODE_ENV === 'development',
   },
