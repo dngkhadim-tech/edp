@@ -77,7 +77,7 @@ export default function NewPostPage() {
       form.append('type', postType);
       if (location) form.append('location', location);
       hashtags.forEach((h) => form.append('hashtags', h));
-      await api.post('/posts', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+      await api.post('/posts', form);
       setPublishState('success');
     } catch (err) {
       setPublishState('error');

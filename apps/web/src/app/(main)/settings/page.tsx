@@ -90,7 +90,7 @@ export default function SettingsPage() {
     try {
       const form = new FormData();
       form.append('file', file);
-      await api.patch('/users/me/avatar', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+      await api.patch('/users/me/avatar', form);
       await fetchMe();
       toast({ title: 'Photo de profil mise à jour' });
     } catch {

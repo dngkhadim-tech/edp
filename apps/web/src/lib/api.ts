@@ -12,6 +12,11 @@ api.interceptors.request.use((config) => {
     const token = localStorage.getItem('edp_access_token');
     if (token) config.headers.Authorization = `Bearer ${token}`;
   }
+  // For FormData, remove the Content-Type default so the browser sets it
+  // automatically with the correct multipart boundary.
+  if (config.data instanceof FormData) {
+    delete config.headers['Content-Type'];
+  }
   return config;
 });
 
