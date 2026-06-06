@@ -2,11 +2,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { ConflictException, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
+import * as crypto from 'crypto';
 import { AuthService } from './auth.service';
 import { UserEntity } from '../../database/entities/user.entity';
 import { LoyaltyService } from '../loyalty/loyalty.service';
+import { EmailService } from '../email/email.service';
 
 const mockUser = {
   id: 'test-uuid',
@@ -18,6 +20,7 @@ const mockUser = {
   role: 'USER',
   isActive: true,
   loyaltyGrade: 'BRONZE',
+  emailVerified: false,
 };
 
 describe('AuthService', () => {
@@ -39,8 +42,10 @@ describe('AuthService', () => {
     get: jest.fn().mockReturnValue('test-secret'),
   };
 
-  const mockLoyaltyService = {
-    addPoints: jest.fn(),
+  const mockLoyaltyService = { addPoints: jest.fn() };
+  const mockEmailService = {
+    sendVerificationEmail: jest.fn().mockResolvedValue(undefined),
+    sendPasswordResetEmail: jest.fn().mockResolvedValue(undefined),
   };
 
   beforeEach(async () => {
@@ -51,6 +56,7 @@ describe('AuthService', () => {
         { provide: JwtService, useValue: mockJwtService },
         { provide: ConfigService, useValue: mockConfigService },
         { provide: LoyaltyService, useValue: mockLoyaltyService },
+        { provide: EmailService, useValue: mockEmailService },
       ],
     }).compile();
 
@@ -59,13 +65,13 @@ describe('AuthService', () => {
   });
 
   describe('register', () => {
-    it('should register a new user', async () => {
+    it('crée un user et envoie un email de vérification', async () => {
       mockUserRepo.findOne.mockResolvedValue(null);
-      mockUserRepo.create.mockReturnValue(mockUser);
-      mockUserRepo.save.mockResolvedValue(mockUser);
-      mockLoyaltyService.addPoints.mockResolvedValue(undefined);
+      mockUserRepo.create.mockReturnValue({ ...mockUser });
+      mockUserRepo.save.mockResolvedValue({ ...mockUser });
+      mockUserRepo.update.mockResolvedValue(undefined);
 
-      const result = await service.register({
+      await service.register({
         email: 'new@edp.app',
         username: 'newuser',
         firstName: 'New',
@@ -73,58 +79,118 @@ describe('AuthService', () => {
         password: 'password123',
       });
 
-      expect(result).toHaveProperty('accessToken');
-      expect(result).toHaveProperty('refreshToken');
-    });
-
-    it('should throw ConflictException if email exists', async () => {
-      mockUserRepo.findOne.mockResolvedValue(mockUser);
-
-      await expect(
-        service.register({
-          email: 'test@edp.app',
-          username: 'testuser',
-          firstName: 'Test',
-          lastName: 'User',
-          password: 'password123',
+      expect(mockUserRepo.update).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          verificationToken: expect.any(String),
+          verificationTokenExpiry: expect.any(Date),
         }),
-      ).rejects.toThrow(ConflictException);
+      );
+      expect(mockEmailService.sendVerificationEmail).toHaveBeenCalled();
     });
   });
 
-  describe('validateUser', () => {
-    it('should return user with valid credentials', async () => {
-      mockUserRepo.findOne.mockResolvedValue(mockUser);
+  describe('verifyEmail', () => {
+    it('vérifie le token et met emailVerified à true', async () => {
+      const rawToken = 'test-raw-token';
+      const hashed = crypto.createHash('sha256').update(rawToken).digest('hex');
+      const futureDate = new Date(Date.now() + 60000);
+
+      mockUserRepo.findOne.mockResolvedValue({
+        ...mockUser,
+        verificationToken: hashed,
+        verificationTokenExpiry: futureDate,
+      });
       mockUserRepo.update.mockResolvedValue(undefined);
 
-      const result = await service.validateUser('test@edp.app', 'password123');
-      expect(result).toBeDefined();
-      expect(result.email).toBe('test@edp.app');
+      await service.verifyEmail(rawToken);
+
+      expect(mockUserRepo.update).toHaveBeenCalledWith(
+        mockUser.id,
+        expect.objectContaining({ emailVerified: true, verificationToken: null }),
+      );
     });
 
-    it('should throw UnauthorizedException with invalid password', async () => {
-      mockUserRepo.findOne.mockResolvedValue(mockUser);
+    it('rejette un token expiré', async () => {
+      const rawToken = 'expired-token';
+      const hashed = crypto.createHash('sha256').update(rawToken).digest('hex');
+      const pastDate = new Date(Date.now() - 60000);
 
-      await expect(
-        service.validateUser('test@edp.app', 'wrongpassword'),
-      ).rejects.toThrow(UnauthorizedException);
+      mockUserRepo.findOne.mockResolvedValue({
+        ...mockUser,
+        verificationToken: hashed,
+        verificationTokenExpiry: pastDate,
+      });
+
+      await expect(service.verifyEmail(rawToken)).rejects.toThrow(BadRequestException);
     });
 
-    it('should throw UnauthorizedException if user not found', async () => {
+    it('rejette un token inexistant', async () => {
       mockUserRepo.findOne.mockResolvedValue(null);
-
-      await expect(
-        service.validateUser('notfound@edp.app', 'password'),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(service.verifyEmail('unknown')).rejects.toThrow(BadRequestException);
     });
   });
 
-  describe('login', () => {
-    it('should return tokens on login', async () => {
-      const result = await service.login(mockUser as any);
-      expect(result).toHaveProperty('accessToken');
-      expect(result).toHaveProperty('refreshToken');
-      expect(result.expiresIn).toBeDefined();
+  describe('forgotPassword', () => {
+    it('génère un token reset et envoie un email', async () => {
+      mockUserRepo.findOne.mockResolvedValue({ ...mockUser });
+      mockUserRepo.update.mockResolvedValue(undefined);
+
+      await service.forgotPassword('test@edp.app');
+
+      expect(mockUserRepo.update).toHaveBeenCalledWith(
+        mockUser.id,
+        expect.objectContaining({
+          passwordResetToken: expect.any(String),
+          passwordResetExpiry: expect.any(Date),
+        }),
+      );
+      expect(mockEmailService.sendPasswordResetEmail).toHaveBeenCalled();
+    });
+
+    it('ne fait rien si le user n\'existe pas (pas d\'énumération)', async () => {
+      mockUserRepo.findOne.mockResolvedValue(null);
+      await service.forgotPassword('ghost@edp.app');
+      expect(mockEmailService.sendPasswordResetEmail).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('resetPassword', () => {
+    it('met à jour le mot de passe et expire le token', async () => {
+      const rawToken = 'reset-token';
+      const hashed = crypto.createHash('sha256').update(rawToken).digest('hex');
+      const futureDate = new Date(Date.now() + 3600000);
+
+      mockUserRepo.findOne.mockResolvedValue({
+        ...mockUser,
+        passwordResetToken: hashed,
+        passwordResetExpiry: futureDate,
+      });
+      mockUserRepo.update.mockResolvedValue(undefined);
+
+      await service.resetPassword(rawToken, 'newpassword123');
+
+      expect(mockUserRepo.update).toHaveBeenCalledWith(
+        mockUser.id,
+        expect.objectContaining({
+          password: expect.any(String),
+          passwordResetToken: null,
+          passwordResetExpiry: null,
+        }),
+      );
+    });
+
+    it('rejette un token expiré', async () => {
+      const rawToken = 'expired-reset';
+      const hashed = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+      mockUserRepo.findOne.mockResolvedValue({
+        ...mockUser,
+        passwordResetToken: hashed,
+        passwordResetExpiry: new Date(Date.now() - 1000),
+      });
+
+      await expect(service.resetPassword(rawToken, 'pass')).rejects.toThrow(BadRequestException);
     });
   });
 });

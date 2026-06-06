@@ -7,11 +7,13 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
+import * as crypto from 'crypto';
 import { UserEntity } from '../../database/entities/user.entity';
 import { RegisterDto } from './dto/register.dto';
 import { AuthTokens, UserRole } from '@edp/shared';
 import { LoyaltyService } from '../loyalty/loyalty.service';
 import { LoyaltyActionType } from '@edp/shared';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class AuthService {
@@ -21,6 +23,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly loyaltyService: LoyaltyService,
+    private readonly emailService: EmailService,
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthTokens> {
@@ -42,6 +45,16 @@ export class AuthService {
       user.id,
       LoyaltyActionType.PROFILE_COMPLETE,
       user.id,
+    );
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+    await this.userRepo.update(user.id, {
+      verificationToken: hashedToken,
+      verificationTokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    });
+    void this.emailService.sendVerificationEmail(
+      { email: user.email, firstName: user.firstName },
+      rawToken,
     );
     return this.generateTokens(user);
   }
@@ -112,6 +125,62 @@ export class AuthService {
 
     await this.userRepo.update(user.id, { lastLoginAt: new Date() });
     return this.generateTokens(user);
+  }
+
+  async verifyEmail(token: string): Promise<void> {
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    const user = await this.userRepo.findOne({ where: { verificationToken: hashedToken } });
+    if (!user || !user.verificationTokenExpiry || user.verificationTokenExpiry < new Date()) {
+      throw new BadRequestException('Token invalide ou expiré');
+    }
+    await this.userRepo.update(user.id, {
+      emailVerified: true,
+      verificationToken: null,
+      verificationTokenExpiry: null,
+    });
+  }
+
+  async resendVerification(email: string): Promise<void> {
+    const user = await this.userRepo.findOne({ where: { email } });
+    if (!user || user.emailVerified) return;
+    // Rate limit : 1 envoi par 5 min — si l'expiry est encore > 23h55m dans le futur, le token a été généré il y a < 5 min
+    const fiveMinWindowMs = 23 * 60 * 60 * 1000 + 55 * 60 * 1000;
+    if (user.verificationTokenExpiry && user.verificationTokenExpiry > new Date(Date.now() + fiveMinWindowMs)) {
+      return;
+    }
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+    await this.userRepo.update(user.id, {
+      verificationToken: hashedToken,
+      verificationTokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    });
+    void this.emailService.sendVerificationEmail({ email: user.email, firstName: user.firstName }, rawToken);
+  }
+
+  async forgotPassword(email: string): Promise<void> {
+    const user = await this.userRepo.findOne({ where: { email } });
+    if (!user) return;
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+    await this.userRepo.update(user.id, {
+      passwordResetToken: hashedToken,
+      passwordResetExpiry: new Date(Date.now() + 60 * 60 * 1000),
+    });
+    void this.emailService.sendPasswordResetEmail({ email: user.email, firstName: user.firstName }, rawToken);
+  }
+
+  async resetPassword(token: string, password: string): Promise<void> {
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    const user = await this.userRepo.findOne({ where: { passwordResetToken: hashedToken } });
+    if (!user || !user.passwordResetExpiry || user.passwordResetExpiry < new Date()) {
+      throw new BadRequestException('Token invalide ou expiré');
+    }
+    const hashed = await bcrypt.hash(password, 12);
+    await this.userRepo.update(user.id, {
+      password: hashed,
+      passwordResetToken: null,
+      passwordResetExpiry: null,
+    });
   }
 
   private async generateUniqueUsername(base: string): Promise<string> {
