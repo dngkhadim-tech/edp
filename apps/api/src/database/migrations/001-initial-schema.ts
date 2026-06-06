@@ -9,14 +9,10 @@ export class InitialSchema1000000000001 implements MigrationInterface {
     await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "cube"`);
     await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "pg_trgm"`);
 
+    await queryRunner.query(`DO $$ BEGIN CREATE TYPE "users_role_enum" AS ENUM('USER', 'ESTABLISHMENT', 'ADMIN'); EXCEPTION WHEN duplicate_object THEN null; END $$`);
+    await queryRunner.query(`DO $$ BEGIN CREATE TYPE "users_loyalty_grade_enum" AS ENUM('BRONZE', 'SILVER', 'GOLD', 'PLATINUM', 'DIAMOND'); EXCEPTION WHEN duplicate_object THEN null; END $$`);
     await queryRunner.query(`
-      CREATE TYPE "users_role_enum" AS ENUM('USER', 'ESTABLISHMENT', 'ADMIN')
-    `);
-    await queryRunner.query(`
-      CREATE TYPE "users_loyalty_grade_enum" AS ENUM('BRONZE', 'SILVER', 'GOLD', 'PLATINUM', 'DIAMOND')
-    `);
-    await queryRunner.query(`
-      CREATE TABLE "users" (
+      CREATE TABLE IF NOT EXISTS "users" (
         "id" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         "email" VARCHAR UNIQUE NOT NULL,
         "username" VARCHAR UNIQUE NOT NULL,
@@ -49,14 +45,10 @@ export class InitialSchema1000000000001 implements MigrationInterface {
       )
     `);
 
+    await queryRunner.query(`DO $$ BEGIN CREATE TYPE "establishments_type_enum" AS ENUM('RESTAURANT','HOTEL','BAR','CAFE','TOURIST_SPOT','EXPERIENCE'); EXCEPTION WHEN duplicate_object THEN null; END $$`);
+    await queryRunner.query(`DO $$ BEGIN CREATE TYPE "establishments_price_range_enum" AS ENUM('BUDGET','MODERATE','EXPENSIVE','LUXURY'); EXCEPTION WHEN duplicate_object THEN null; END $$`);
     await queryRunner.query(`
-      CREATE TYPE "establishments_type_enum" AS ENUM('RESTAURANT','HOTEL','BAR','CAFE','TOURIST_SPOT','EXPERIENCE')
-    `);
-    await queryRunner.query(`
-      CREATE TYPE "establishments_price_range_enum" AS ENUM('BUDGET','MODERATE','EXPENSIVE','LUXURY')
-    `);
-    await queryRunner.query(`
-      CREATE TABLE "establishments" (
+      CREATE TABLE IF NOT EXISTS "establishments" (
         "id" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         "user_id" UUID NOT NULL REFERENCES users(id),
         "name" VARCHAR NOT NULL,
@@ -91,11 +83,9 @@ export class InitialSchema1000000000001 implements MigrationInterface {
       )
     `);
 
+    await queryRunner.query(`DO $$ BEGIN CREATE TYPE "posts_type_enum" AS ENUM('PHOTO','VIDEO','REEL','STORY','REVIEW','PROMOTION'); EXCEPTION WHEN duplicate_object THEN null; END $$`);
     await queryRunner.query(`
-      CREATE TYPE "posts_type_enum" AS ENUM('PHOTO','VIDEO','REEL','STORY','REVIEW','PROMOTION')
-    `);
-    await queryRunner.query(`
-      CREATE TABLE "posts" (
+      CREATE TABLE IF NOT EXISTS "posts" (
         "id" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         "author_id" UUID NOT NULL,
         "author_type" VARCHAR NOT NULL DEFAULT 'USER',
@@ -119,7 +109,7 @@ export class InitialSchema1000000000001 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
-      CREATE TABLE "reviews" (
+      CREATE TABLE IF NOT EXISTS "reviews" (
         "id" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         "user_id" UUID NOT NULL REFERENCES users(id),
         "establishment_id" UUID NOT NULL REFERENCES establishments(id),
@@ -139,14 +129,10 @@ export class InitialSchema1000000000001 implements MigrationInterface {
       )
     `);
 
+    await queryRunner.query(`DO $$ BEGIN CREATE TYPE "reservations_type_enum" AS ENUM('RESTAURANT','HOTEL'); EXCEPTION WHEN duplicate_object THEN null; END $$`);
+    await queryRunner.query(`DO $$ BEGIN CREATE TYPE "reservations_status_enum" AS ENUM('PENDING','CONFIRMED','CANCELLED','COMPLETED','NO_SHOW'); EXCEPTION WHEN duplicate_object THEN null; END $$`);
     await queryRunner.query(`
-      CREATE TYPE "reservations_type_enum" AS ENUM('RESTAURANT','HOTEL')
-    `);
-    await queryRunner.query(`
-      CREATE TYPE "reservations_status_enum" AS ENUM('PENDING','CONFIRMED','CANCELLED','COMPLETED','NO_SHOW')
-    `);
-    await queryRunner.query(`
-      CREATE TABLE "reservations" (
+      CREATE TABLE IF NOT EXISTS "reservations" (
         "id" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         "user_id" UUID NOT NULL REFERENCES users(id),
         "establishment_id" UUID NOT NULL REFERENCES establishments(id),
@@ -163,7 +149,7 @@ export class InitialSchema1000000000001 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
-      CREATE TABLE "follows" (
+      CREATE TABLE IF NOT EXISTS "follows" (
         "id" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         "follower_id" UUID NOT NULL REFERENCES users(id),
         "following_id" UUID NOT NULL,
@@ -173,13 +159,9 @@ export class InitialSchema1000000000001 implements MigrationInterface {
       )
     `);
 
+    await queryRunner.query(`DO $$ BEGIN CREATE TYPE "loyalty_transactions_action_enum" AS ENUM('RESERVATION','REVIEW','PHOTO_POST','VIDEO_POST','SHARE','INVITE','DAILY_LOGIN','PROFILE_COMPLETE'); EXCEPTION WHEN duplicate_object THEN null; END $$`);
     await queryRunner.query(`
-      CREATE TYPE "loyalty_transactions_action_enum" AS ENUM(
-        'RESERVATION','REVIEW','PHOTO_POST','VIDEO_POST','SHARE','INVITE','DAILY_LOGIN','PROFILE_COMPLETE'
-      )
-    `);
-    await queryRunner.query(`
-      CREATE TABLE "loyalty_transactions" (
+      CREATE TABLE IF NOT EXISTS "loyalty_transactions" (
         "id" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         "user_id" UUID NOT NULL REFERENCES users(id),
         "action" "loyalty_transactions_action_enum" NOT NULL,
@@ -191,7 +173,7 @@ export class InitialSchema1000000000001 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
-      CREATE TABLE "messages" (
+      CREATE TABLE IF NOT EXISTS "messages" (
         "id" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         "conversation_id" VARCHAR NOT NULL,
         "sender_id" UUID NOT NULL REFERENCES users(id),
@@ -204,14 +186,9 @@ export class InitialSchema1000000000001 implements MigrationInterface {
       )
     `);
 
+    await queryRunner.query(`DO $$ BEGIN CREATE TYPE "notifications_type_enum" AS ENUM('LIKE','COMMENT','FOLLOW','REVIEW','RESERVATION_CONFIRMED','RESERVATION_CANCELLED','MESSAGE','LOYALTY_UPGRADE','PROMOTION','MENTION'); EXCEPTION WHEN duplicate_object THEN null; END $$`);
     await queryRunner.query(`
-      CREATE TYPE "notifications_type_enum" AS ENUM(
-        'LIKE','COMMENT','FOLLOW','REVIEW','RESERVATION_CONFIRMED',
-        'RESERVATION_CANCELLED','MESSAGE','LOYALTY_UPGRADE','PROMOTION','MENTION'
-      )
-    `);
-    await queryRunner.query(`
-      CREATE TABLE "notifications" (
+      CREATE TABLE IF NOT EXISTS "notifications" (
         "id" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         "user_id" UUID NOT NULL REFERENCES users(id),
         "actor_id" UUID,
@@ -225,22 +202,22 @@ export class InitialSchema1000000000001 implements MigrationInterface {
     `);
 
     // Indexes
-    await queryRunner.query(`CREATE INDEX "idx_posts_author_id" ON "posts"("author_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_posts_establishment_id" ON "posts"("establishment_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_posts_expires_at" ON "posts"("expires_at")`);
-    await queryRunner.query(`CREATE INDEX "idx_follows_follower_id" ON "follows"("follower_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_follows_following_id" ON "follows"("following_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_messages_conversation_id" ON "messages"("conversation_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_notifications_user_id" ON "notifications"("user_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_loyalty_user_id" ON "loyalty_transactions"("user_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_users_email" ON "users"("email")`);
-    await queryRunner.query(`CREATE INDEX "idx_users_username" ON "users"("username")`);
-    await queryRunner.query(`CREATE INDEX "idx_establishments_slug" ON "establishments"("slug")`);
-    await queryRunner.query(`CREATE INDEX "idx_establishments_type" ON "establishments"("type")`);
-    await queryRunner.query(`CREATE INDEX "idx_establishments_geo" ON "establishments" USING GIST(ll_to_earth(latitude::float, longitude::float))`);
-    await queryRunner.query(`CREATE INDEX "idx_posts_hashtags" ON "posts" USING GIN("hashtags")`);
-    await queryRunner.query(`CREATE INDEX "idx_establishments_name_trgm" ON "establishments" USING GIN("name" gin_trgm_ops)`);
-    await queryRunner.query(`CREATE INDEX "idx_users_username_trgm" ON "users" USING GIN("username" gin_trgm_ops)`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_posts_author_id" ON "posts"("author_id")`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_posts_establishment_id" ON "posts"("establishment_id")`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_posts_expires_at" ON "posts"("expires_at")`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_follows_follower_id" ON "follows"("follower_id")`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_follows_following_id" ON "follows"("following_id")`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_messages_conversation_id" ON "messages"("conversation_id")`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_notifications_user_id" ON "notifications"("user_id")`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_loyalty_user_id" ON "loyalty_transactions"("user_id")`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_users_email" ON "users"("email")`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_users_username" ON "users"("username")`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_establishments_slug" ON "establishments"("slug")`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_establishments_type" ON "establishments"("type")`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_establishments_geo" ON "establishments" USING GIST(ll_to_earth(latitude::float, longitude::float))`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_posts_hashtags" ON "posts" USING GIN("hashtags")`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_establishments_name_trgm" ON "establishments" USING GIN("name" gin_trgm_ops)`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_users_username_trgm" ON "users" USING GIN("username" gin_trgm_ops)`);
   }
 
   async down(queryRunner: QueryRunner): Promise<void> {
