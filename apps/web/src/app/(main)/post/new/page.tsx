@@ -72,7 +72,7 @@ export default function NewPostPage() {
     setPublishState('loading');
     try {
       const form = new FormData();
-      form.append('media', file);
+      form.append('files', file);
       form.append('caption', caption);
       form.append('type', postType);
       if (location) form.append('location', location);

@@ -2,9 +2,9 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import Image from 'next/image';
 import Link from 'next/link';
 import { api } from '@/lib/api';
+import { EdpLogo } from '@/components/ui/edp-logo';
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
@@ -52,7 +52,7 @@ function VerifyEmailContent() {
 export default function VerifyEmailPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-6 p-8">
-      <Image src="/edplogo.png" alt="EDP" width={128} height={64} priority />
+      <EdpLogo withTagline className="h-20 w-auto" />
       <Suspense fallback={<p className="text-muted-foreground">Chargement…</p>}>
         <VerifyEmailContent />
       </Suspense>

@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { api } from '@/lib/api';
+import { EdpLogo } from '@/components/ui/edp-logo';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -20,7 +20,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-6 p-8">
-      <Image src="/edplogo.png" alt="EDP" width={128} height={64} priority />
+      <EdpLogo withTagline className="h-20 w-auto" />
       {sent ? (
         <div className="text-center">
           <p className="font-semibold text-lg">Email envoyé !</p>

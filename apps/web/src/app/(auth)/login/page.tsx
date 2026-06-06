@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff } from 'lucide-react';
+import { EdpLogo } from '@/components/ui/edp-logo';
 
 const schema = z.object({
   email: z.string().email('Email invalide'),
@@ -46,7 +47,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex">
       {/* Left hero — desktop only */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary/20 via-background to-background flex-col justify-between p-12">
-        <span className="text-4xl font-heading font-extrabold text-primary">EDP</span>
+        <EdpLogo withTagline className="h-16 w-auto text-primary mx-auto" />
         <div>
           <p className="text-2xl font-light text-foreground/80">Partagez vos expériences,</p>
           <p className="text-2xl font-light text-foreground/80">réservez vos moments.</p>
@@ -58,7 +59,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md space-y-8">
           {/* Mobile logo */}
           <div className="text-center lg:hidden">
-            <span className="text-4xl font-heading font-extrabold text-primary">EDP</span>
+            <EdpLogo withTagline className="h-16 w-auto text-primary mx-auto" />
           </div>
 
           <div className="text-center">
