@@ -14,5 +14,6 @@ export const databaseConfig = (
       ? { rejectUnauthorized: false }
       : false,
   migrations: ['dist/database/migrations/*.js'],
-  migrationsRun: config.get('NODE_ENV') === 'production',
+  // Schema is pre-applied on Supabase — migrations run manually via db:migrate
+  migrationsRun: false,
 });
