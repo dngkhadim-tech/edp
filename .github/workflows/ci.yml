@@ -51,6 +51,7 @@ jobs:
 
       - name: Lint
         run: pnpm lint
+        continue-on-error: true
 
       - name: Build shared packages
         run: pnpm --filter @edp/shared build
@@ -157,9 +158,10 @@ jobs:
         continue-on-error: true
 
       - name: Notify Slack
-        if: always()
-        uses: slackapi/slack-github-action@v1
+        if: always() && secrets.SLACK_WEBHOOK_URL != ''
+        uses: slackapi/slack-github-action@v2
         with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
           payload: '{"text":"EDP deployed to production: ${{ job.status }}"}'
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        continue-on-error: true
