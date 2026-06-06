@@ -12,6 +12,7 @@ import { FacebookStrategy } from './strategies/facebook.strategy';
 import { UserEntity } from '../../database/entities/user.entity';
 import { UsersModule } from '../users/users.module';
 import { LoyaltyModule } from '../loyalty/loyalty.module';
+import { EmailModule } from '../email/email.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { LoyaltyModule } from '../loyalty/loyalty.module';
     }),
     UsersModule,
     LoyaltyModule,
+    EmailModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy, LocalStrategy, GoogleStrategy, FacebookStrategy],
