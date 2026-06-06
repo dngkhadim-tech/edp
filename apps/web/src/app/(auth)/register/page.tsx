@@ -92,8 +92,13 @@ export default function RegisterPage() {
     try {
       await registerUser({ ...data, isEstablishment: accountType === 'establishment' });
       router.push('/feed');
-    } catch {
-      toast({ variant: 'destructive', title: 'Erreur', description: "Erreur lors de l'inscription" });
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: typeof msg === 'string' ? msg : "Erreur lors de l'inscription",
+      });
     }
   };
 
