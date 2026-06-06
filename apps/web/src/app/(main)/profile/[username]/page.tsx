@@ -55,7 +55,7 @@ export default function ProfilePage() {
 
   const { data: savedPosts } = useQuery({
     queryKey: ['posts', 'saved', profile?.id],
-    queryFn: () => api.get(`/posts/saved`).then((r) => r.data),
+    queryFn: () => api.get(`/users/me/saved`).then((r) => r.data),
     enabled: !!profile?.id && gridTab === 'saved',
   });
 
