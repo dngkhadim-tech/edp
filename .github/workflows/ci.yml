@@ -157,11 +157,3 @@ jobs:
             -d "{\"query\": \"mutation { serviceUpdate(id: \\\"bacd558c-2fcc-4665-a756-9528fc42feb5\\\", input: { source: { image: \\\"ghcr.io/dngkhadim-tech/edp-api:${{ github.sha }}\\\" } }) { id } }\"}"
         continue-on-error: true
 
-      - name: Notify Slack
-        if: always() && secrets.SLACK_WEBHOOK_URL != ''
-        uses: slackapi/slack-github-action@v2
-        with:
-          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
-          webhook-type: incoming-webhook
-          payload: '{"text":"EDP deployed to production: ${{ job.status }}"}'
-        continue-on-error: true
