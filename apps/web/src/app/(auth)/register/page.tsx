@@ -91,7 +91,7 @@ export default function RegisterPage() {
   const onSubmit = async (data: FormData) => {
     try {
       await registerUser({ ...data, isEstablishment: accountType === 'establishment' });
-      router.push('/feed');
+      window.location.replace('/feed');
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
       toast({

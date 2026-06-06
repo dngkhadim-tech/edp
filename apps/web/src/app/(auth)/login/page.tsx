@@ -32,7 +32,7 @@ export default function LoginPage() {
   const onSubmit = async (data: FormData) => {
     try {
       await login(data.email, data.password);
-      router.push('/feed');
+      window.location.replace('/feed');
     } catch {
       toast({
         variant: 'destructive',
