@@ -3,19 +3,36 @@ import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 
 export const databaseConfig = (
   config: ConfigService,
-): TypeOrmModuleOptions => ({
-  type: 'postgres',
-  url: config.get('DATABASE_URL'),
-  autoLoadEntities: true,
-  synchronize: config.get('NODE_ENV') === 'development',
-  logging: config.get('NODE_ENV') === 'development',
-  ssl: config.get('DATABASE_URL', '').includes('supabase') || config.get('NODE_ENV') === 'production'
-    ? { rejectUnauthorized: false }
-    : false,
-  extra: config.get('NODE_ENV') === 'production'
-    ? { ssl: { rejectUnauthorized: false } }
-    : undefined,
-  migrations: ['dist/database/migrations/*.js'],
-  // Schema is pre-applied on Supabase — migrations run manually via db:migrate
-  migrationsRun: false,
-});
+): TypeOrmModuleOptions => {
+  const dbUrl = config.get<string>('DATABASE_URL', '');
+  const isProduction = config.get('NODE_ENV') === 'production';
+
+  // Supabase session pooler (port 5432) needs explicit SNI so it can route
+  // to the correct tenant — Node.js 22 no longer sends a project-specific
+  // SNI automatically when the host is the shared pooler hostname.
+  const poolerMatch = dbUrl.match(/pooler\.supabase\.com/);
+  const projectMatch = dbUrl.match(/db\.([a-z]+)\.supabase\.co/) ||
+    dbUrl.match(/@aws-[^/]+\.pooler\.supabase\.com/);
+
+  const sslConfig =
+    dbUrl.includes('supabase') || isProduction
+      ? {
+          rejectUnauthorized: false,
+          ...(poolerMatch && {
+            servername: `db.${process.env.SUPABASE_PROJECT_REF ?? 'neprpfuszewhkrgrkzcv'}.supabase.co`,
+          }),
+        }
+      : false;
+
+  return {
+    type: 'postgres',
+    url: dbUrl,
+    autoLoadEntities: true,
+    synchronize: !isProduction,
+    logging: !isProduction,
+    ssl: sslConfig,
+    extra: isProduction ? { ssl: sslConfig } : undefined,
+    migrations: ['dist/database/migrations/*.js'],
+    migrationsRun: false,
+  };
+};
