@@ -1,25 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import * as sharp from 'sharp';
 import { v4 as uuidv4 } from 'uuid';
 import * as path from 'path';
 
+const BUCKET = 'edp-media';
+
 @Injectable()
 export class MediaService {
-  private s3: S3Client;
-  private bucket: string;
+  private supabase: SupabaseClient;
 
   constructor(private readonly config: ConfigService) {
-    this.s3 = new S3Client({
-      region: config.get('AWS_REGION', 'eu-west-1'),
-      credentials: {
-        accessKeyId: config.get('AWS_ACCESS_KEY_ID', ''),
-        secretAccessKey: config.get('AWS_SECRET_ACCESS_KEY', ''),
-      },
-    });
-    this.bucket = config.get('AWS_S3_BUCKET', 'edp-media');
+    this.supabase = createClient(
+      config.get<string>('SUPABASE_URL', ''),
+      config.get<string>('SUPABASE_SERVICE_KEY', ''),
+    );
   }
 
   async uploadFile(
@@ -40,34 +36,31 @@ export class MediaService {
       contentType = 'image/webp';
     }
 
-    await this.s3.send(
-      new PutObjectCommand({
-        Bucket: this.bucket,
-        Key: key,
-        Body: buffer,
-        ContentType: contentType,
-        ACL: 'public-read',
-      }),
-    );
+    const { error } = await this.supabase.storage
+      .from(BUCKET)
+      .upload(key, buffer, { contentType, upsert: false });
 
-    return `https://${this.bucket}.s3.amazonaws.com/${key}`;
+    if (error) throw new Error(`Upload failed: ${error.message}`);
+
+    return this.supabase.storage.from(BUCKET).getPublicUrl(key).data.publicUrl;
   }
 
   async deleteFile(url: string): Promise<void> {
-    const key = url.split('.amazonaws.com/')[1];
+    const marker = `/object/public/${BUCKET}/`;
+    const key = url.split(marker)[1];
     if (!key) return;
-    await this.s3.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: key }));
+    await this.supabase.storage.from(BUCKET).remove([key]);
   }
 
   async getPresignedUrl(folder: string, filename: string, contentType: string) {
     const key = `${folder}/${uuidv4()}-${filename}`;
-    const command = new PutObjectCommand({
-      Bucket: this.bucket,
-      Key: key,
-      ContentType: contentType,
-      ACL: 'public-read',
-    });
-    const url = await getSignedUrl(this.s3, command, { expiresIn: 3600 });
-    return { url, key, publicUrl: `https://${this.bucket}.s3.amazonaws.com/${key}` };
+    const { data, error } = await this.supabase.storage
+      .from(BUCKET)
+      .createSignedUploadUrl(key);
+
+    if (error || !data) throw new Error(`Presign failed: ${error?.message}`);
+
+    const publicUrl = this.supabase.storage.from(BUCKET).getPublicUrl(key).data.publicUrl;
+    return { url: data.signedUrl, key, publicUrl };
   }
 }

@@ -77,6 +77,9 @@ importers:
       '@nestjs/websockets':
         specifier: ^10.3.0
         version: 10.4.22(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22)(@nestjs/platform-socket.io@10.4.22)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@supabase/supabase-js':
+        specifier: ^2.107.0
+        version: 2.107.0
       aws-sdk:
         specifier: ^2.1614.0
         version: 2.1693.0
@@ -414,10 +417,10 @@ importers:
         version: 0.397.0(react@19.2.7)
       next:
         specifier: 16.2.7
-        version: 16.2.7(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.60.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+        version: 16.2.7(@opentelemetry/api@1.9.1)(@playwright/test@1.60.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       next-auth:
         specifier: ^4.24.7
-        version: 4.24.14(next@16.2.7(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.60.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+        version: 4.24.14(next@16.2.7(@opentelemetry/api@1.9.1)(@playwright/test@1.60.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -3224,6 +3227,33 @@ packages:
     resolution: {integrity: sha512-KrMOL+sH69htCIXCaZ4JluJ35bchuCCznyPyrbN8JXSGQfwBI1SuIEMZNwvy8L8ykj29t6sa5BAAiL7fNoLZ8A==}
     engines: {node: '>=12.16'}
 
+  '@supabase/auth-js@2.107.0':
+    resolution: {integrity: sha512-XA7x+WIeIvuC3GTZ2ey67QcBbGw4n+o5B7M+dMm9KT1lL3wX1B52DfEWW00WuPt/LnniJLLIn1WIm9YPtuxzKQ==}
+    engines: {node: '>=20.0.0'}
+
+  '@supabase/functions-js@2.107.0':
+    resolution: {integrity: sha512-iMtRUmEj1KOgQd/a3MR4hnBlPnZc62DW8+z8aPpnzbxWkexEZUVL2fSgvvp15gqFg1V55e2yMGqgK+yhSQxp5w==}
+    engines: {node: '>=20.0.0'}
+
+  '@supabase/phoenix@0.4.2':
+    resolution: {integrity: sha512-YSAGnmDAfuleFCVt3CeurQZAhxRfXWeZIIkwp7NhYzQ1UwW6ePSnzsFAiUm/mbCkfoCf70QQHKW/K6RKh52a4A==}
+
+  '@supabase/postgrest-js@2.107.0':
+    resolution: {integrity: sha512-7ARs47/tyIjX7T0Ive20d4NY8zQYXsP5/P07jJWxffSIM2gpnSnGRnL/Fe15GPbdjsW2sTYeckHcyaoKbM6yWQ==}
+    engines: {node: '>=20.0.0'}
+
+  '@supabase/realtime-js@2.107.0':
+    resolution: {integrity: sha512-cF2KYdR3JIn9YlWGeluY9S0G+otqTdL6hB8GzpatlEIY6fZudCcyFo6Dc3+X9tjeb+x9XcIyNAk9qhNAknjH1A==}
+    engines: {node: '>=20.0.0'}
+
+  '@supabase/storage-js@2.107.0':
+    resolution: {integrity: sha512-/X8OOVwKBn8aVKuHAGOz2yLA0d2OauqhVuy4mNtN+o7wttHOgx1/j+pqOzlsjmhOHrYykF6AJNZhs3gKZzcMUw==}
+    engines: {node: '>=20.0.0'}
+
+  '@supabase/supabase-js@2.107.0':
+    resolution: {integrity: sha512-ChKzdlWVweMUUhr0U79JhMmgm1haS/C5JquaiCDr70JaGARRtjjoY9rkIheXWybXxTSNzRiQs3Sk8IAg1HS3ZA==}
+    engines: {node: '>=20.0.0'}
+
   '@swc/helpers@0.5.15':
     resolution: {integrity: sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g==}
 
@@ -5892,6 +5922,10 @@ packages:
   human-signals@2.1.0:
     resolution: {integrity: sha512-B4FFZ6q/T2jhhksgkbEW3HBvWIfDW85snkQgawt07S7J5QXTk6BkNV+0yAeZrM5QpMAdYlocGoljn0sJ/WQkFw==}
     engines: {node: '>=10.17.0'}
+
+  iceberg-js@0.8.1:
+    resolution: {integrity: sha512-1dhVQZXhcHje7798IVM+xoo/1ZdVfzOMIc8/rgVSijRK38EDqOJoGula9N/8ZI5RD8QTxNQtK/Gozpr+qUqRRA==}
+    engines: {node: '>=20.0.0'}
 
   iconv-lite@0.4.24:
     resolution: {integrity: sha512-v3MXnZAcvnywkTUEZomIActle7RXXeedOR31wwl7VlyoXO4Qi9arvSenNQWne1TcRwhCL1HwLI21bEqdpj8/rA==}
@@ -13092,6 +13126,38 @@ snapshots:
 
   '@stripe/stripe-js@4.10.0': {}
 
+  '@supabase/auth-js@2.107.0':
+    dependencies:
+      tslib: 2.8.1
+
+  '@supabase/functions-js@2.107.0':
+    dependencies:
+      tslib: 2.8.1
+
+  '@supabase/phoenix@0.4.2': {}
+
+  '@supabase/postgrest-js@2.107.0':
+    dependencies:
+      tslib: 2.8.1
+
+  '@supabase/realtime-js@2.107.0':
+    dependencies:
+      '@supabase/phoenix': 0.4.2
+      tslib: 2.8.1
+
+  '@supabase/storage-js@2.107.0':
+    dependencies:
+      iceberg-js: 0.8.1
+      tslib: 2.8.1
+
+  '@supabase/supabase-js@2.107.0':
+    dependencies:
+      '@supabase/auth-js': 2.107.0
+      '@supabase/functions-js': 2.107.0
+      '@supabase/postgrest-js': 2.107.0
+      '@supabase/realtime-js': 2.107.0
+      '@supabase/storage-js': 2.107.0
+
   '@swc/helpers@0.5.15':
     dependencies:
       tslib: 2.8.1
@@ -16292,6 +16358,8 @@ snapshots:
 
   human-signals@2.1.0: {}
 
+  iceberg-js@0.8.1: {}
+
   iconv-lite@0.4.24:
     dependencies:
       safer-buffer: 2.1.2
@@ -17750,13 +17818,13 @@ snapshots:
 
   nested-error-stacks@2.0.1: {}
 
-  next-auth@4.24.14(next@16.2.7(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.60.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
+  next-auth@4.24.14(next@16.2.7(@opentelemetry/api@1.9.1)(@playwright/test@1.60.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
     dependencies:
       '@babel/runtime': 7.29.7
       '@panva/hkdf': 1.2.1
       cookie: 0.7.2
       jose: 4.15.9
-      next: 16.2.7(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.60.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      next: 16.2.7(@opentelemetry/api@1.9.1)(@playwright/test@1.60.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       oauth: 0.9.15
       openid-client: 5.7.1
       preact: 10.29.2
@@ -17770,7 +17838,7 @@ snapshots:
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
 
-  next@16.2.7(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.60.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
+  next@16.2.7(@opentelemetry/api@1.9.1)(@playwright/test@1.60.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
     dependencies:
       '@next/env': 16.2.7
       '@swc/helpers': 0.5.15
@@ -17779,7 +17847,7 @@ snapshots:
       postcss: 8.4.31
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
-      styled-jsx: 5.1.6(@babel/core@7.29.7)(react@19.2.7)
+      styled-jsx: 5.1.6(react@19.2.7)
     optionalDependencies:
       '@next/swc-darwin-arm64': 16.2.7
       '@next/swc-darwin-x64': 16.2.7
@@ -19401,12 +19469,10 @@ snapshots:
   stubs@3.0.0:
     optional: true
 
-  styled-jsx@5.1.6(@babel/core@7.29.7)(react@19.2.7):
+  styled-jsx@5.1.6(react@19.2.7):
     dependencies:
       client-only: 0.0.1
       react: 19.2.7
-    optionalDependencies:
-      '@babel/core': 7.29.7
 
   sucrase@3.34.0:
     dependencies:
