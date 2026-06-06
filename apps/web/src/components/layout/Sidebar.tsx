@@ -42,9 +42,9 @@ export function Sidebar() {
       <div className="p-3 lg:p-6">
         <Link href="/feed" className="block" aria-label="EDP — Eat Drink Pose">
           {/* Narrow (icon-only): monogram only */}
-          <EdpLogo className="lg:hidden h-8 w-auto" />
+          <EdpLogo className="lg:hidden h-8 w-auto text-primary" />
           {/* Wide: full logo with tagline */}
-          <EdpLogo withTagline className="hidden lg:block h-14 w-auto" />
+          <EdpLogo withTagline className="hidden lg:block h-14 w-auto text-primary" />
         </Link>
       </div>
 
