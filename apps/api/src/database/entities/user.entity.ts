@@ -94,6 +94,20 @@ export class UserEntity {
   @Column({ name: 'email_verified', default: false })
   emailVerified: boolean;
 
+  @Exclude()
+  @Column({ name: 'verification_token', nullable: true })
+  verificationToken?: string;
+
+  @Column({ name: 'verification_token_expiry', nullable: true, type: 'timestamptz' })
+  verificationTokenExpiry?: Date;
+
+  @Exclude()
+  @Column({ name: 'password_reset_token', nullable: true })
+  passwordResetToken?: string;
+
+  @Column({ name: 'password_reset_expiry', nullable: true, type: 'timestamptz' })
+  passwordResetExpiry?: Date;
+
   @Column({ name: 'last_login_at', nullable: true, type: 'timestamp' })
   lastLoginAt?: Date;
 

@@ -31,6 +31,7 @@ export interface User {
   isVerified: boolean;
   isPremium: boolean;
   isActive: boolean;
+  emailVerified: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
