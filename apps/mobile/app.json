@@ -36,8 +36,15 @@
       ["expo-notifications", { "icon": "./assets/icon.png", "color": "#C9A84C" }]
     ],
     "scheme": "edp",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/CHANGE_ME_EAS_PROJECT_ID"
+    },
     "extra": {
-      "eas": { "projectId": "your-eas-project-id" }
-    }
+      "eas": { "projectId": "CHANGE_ME_EAS_PROJECT_ID" }
+    },
+    "owner": "dngkhadim-tech"
   }
 }
