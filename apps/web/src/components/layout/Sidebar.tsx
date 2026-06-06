@@ -41,10 +41,10 @@ export function Sidebar() {
     <aside className="fixed left-0 top-0 h-full w-16 lg:w-60 border-r border-border bg-card flex flex-col z-40 hidden md:flex">
       <div className="p-3 lg:p-6">
         <Link href="/feed" className="block" aria-label="EDP — Eat Drink Pose">
-          {/* Narrow (icon-only): compact monogram */}
-          <EdpLogo className="lg:hidden h-8 w-auto text-primary" />
+          {/* Narrow (icon-only): monogram only */}
+          <EdpLogo className="lg:hidden h-8 w-auto" />
           {/* Wide: full logo with tagline */}
-          <EdpLogo withTagline className="hidden lg:block h-14 w-auto text-primary" />
+          <EdpLogo withTagline className="hidden lg:block h-14 w-auto" />
         </Link>
       </div>
 
