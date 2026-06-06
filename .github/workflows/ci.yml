@@ -117,6 +117,9 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-web:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-web:${{ github.sha }}
+          build-args: |
+            NEXT_PUBLIC_API_URL=https://api-production-be9c.up.railway.app
+            NEXT_PUBLIC_APP_URL=https://web-production-872e1.up.railway.app
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
