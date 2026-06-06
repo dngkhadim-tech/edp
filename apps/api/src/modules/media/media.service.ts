@@ -4,6 +4,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import * as sharp from 'sharp';
 import { v4 as uuidv4 } from 'uuid';
 import * as path from 'path';
+import * as ws from 'ws';
 
 const BUCKET = 'edp-media';
 
@@ -15,6 +16,7 @@ export class MediaService {
     this.supabase = createClient(
       config.get<string>('SUPABASE_URL', ''),
       config.get<string>('SUPABASE_SERVICE_KEY', ''),
+      { realtime: { transport: ws as any } },
     );
   }
 

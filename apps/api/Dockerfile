@@ -1,4 +1,4 @@
-FROM node:22-alpine AS base
+FROM node:20-alpine AS base
 RUN npm install -g pnpm@9.4.0
 
 FROM base AS deps
@@ -19,7 +19,7 @@ RUN pnpm --filter @edp/api build
 # pnpm deploy crée un répertoire avec node_modules plat (pas de symlinks pnpm)
 RUN pnpm --filter @edp/api deploy --prod /app/api-deploy
 
-FROM node:22-alpine AS runner
+FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=builder /app/api-deploy/node_modules ./node_modules
