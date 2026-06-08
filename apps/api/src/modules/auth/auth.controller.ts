@@ -1,6 +1,6 @@
 import {
   Controller, Post, Body, UseGuards, Request, Get, HttpCode,
-  HttpStatus,
+  HttpStatus, Res,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
@@ -49,8 +49,13 @@ export class AuthController {
 
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
-  googleAuthCallback(@Request() req) {
-    return this.authService.oauthLogin(req.user);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async googleAuthCallback(@Request() req, @Res() res: any) {
+    const tokens = await this.authService.oauthLogin(req.user);
+    const appUrl = process.env.APP_URL || 'http://localhost:3000';
+    res.redirect(
+      `${appUrl}/auth/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`,
+    );
   }
 
   @Get('facebook')
@@ -60,8 +65,13 @@ export class AuthController {
 
   @Get('facebook/callback')
   @UseGuards(FacebookAuthGuard)
-  facebookAuthCallback(@Request() req) {
-    return this.authService.oauthLogin(req.user);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async facebookAuthCallback(@Request() req, @Res() res: any) {
+    const tokens = await this.authService.oauthLogin(req.user);
+    const appUrl = process.env.APP_URL || 'http://localhost:3000';
+    res.redirect(
+      `${appUrl}/auth/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`,
+    );
   }
 
   @Get('me')
