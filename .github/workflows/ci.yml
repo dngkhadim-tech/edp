@@ -120,6 +120,7 @@ jobs:
           build-args: |
             NEXT_PUBLIC_API_URL=https://api-production-be9c.up.railway.app
             NEXT_PUBLIC_APP_URL=https://web-production-872e1.up.railway.app
+            NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=AIzaSyDvEI8XaVbm0cXwTqLROh4_Tq7sE9pzr38
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
