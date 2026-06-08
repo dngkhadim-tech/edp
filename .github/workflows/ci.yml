@@ -140,24 +140,18 @@ jobs:
 
     steps:
       - name: Install Railway CLI
-        run: curl -fsSL https://railway.com/install.sh | sh
+        run: |
+          curl -fsSL https://railway.com/install.sh | bash
+          echo "$HOME/.railway/bin" >> $GITHUB_PATH
 
-      - name: Write Railway config (with auto-refresh support)
+      - name: Write Railway config
         run: |
           mkdir -p ~/.railway
-          cat > ~/.railway/config.json << EOF
-          {
-            "projects": {},
-            "user": {
-              "id": "${{ secrets.RAILWAY_USER_ID }}",
-              "token": null,
-              "accessToken": "${{ secrets.RAILWAY_TOKEN }}",
-              "refreshToken": "${{ secrets.RAILWAY_REFRESH_TOKEN }}",
-              "tokenExpiresAt": 0
-            },
-            "editor": null
-          }
-          EOF
+          printf '{"projects":{},"user":{"id":"%s","token":null,"accessToken":"%s","refreshToken":"%s","tokenExpiresAt":0},"editor":null}' \
+            "${{ secrets.RAILWAY_USER_ID }}" \
+            "${{ secrets.RAILWAY_TOKEN }}" \
+            "${{ secrets.RAILWAY_REFRESH_TOKEN }}" \
+            > ~/.railway/config.json
 
       - name: Trigger API redeploy
         run: |
