@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDropzone } from 'react-dropzone';
+import { useAuthStore } from '@/store/auth.store';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -26,6 +27,7 @@ const MAX_CAPTION = 2200;
 export default function NewPostPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { user } = useAuthStore();
 
   const [step, setStep] = useState<Step>('media');
   const [postType, setPostType] = useState<PostType>(PostType.PHOTO);
@@ -239,7 +241,7 @@ export default function NewPostPage() {
               <p className="text-lg font-heading font-semibold">Publié !</p>
               <button
                 className="text-primary text-sm font-medium hover:underline"
-                onClick={() => router.push('/feed')}
+                onClick={() => router.push(user?.username ? `/profile/${user.username}` : '/feed')}
               >
                 Voir votre post →
               </button>

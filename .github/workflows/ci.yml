@@ -160,3 +160,11 @@ jobs:
             -d "{\"query\": \"mutation { serviceUpdate(id: \\\"bacd558c-2fcc-4665-a756-9528fc42feb5\\\", input: { source: { image: \\\"ghcr.io/dngkhadim-tech/edp-api:${{ github.sha }}\\\" } }) { id } }\"}"
         continue-on-error: true
 
+      - name: Update Web image tag
+        run: |
+          curl -s -X POST https://backboard.railway.com/graphql/v2 \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.RAILWAY_TOKEN }}" \
+            -d "{\"query\": \"mutation { serviceUpdate(id: \\\"655e4c5d-f826-4453-8c39-fb21a7e4aa6f\\\", input: { source: { image: \\\"ghcr.io/dngkhadim-tech/edp-web:${{ github.sha }}\\\" } }) { id } }\"}"
+        continue-on-error: true
+
