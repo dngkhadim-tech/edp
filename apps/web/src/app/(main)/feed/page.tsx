@@ -4,26 +4,29 @@ import { useState, useEffect } from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useInView } from 'react-intersection-observer';
 import { api } from '@/lib/api';
-import { PostCard } from '@/components/feed/PostCard';
+import { PinCard } from '@/components/feed/PinCard';
+import { PinCardSkeleton } from '@/components/feed/PinCardSkeleton';
 import { CategoryPills, type FeedCategory } from '@/components/feed/CategoryPills';
 import { ReelsRow } from '@/components/feed/ReelsRow';
 import { Loader2 } from 'lucide-react';
-import { PostCardSkeleton } from '@/components/feed/PostCardSkeleton';
 
-const REELS_AFTER_N_POSTS = 3;
+const REELS_AFTER_N_POSTS = 4;
 
 export default function FeedPage() {
   const { ref, inView } = useInView();
   const [category, setCategory] = useState<FeedCategory>('all');
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError, refetch } = useInfiniteQuery({
-    queryKey: ['feed', category],
-    queryFn: ({ pageParam = 1 }) =>
-      api.get(`/feed?page=${pageParam}&limit=10${category !== 'all' ? `&type=${category}` : ''}`).then((r) => r.data),
-    getNextPageParam: (last) =>
-      last.meta.page < last.meta.totalPages ? last.meta.page + 1 : undefined,
-    initialPageParam: 1,
-  });
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError, refetch } =
+    useInfiniteQuery({
+      queryKey: ['feed', category],
+      queryFn: ({ pageParam = 1 }) =>
+        api
+          .get(`/feed?page=${pageParam}&limit=12${category !== 'all' ? `&type=${category}` : ''}`)
+          .then((r) => r.data),
+      getNextPageParam: (last) =>
+        last.meta.page < last.meta.totalPages ? last.meta.page + 1 : undefined,
+      initialPageParam: 1,
+    });
 
   const { data: reelsData } = useQuery({
     queryKey: ['reels', 'preview'],
@@ -35,6 +38,13 @@ export default function FeedPage() {
   }, [inView, hasNextPage, fetchNextPage]);
 
   const posts = data?.pages.flatMap((p) => p.data) ?? [];
+
+  // Split posts into two columns for masonry layout
+  const leftPosts = posts.filter((_, i) => i % 2 === 0);
+  const rightPosts = posts.filter((_, i) => i % 2 !== 0);
+
+  // Insert ReelsRow after N posts in total (appears between left column items)
+  const reelsInsertAtLeft = Math.floor(REELS_AFTER_N_POSTS / 2);
 
   if (isError) {
     return (
@@ -52,7 +62,7 @@ export default function FeedPage() {
   }
 
   return (
-    <div className="max-w-xl mx-auto pb-24 lg:pb-8">
+    <div className="pb-24 lg:pb-8">
       {/* Header mobile */}
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border px-4 py-3 lg:hidden flex items-center justify-between">
         <span className="font-heading font-extrabold text-xl text-primary">EDP</span>
@@ -62,27 +72,46 @@ export default function FeedPage() {
       <CategoryPills value={category} onChange={setCategory} />
 
       {isLoading ? (
-        <div className="space-y-4 px-4">
-          {[0, 1, 2].map((i) => <PostCardSkeleton key={i} />)}
-        </div>
-      ) : (
-        <div className="space-y-4 px-4">
-          {posts.map((post, i) => (
-            <div key={post.id}>
-              <PostCard post={post} />
-              {/* Insérer ReelsRow après le Nième post */}
-              {i === REELS_AFTER_N_POSTS - 1 && reelsData?.length > 0 && (
-                <div className="-mx-4 mt-4">
-                  <ReelsRow reels={reelsData} />
-                </div>
-              )}
-            </div>
-          ))}
-
-          <div ref={ref} className="flex justify-center py-4">
-            {isFetchingNextPage && <Loader2 className="animate-spin text-primary" size={22} />}
+        /* Skeleton masonry */
+        <div className="flex gap-2 px-2 mt-1">
+          <div className="flex-1 flex flex-col gap-2">
+            {[0, 1, 2].map((i) => <PinCardSkeleton key={i} tall={i % 2 === 0} />)}
+          </div>
+          <div className="flex-1 flex flex-col gap-2">
+            {[0, 1, 2].map((i) => <PinCardSkeleton key={i} tall={i % 2 !== 0} />)}
           </div>
         </div>
+      ) : (
+        <>
+          {/* ReelsRow — full width, above the grid */}
+          {reelsData?.length > 0 && posts.length >= REELS_AFTER_N_POSTS && (
+            <div className="-mx-0 mb-2">
+              <ReelsRow reels={reelsData} />
+            </div>
+          )}
+
+          {/* Masonry 2-column grid */}
+          <div className="flex gap-2 px-2 mt-1 items-start">
+            {/* Left column */}
+            <div className="flex-1 flex flex-col gap-2">
+              {leftPosts.map((post, i) => (
+                <PinCard key={post.id} post={post} tall={i % 3 === 0} />
+              ))}
+            </div>
+
+            {/* Right column — offset by half a card for natural stagger */}
+            <div className="flex-1 flex flex-col gap-2 mt-6">
+              {rightPosts.map((post, i) => (
+                <PinCard key={post.id} post={post} tall={i % 3 === 2} />
+              ))}
+            </div>
+          </div>
+
+          {/* Infinite scroll sentinel */}
+          <div ref={ref} className="flex justify-center py-6">
+            {isFetchingNextPage && <Loader2 className="animate-spin text-primary" size={22} />}
+          </div>
+        </>
       )}
     </div>
   );
