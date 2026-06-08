@@ -54,7 +54,7 @@ export class AuthController {
     const tokens = await this.authService.oauthLogin(req.user);
     const appUrl = process.env.APP_URL || 'https://web-production-872e1.up.railway.app';
     res.redirect(
-      `${appUrl}/auth/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`,
+      `${appUrl}/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`,
     );
   }
 
@@ -70,7 +70,7 @@ export class AuthController {
     const tokens = await this.authService.oauthLogin(req.user);
     const appUrl = process.env.APP_URL || 'https://web-production-872e1.up.railway.app';
     res.redirect(
-      `${appUrl}/auth/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`,
+      `${appUrl}/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`,
     );
   }
 

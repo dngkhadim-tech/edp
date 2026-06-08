@@ -9,7 +9,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   const router = useRouter();
 
   useEffect(() => {
-    if (isAuthenticated && typeof window !== 'undefined' && !window.location.pathname.includes('/auth/callback')) {
+    if (isAuthenticated && typeof window !== 'undefined' && window.location.pathname !== '/callback') {
       router.replace('/feed');
     }
   }, [isAuthenticated, router]);
