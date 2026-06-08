@@ -79,7 +79,10 @@ export default function NotificationsPage() {
 
   const { mutate: markAllRead } = useMutation({
     mutationFn: () => api.patch('/notifications/read-all'),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications', 'unread'] });
+    },
   });
 
   const all = data?.data ?? [];

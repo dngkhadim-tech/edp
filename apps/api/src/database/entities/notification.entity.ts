@@ -33,6 +33,10 @@ export class NotificationEntity {
   @Column({ name: 'actor_id', nullable: true })
   actorId?: string;
 
+  @ManyToOne(() => UserEntity, { nullable: true, eager: false })
+  @JoinColumn({ name: 'actor_id' })
+  actor?: UserEntity;
+
   @Column({ type: 'enum', enum: NotificationType })
   type: NotificationType;
 

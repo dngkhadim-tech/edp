@@ -5,6 +5,8 @@ import { PostLikeEntity } from '../../database/entities/post-like.entity';
 import { PostSaveEntity } from '../../database/entities/post-save.entity';
 import { CommentEntity } from '../../database/entities/comment.entity';
 import { PostEntity } from '../../database/entities/post.entity';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../../database/entities/notification.entity';
 
 @Injectable()
 export class InteractionsService {
@@ -17,6 +19,7 @@ export class InteractionsService {
     private readonly commentRepo: Repository<CommentEntity>,
     @InjectRepository(PostEntity)
     private readonly postRepo: Repository<PostEntity>,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async toggleLike(userId: string, postId: string): Promise<{ liked: boolean; count: number }> {
@@ -30,6 +33,16 @@ export class InteractionsService {
       await this.likeRepo.save(this.likeRepo.create({ userId, postId }));
       await this.postRepo.increment({ id: postId }, 'likesCount', 1);
       const post = await this.postRepo.findOne({ where: { id: postId } });
+      if (post && post.authorId !== userId) {
+        this.notificationsService.create({
+          userId: post.authorId,
+          actorId: userId,
+          type: NotificationType.LIKE,
+          message: 'a aimé votre publication',
+          referenceId: postId,
+          referenceType: 'post',
+        }).catch(() => {});
+      }
       return { liked: true, count: post.likesCount };
     }
   }
@@ -80,6 +93,17 @@ export class InteractionsService {
     const comment = this.commentRepo.create({ postId, authorId: userId, content, parentId } as any);
     const saved = await this.commentRepo.save(comment) as unknown as CommentEntity;
     await this.postRepo.increment({ id: postId }, 'commentsCount', 1);
+    const post = await this.postRepo.findOne({ where: { id: postId } });
+    if (post && post.authorId !== userId) {
+      this.notificationsService.create({
+        userId: post.authorId,
+        actorId: userId,
+        type: NotificationType.COMMENT,
+        message: 'a commenté votre publication',
+        referenceId: postId,
+        referenceType: 'post',
+      }).catch(() => {});
+    }
     return this.commentRepo.findOne({ where: { id: saved.id }, relations: ['author'] });
   }
 

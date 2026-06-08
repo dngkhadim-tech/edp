@@ -4,6 +4,8 @@ import { Repository } from 'typeorm';
 import { FollowEntity } from '../../database/entities/follow.entity';
 import { UserEntity } from '../../database/entities/user.entity';
 import { EstablishmentEntity } from '../../database/entities/establishment.entity';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../../database/entities/notification.entity';
 
 @Injectable()
 export class FollowsService {
@@ -14,6 +16,7 @@ export class FollowsService {
     private readonly userRepo: Repository<UserEntity>,
     @InjectRepository(EstablishmentEntity)
     private readonly estRepo: Repository<EstablishmentEntity>,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async followUser(followerId: string, followingId: string): Promise<void> {
@@ -27,6 +30,14 @@ export class FollowsService {
     );
     await this.userRepo.increment({ id: followerId }, 'followingCount', 1);
     await this.userRepo.increment({ id: followingId }, 'followersCount', 1);
+    this.notificationsService.create({
+      userId: followingId,
+      actorId: followerId,
+      type: NotificationType.FOLLOW,
+      message: 'a commencé à vous suivre',
+      referenceId: followerId,
+      referenceType: 'user',
+    }).catch(() => {});
   }
 
   async unfollowUser(followerId: string, followingId: string): Promise<void> {

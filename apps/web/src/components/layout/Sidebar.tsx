@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth.store';
+import { api } from '@/lib/api';
 import {
   Home, Compass, Film, Search, Heart, Bookmark,
   MessageCircle, MapPin, Trophy, Bell, User, Settings,
@@ -32,6 +34,14 @@ export function Sidebar() {
   const router = useRouter();
   const { user, logout } = useAuthStore();
 
+  const { data: unreadData } = useQuery<{ count: number }>({
+    queryKey: ['notifications', 'unread'],
+    queryFn: () => api.get('/notifications/unread-count').then((r) => r.data),
+    refetchInterval: 30_000,
+    enabled: !!user,
+  });
+  const unreadCount = unreadData?.count ?? 0;
+
   const handleLogout = () => {
     logout();
     router.push('/login');
@@ -52,6 +62,7 @@ export function Sidebar() {
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const active = pathname.startsWith(item.href);
+          const isNotif = item.href === '/notifications';
           return (
             <Link
               key={item.href}
@@ -64,7 +75,14 @@ export function Sidebar() {
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted',
               )}
             >
-              <Icon size={20} />
+              <span className="relative">
+                <Icon size={20} />
+                {isNotif && unreadCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </span>
               <span className="hidden lg:block">{item.label}</span>
             </Link>
           );
