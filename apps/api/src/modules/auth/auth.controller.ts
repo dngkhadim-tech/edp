@@ -52,7 +52,7 @@ export class AuthController {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async googleAuthCallback(@Request() req, @Res() res: any) {
     const tokens = await this.authService.oauthLogin(req.user);
-    const appUrl = process.env.APP_URL || 'http://localhost:3000';
+    const appUrl = process.env.APP_URL || 'https://web-production-872e1.up.railway.app';
     res.redirect(
       `${appUrl}/auth/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`,
     );
@@ -68,7 +68,7 @@ export class AuthController {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async facebookAuthCallback(@Request() req, @Res() res: any) {
     const tokens = await this.authService.oauthLogin(req.user);
-    const appUrl = process.env.APP_URL || 'http://localhost:3000';
+    const appUrl = process.env.APP_URL || 'https://web-production-872e1.up.railway.app';
     res.redirect(
       `${appUrl}/auth/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`,
     );
