@@ -70,26 +70,24 @@ export default function ExplorePage() {
     <div className="flex flex-col min-h-screen bg-background">
       <header className="sticky top-0 z-10 bg-background border-b border-border px-4 py-3 flex items-center justify-between">
         <h1 className="font-heading font-bold text-[18px]">À proximité</h1>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
           {geo.status === 'ready' ? (
             <button
               type="button"
               onClick={() => setGeo({ status: 'idle' })}
-              className="p-2 rounded-full hover:bg-secondary transition-colors"
-              aria-label="Désactiver la localisation"
-              title="Désactiver la localisation"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
             >
-              <LocateOff size={18} className="text-primary" />
+              <LocateOff size={13} />
+              Désactiver
             </button>
           ) : (
             <button
               type="button"
               onClick={() => requestLocation(setGeo)}
-              className="p-2 rounded-full hover:bg-secondary transition-colors"
-              aria-label="Activer la localisation"
-              title="Activer la localisation"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-secondary text-foreground hover:bg-muted transition-colors"
             >
-              <LocateFixed size={18} className="text-muted-foreground" />
+              <LocateFixed size={13} />
+              Ma position
             </button>
           )}
           <button
