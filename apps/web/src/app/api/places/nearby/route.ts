@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '';
+const API_KEY = process.env.GOOGLE_MAPS_API_KEY ?? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '';
 
 const TYPE_MAP: Record<string, string[]> = {
   RESTAURANT: ['restaurant'],
@@ -58,6 +58,7 @@ export async function GET(req: NextRequest) {
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
+    console.error('[places/nearby] Google API error', res.status, JSON.stringify(err));
     return NextResponse.json({ error: 'Google Places error', details: err }, { status: res.status });
   }
 

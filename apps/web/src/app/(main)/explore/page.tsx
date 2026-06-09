@@ -53,7 +53,10 @@ export default function ExplorePage() {
         type,
         radius: '5000',
       });
-      return fetch(`/api/places/nearby?${params}`).then((r) => r.json());
+      return fetch(`/api/places/nearby?${params}`).then((r) => {
+        if (!r.ok) return r.json().then((e) => Promise.reject(e));
+        return r.json();
+      });
     },
     enabled: geo.status === 'ready',
     staleTime: 5 * 60 * 1000,
