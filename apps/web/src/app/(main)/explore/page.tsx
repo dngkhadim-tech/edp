@@ -37,7 +37,11 @@ export default function ExplorePage() {
   const [type, setType] = useState('');
   const [geo, setGeo] = useState<GeoState>({ status: 'idle' });
 
-  useEffect(() => { requestLocation(setGeo); }, []);
+  useEffect(() => {
+    navigator.permissions?.query({ name: 'geolocation' }).then((result) => {
+      if (result.state === 'granted') requestLocation(setGeo);
+    });
+  }, []);
 
   const lat = geo.status === 'ready' ? geo.lat : null;
   const lng = geo.status === 'ready' ? geo.lng : null;
