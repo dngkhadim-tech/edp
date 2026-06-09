@@ -46,6 +46,10 @@ export class EstablishmentsService {
     return this.findById(est.id, currentUserId);
   }
 
+  async findByOwner(userId: string): Promise<EstablishmentEntity | null> {
+    return this.estRepo.findOne({ where: { userId } });
+  }
+
   async update(id: string, userId: string, dto: UpdateEstablishmentDto): Promise<EstablishmentEntity> {
     const est = await this.findById(id);
     if (est.userId !== userId) throw new ForbiddenException();

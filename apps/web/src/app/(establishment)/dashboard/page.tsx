@@ -30,7 +30,7 @@ export default function EstablishmentDashboard() {
 
   const { data: myEst } = useQuery({
     queryKey: ['my-establishment'],
-    queryFn: () => api.get('/establishments/search?limit=1').then((r) => r.data.data?.[0]),
+    queryFn: () => api.get('/establishments/mine').then((r) => r.data),
     enabled: !!user,
   });
 

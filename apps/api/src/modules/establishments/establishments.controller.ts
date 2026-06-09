@@ -22,6 +22,13 @@ export class EstablishmentsController {
     return this.service.create(req.user.id, dto);
   }
 
+  @Get('mine')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  findMine(@Request() req) {
+    return this.service.findByOwner(req.user.id);
+  }
+
   @Get('search')
   search(@Query() query: SearchQuery) {
     return this.service.search(query);
