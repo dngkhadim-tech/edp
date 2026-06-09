@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { PlaceCard, type GooglePlace } from '@/components/explore/PlaceCard';
 import { FilterPills, type FilterOption } from '@/components/shared/FilterPills';
-import { SlidersHorizontal, MapPin, AlertCircle } from 'lucide-react';
+import { SlidersHorizontal, MapPin, AlertCircle, LocateFixed, LocateOff } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 
 const FILTER_OPTIONS: FilterOption[] = [
   { value: '', label: 'Tout' },
@@ -22,19 +23,21 @@ type GeoState =
   | { status: 'ready'; lat: number; lng: number }
   | { status: 'denied' };
 
+function requestLocation(onUpdate: (state: GeoState) => void) {
+  if (!navigator.geolocation) { onUpdate({ status: 'denied' }); return; }
+  onUpdate({ status: 'loading' });
+  navigator.geolocation.getCurrentPosition(
+    (pos) => onUpdate({ status: 'ready', lat: pos.coords.latitude, lng: pos.coords.longitude }),
+    () => onUpdate({ status: 'denied' }),
+    { timeout: 8000 },
+  );
+}
+
 export default function ExplorePage() {
   const [type, setType] = useState('');
   const [geo, setGeo] = useState<GeoState>({ status: 'idle' });
 
-  useEffect(() => {
-    if (!navigator.geolocation) { setGeo({ status: 'denied' }); return; }
-    setGeo({ status: 'loading' });
-    navigator.geolocation.getCurrentPosition(
-      (pos) => setGeo({ status: 'ready', lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => setGeo({ status: 'denied' }),
-      { timeout: 8000 },
-    );
-  }, []);
+  useEffect(() => { requestLocation(setGeo); }, []);
 
   const lat = geo.status === 'ready' ? geo.lat : null;
   const lng = geo.status === 'ready' ? geo.lng : null;
@@ -63,36 +66,67 @@ export default function ExplorePage() {
     <div className="flex flex-col min-h-screen bg-background">
       <header className="sticky top-0 z-10 bg-background border-b border-border px-4 py-3 flex items-center justify-between">
         <h1 className="font-heading font-bold text-[18px]">À proximité</h1>
-        <button
-          type="button"
-          className="p-2 rounded-full hover:bg-secondary transition-colors"
-          aria-label="Filtres"
-        >
-          <SlidersHorizontal size={18} className="text-muted-foreground" />
-        </button>
+        <div className="flex items-center gap-1">
+          {geo.status === 'ready' ? (
+            <button
+              type="button"
+              onClick={() => setGeo({ status: 'idle' })}
+              className="p-2 rounded-full hover:bg-secondary transition-colors"
+              aria-label="Désactiver la localisation"
+              title="Désactiver la localisation"
+            >
+              <LocateOff size={18} className="text-primary" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => requestLocation(setGeo)}
+              className="p-2 rounded-full hover:bg-secondary transition-colors"
+              aria-label="Activer la localisation"
+              title="Activer la localisation"
+            >
+              <LocateFixed size={18} className="text-muted-foreground" />
+            </button>
+          )}
+          <button
+            type="button"
+            className="p-2 rounded-full hover:bg-secondary transition-colors"
+            aria-label="Filtres"
+          >
+            <SlidersHorizontal size={18} className="text-muted-foreground" />
+          </button>
+        </div>
       </header>
 
       <div className="px-4 pt-4 space-y-4 max-w-screen-xl mx-auto w-full pb-8">
         <FilterPills options={FILTER_OPTIONS} value={type} onChange={setType} />
 
         {/* Géolocalisation en cours */}
-        {(geo.status === 'idle' || geo.status === 'loading') && (
+        {geo.status === 'loading' && (
           <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
             <div className="w-10 h-10 rounded-full border-2 border-primary border-t-transparent animate-spin" />
             <p className="text-sm font-sans">Localisation en cours…</p>
           </div>
         )}
 
-        {/* Accès refusé */}
-        {geo.status === 'denied' && (
-          <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
-            <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center">
-              <MapPin size={24} className="text-muted-foreground" />
+        {/* Accès refusé ou idle */}
+        {(geo.status === 'idle' || geo.status === 'denied') && (
+          <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+              <LocateFixed size={28} className="text-muted-foreground" />
             </div>
-            <p className="font-heading font-bold text-foreground">Localisation requise</p>
-            <p className="text-sm text-muted-foreground max-w-xs">
-              Autorise l&apos;accès à ta position pour voir les restaurants à proximité.
-            </p>
+            <div className="space-y-1">
+              <p className="font-heading font-bold text-foreground">Localisation requise</p>
+              <p className="text-sm text-muted-foreground max-w-xs">
+                {geo.status === 'denied'
+                  ? 'L\'accès à ta position a été refusé. Autorise-le dans les réglages de ton navigateur, puis réessaie.'
+                  : 'Active ta position pour voir les restaurants, bars et hôtels à 5 km autour de toi.'}
+              </p>
+            </div>
+            <Button onClick={() => requestLocation(setGeo)} className="gap-2">
+              <LocateFixed size={16} />
+              Activer la localisation
+            </Button>
           </div>
         )}
 
