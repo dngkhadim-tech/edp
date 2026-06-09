@@ -20,6 +20,10 @@ const FILTER_OPTIONS: FilterOption[] = [
   { value: 'tourist_attraction', label: 'À visiter' },
 ];
 
+const RADIUS_M = 5000;
+// Types searched in parallel when no filter is active
+const ALL_TYPES = ['restaurant', 'bar', 'cafe', 'lodging'];
+
 type GeoState =
   | { status: 'idle' }
   | { status: 'loading' }
@@ -55,12 +59,29 @@ export default function ExplorePage() {
     if (!ready || lat === null || lng === null) return;
     setLoading(true);
     setError(false);
-    nearbySearch({
-      location: { lat, lng },
-      radius: 1500,
-      type: (type || 'restaurant') as string,
-    })
-      .then(setPlaces)
+    const location = { lat, lng };
+    const searches = type
+      ? [nearbySearch({ location, radius: RADIUS_M, type: type as string })]
+      : ALL_TYPES.map((t) => nearbySearch({ location, radius: RADIUS_M, type: t as string }));
+
+    Promise.all(searches)
+      .then((results) => {
+        const seen = new Set<string>();
+        const merged: google.maps.places.PlaceResult[] = [];
+        for (const list of results) {
+          for (const place of list) {
+            if (place.place_id && !seen.has(place.place_id)) {
+              seen.add(place.place_id);
+              merged.push(place);
+            }
+          }
+        }
+        merged.sort((a, b) => {
+          const rd = (b.rating ?? 0) - (a.rating ?? 0);
+          return rd !== 0 ? rd : (b.user_ratings_total ?? 0) - (a.user_ratings_total ?? 0);
+        });
+        setPlaces(merged);
+      })
       .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, [ready, lat, lng, type]);
@@ -144,16 +165,21 @@ export default function ExplorePage() {
             )}
             {!loading && !error && ready && (
               places.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                  {places.map((place) => (
-                    <PlaceCard key={place.place_id} place={place} />
-                  ))}
-                </div>
+                <>
+                  <p className="text-xs text-muted-foreground font-sans">
+                    {places.length} établissement{places.length > 1 ? 's' : ''} dans un rayon de 5 km
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {places.map((place) => (
+                      <PlaceCard key={place.place_id} place={place} />
+                    ))}
+                  </div>
+                </>
               ) : (
                 <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
                   <MapPin size={48} className="opacity-30" />
                   <p className="text-sm font-sans text-center">
-                    Aucun établissement trouvé dans un rayon de 1,5 km
+                    Aucun établissement trouvé dans un rayon de 5 km
                   </p>
                 </div>
               )
