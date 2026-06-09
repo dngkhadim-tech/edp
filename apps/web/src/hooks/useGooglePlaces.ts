@@ -81,5 +81,23 @@ export function useGooglePlaces() {
     });
   }
 
-  return { ready, loadError, nearbySearch, getDetails };
+  function textSearch(
+    request: google.maps.places.TextSearchRequest,
+  ): Promise<google.maps.places.PlaceResult[]> {
+    return new Promise((resolve, reject) => {
+      if (!serviceRef.current) return reject(new Error('Service not ready'));
+      serviceRef.current.textSearch(request, (results, status) => {
+        if (
+          status === google.maps.places.PlacesServiceStatus.OK ||
+          status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS
+        ) {
+          resolve(results ?? []);
+        } else {
+          reject(new Error(status));
+        }
+      });
+    });
+  }
+
+  return { ready, loadError, nearbySearch, getDetails, textSearch };
 }
