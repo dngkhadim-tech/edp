@@ -1,19 +1,23 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { PlaceCard, type GooglePlace } from '@/components/explore/PlaceCard';
+import { PlaceCard } from '@/components/explore/PlaceCard';
 import { FilterPills, type FilterOption } from '@/components/shared/FilterPills';
+import { SearchBar } from '@/components/shared/SearchBar';
+import { useGooglePlaces } from '@/hooks/useGooglePlaces';
 import { SlidersHorizontal, MapPin, AlertCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@/lib/api';
+import { EstablishmentCard, type Establishment } from '@/components/establishment/EstablishmentCard';
 
 const FILTER_OPTIONS: FilterOption[] = [
   { value: '', label: 'Tout' },
-  { value: 'RESTAURANT', label: 'Restaurant' },
-  { value: 'BAR', label: 'Bar' },
-  { value: 'CAFE', label: 'Café' },
-  { value: 'HOTEL', label: 'Hôtel' },
-  { value: 'TOURIST_SPOT', label: 'À visiter' },
+  { value: 'restaurant', label: 'Restaurant' },
+  { value: 'bar', label: 'Bar' },
+  { value: 'cafe', label: 'Café' },
+  { value: 'lodging', label: 'Hôtel' },
+  { value: 'tourist_attraction', label: 'À visiter' },
 ];
 
 type GeoState =
@@ -25,6 +29,13 @@ type GeoState =
 export default function ExplorePage() {
   const [type, setType] = useState('');
   const [geo, setGeo] = useState<GeoState>({ status: 'idle' });
+  const [places, setPlaces] = useState<google.maps.places.PlaceResult[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const [searchQ, setSearchQ] = useState('');
+
+  const { ready, loadError, nearbySearch } = useGooglePlaces();
+  const handleTypeChange = useCallback((value: string) => setType(value), []);
 
   useEffect(() => {
     if (!navigator.geolocation) { setGeo({ status: 'denied' }); return; }
@@ -36,25 +47,39 @@ export default function ExplorePage() {
     );
   }, []);
 
-  const handleTypeChange = useCallback((value: string) => setType(value), []);
+  // Stable lat/lng primitives for correct dep tracking
+  const lat = geo.status === 'ready' ? geo.lat : null;
+  const lng = geo.status === 'ready' ? geo.lng : null;
 
-  const { data, isLoading, isError } = useQuery<{ places: GooglePlace[] }>({
-    queryKey: ['places-nearby', geo.status === 'ready' ? geo.lat : null, geo.status === 'ready' ? geo.lng : null, type],
-    queryFn: () => {
-      if (geo.status !== 'ready') return Promise.resolve({ places: [] });
-      const params = new URLSearchParams({
-        lat: String(geo.lat),
-        lng: String(geo.lng),
-        type,
-        radius: '1500',
-      });
-      return fetch(`/api/places/nearby?${params}`).then((r) => r.json());
-    },
-    enabled: geo.status === 'ready',
-    staleTime: 5 * 60 * 1000,
+  useEffect(() => {
+    if (!ready || lat === null || lng === null) return;
+    setLoading(true);
+    setError(false);
+    nearbySearch({
+      location: { lat, lng },
+      radius: 1500,
+      type: (type || 'restaurant') as string,
+    })
+      .then(setPlaces)
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+  }, [ready, lat, lng, type]);
+
+  // Fallback: EDP text search when geolocation denied
+  const { data: edpFallback, isLoading: edpLoading } = useQuery({
+    queryKey: ['establishments', 'search', searchQ, type],
+    queryFn: () =>
+      api
+        .get<{ data: Establishment[] }>('/establishments/search', {
+          params: { q: searchQ, type: type.toUpperCase() || undefined, limit: 20 },
+        })
+        .then((r) => r.data),
+    enabled: geo.status === 'denied',
+    staleTime: 2 * 60 * 1000,
   });
 
-  const places = data?.places ?? [];
+  const showGoogleResults = geo.status === 'ready';
+  const showFallback = geo.status === 'denied';
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -70,6 +95,15 @@ export default function ExplorePage() {
       </header>
 
       <div className="px-4 pt-4 space-y-4 max-w-screen-xl mx-auto w-full pb-8">
+        {/* Barre de recherche uniquement en fallback */}
+        {showFallback && (
+          <SearchBar
+            placeholder="Rechercher restaurant, hôtel, ville…"
+            onSearch={setSearchQ}
+            debounceMs={300}
+          />
+        )}
+
         <FilterPills options={FILTER_OPTIONS} value={type} onChange={handleTypeChange} />
 
         {/* Géolocalisation en cours */}
@@ -80,56 +114,81 @@ export default function ExplorePage() {
           </div>
         )}
 
-        {/* Accès refusé */}
-        {geo.status === 'denied' && (
-          <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
-            <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center">
-              <MapPin size={24} className="text-muted-foreground" />
-            </div>
-            <p className="font-heading font-bold text-foreground">Localisation requise</p>
-            <p className="text-sm text-muted-foreground max-w-xs">
-              Autorise l'accès à ta position pour voir les restaurants à proximité.
-            </p>
-          </div>
-        )}
-
-        {/* Chargement Google Places */}
-        {geo.status === 'ready' && isLoading && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="space-y-2">
-                <Skeleton className="aspect-[4/3] rounded-2xl w-full" />
-                <Skeleton className="h-3 w-3/4" />
-                <Skeleton className="h-2.5 w-1/2" />
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Erreur */}
-        {geo.status === 'ready' && isError && (
+        {/* Erreur chargement Maps SDK */}
+        {loadError && (
           <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
             <AlertCircle size={40} className="text-destructive/50" />
-            <p className="text-sm text-muted-foreground">Impossible de charger les établissements</p>
+            <p className="text-sm text-muted-foreground">Impossible de charger Google Maps</p>
           </div>
         )}
 
-        {/* Résultats */}
-        {geo.status === 'ready' && !isLoading && !isError && (
-          places.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-              {places.map((place) => (
-                <PlaceCard key={place.id} place={place} />
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
-              <MapPin size={48} className="opacity-30" />
-              <p className="text-sm font-sans text-center">
-                Aucun établissement trouvé dans un rayon de 1,5 km
-              </p>
-            </div>
-          )
+        {/* ── Résultats Google Places ── */}
+        {showGoogleResults && (
+          <>
+            {(loading || !ready) && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="space-y-2">
+                    <Skeleton className="aspect-[4/3] rounded-2xl w-full" />
+                    <Skeleton className="h-3 w-3/4" />
+                    <Skeleton className="h-2.5 w-1/2" />
+                  </div>
+                ))}
+              </div>
+            )}
+            {!loading && error && (
+              <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+                <AlertCircle size={40} className="text-destructive/50" />
+                <p className="text-sm text-muted-foreground">Impossible de charger les établissements</p>
+              </div>
+            )}
+            {!loading && !error && ready && (
+              places.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {places.map((place) => (
+                    <PlaceCard key={place.place_id} place={place} />
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
+                  <MapPin size={48} className="opacity-30" />
+                  <p className="text-sm font-sans text-center">
+                    Aucun établissement trouvé dans un rayon de 1,5 km
+                  </p>
+                </div>
+              )
+            )}
+          </>
+        )}
+
+        {/* ── Fallback EDP (géoloc refusée) ── */}
+        {showFallback && (
+          <>
+            {edpLoading && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="space-y-2">
+                    <Skeleton className="aspect-[4/3] rounded-2xl w-full" />
+                    <Skeleton className="h-3 w-3/4" />
+                    <Skeleton className="h-2.5 w-1/2" />
+                  </div>
+                ))}
+              </div>
+            )}
+            {!edpLoading && (edpFallback?.data ?? []).length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                {(edpFallback!.data).map((est) => (
+                  <EstablishmentCard key={est.id} establishment={est} />
+                ))}
+              </div>
+            )}
+            {!edpLoading && (edpFallback?.data ?? []).length === 0 && (
+              <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+                <MapPin size={48} className="text-muted-foreground opacity-30" />
+                <p className="text-sm text-muted-foreground">Aucun établissement trouvé</p>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

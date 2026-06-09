@@ -1,0 +1,79 @@
+<h2>Disposition des écrans Auth — mobile</h2>
+<p class="subtitle">Pas de split sur mobile. Quelle structure pour Login et Register ?</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="minimal" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#F9FAFB;padding:16px;">
+      <div style="max-width:200px;margin:0 auto;background:#FFFFFF;border-radius:24px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.10);border:1px solid #E5E7EB;min-height:380px;display:flex;flex-direction:column;justify-content:center;padding:24px 20px;gap:16px;">
+        <div style="text-align:center;margin-bottom:8px;">
+          <div style="font-size:32px;font-weight:800;color:#E11D48;letter-spacing:2px;margin-bottom:4px;">EDP</div>
+          <div style="font-size:11px;color:#6B7280;">Connectez-vous à votre compte</div>
+        </div>
+        <div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;padding:10px 12px;">
+          <div style="font-size:9px;color:#9CA3AF;margin-bottom:2px;">Email</div>
+          <div style="font-size:11px;color:#374151;">vous@exemple.com</div>
+        </div>
+        <div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;padding:10px 12px;">
+          <div style="font-size:9px;color:#9CA3AF;margin-bottom:2px;">Mot de passe</div>
+          <div style="font-size:11px;color:#374151;">••••••••</div>
+        </div>
+        <div style="background:#E11D48;border-radius:10px;padding:11px;text-align:center;">
+          <span style="color:#FFF;font-size:12px;font-weight:700;">Se connecter</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;margin:0 -4px;">
+          <div style="flex:1;height:1px;background:#E5E7EB;"></div>
+          <span style="font-size:9px;color:#9CA3AF;">ou</span>
+          <div style="flex:1;height:1px;background:#E5E7EB;"></div>
+        </div>
+        <div style="border:1px solid #E5E7EB;border-radius:10px;padding:8px;text-align:center;">
+          <span style="font-size:10px;color:#374151;">G  Continuer avec Google</span>
+        </div>
+        <div style="text-align:center;margin-top:4px;">
+          <span style="font-size:10px;color:#6B7280;">Pas de compte ? </span>
+          <span style="font-size:10px;color:#E11D48;font-weight:600;">S'inscrire →</span>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Minimaliste centré</h3>
+      <p>Fond blanc, logo EDP centré en haut, formulaire simple. Même pattern que la version web mobile. Propre et direct.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="hero" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#F9FAFB;padding:16px;">
+      <div style="max-width:200px;margin:0 auto;background:#FFFFFF;border-radius:24px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.10);border:1px solid #E5E7EB;min-height:380px;display:flex;flex-direction:column;">
+        <!-- Hero top -->
+        <div style="background:linear-gradient(160deg,#FFE4E6,#FEC5BB,#FECDD3);height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;">
+          <div style="font-size:36px;font-weight:800;color:#E11D48;letter-spacing:2px;">EDP</div>
+          <div style="font-size:10px;color:#BE123C;font-weight:500;">Eat · Drink · Pose</div>
+        </div>
+        <!-- Form bottom -->
+        <div style="flex:1;padding:16px 18px;display:flex;flex-direction:column;gap:10px;">
+          <div style="font-size:14px;font-weight:700;color:#111827;">Connexion</div>
+          <div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;padding:8px 12px;">
+            <div style="font-size:9px;color:#9CA3AF;margin-bottom:2px;">Email</div>
+            <div style="font-size:11px;color:#374151;">vous@exemple.com</div>
+          </div>
+          <div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;padding:8px 12px;">
+            <div style="font-size:9px;color:#9CA3AF;margin-bottom:2px;">Mot de passe</div>
+            <div style="font-size:11px;color:#374151;">••••••••</div>
+          </div>
+          <div style="background:#E11D48;border-radius:10px;padding:10px;text-align:center;">
+            <span style="color:#FFF;font-size:12px;font-weight:700;">Se connecter</span>
+          </div>
+          <div style="text-align:center;margin-top:2px;">
+            <span style="font-size:10px;color:#6B7280;">Pas de compte ? </span>
+            <span style="font-size:10px;color:#E11D48;font-weight:600;">S'inscrire →</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Hero gradient + formulaire</h3>
+      <p>Bandeau gradient rose en haut avec le logo, formulaire en bas. Plus visuel, rappelle l'identité EDP dès l'ouverture.</p>
+    </div>
+  </div>
+
+</div>

@@ -1,8 +1,8 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Star, MapPin, Clock, Navigation, ChevronLeft,
   Globe, Phone, Sparkles, MessageSquare, Image as ImageIcon,
@@ -13,55 +13,18 @@ import { api } from '@/lib/api';
 import { ReviewCard } from '@/components/establishment/ReviewCard';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useGooglePlaces } from '@/hooks/useGooglePlaces';
 
 const TABS = ['Google', 'EDP'] as const;
 type Tab = (typeof TABS)[number];
 
-const PRICE_LABELS: Record<string, string> = {
-  PRICE_LEVEL_INEXPENSIVE: '€',
-  PRICE_LEVEL_MODERATE: '€€',
-  PRICE_LEVEL_EXPENSIVE: '€€€',
-  PRICE_LEVEL_VERY_EXPENSIVE: '€€€€',
-};
-
-interface GoogleReview {
-  name: string;
-  rating: number;
-  relativePublishTimeDescription: string;
-  text?: { text: string };
-  authorAttribution?: { displayName: string; photoUri?: string };
-}
-
-interface PlaceDetail {
-  id: string;
-  displayName: { text: string };
-  rating?: number;
-  userRatingCount?: number;
-  editorialSummary?: { text: string };
-  generativeSummary?: { overview?: { text: string } };
-  reviews?: GoogleReview[];
-  photos?: Array<{ name: string; url: string }>;
-  regularOpeningHours?: {
-    openNow?: boolean;
-    weekdayDescriptions?: string[];
-  };
-  currentOpeningHours?: { openNow?: boolean };
-  formattedAddress?: string;
-  websiteUri?: string;
-  internationalPhoneNumber?: string;
-  priceLevel?: string;
-  primaryTypeDisplayName?: { text: string };
-  location?: { latitude: number; longitude: number };
-}
+const PRICE_ICONS = ['', '€', '€€', '€€€', '€€€€'];
 
 interface EdpEstablishment {
   id: string;
   slug: string;
   name: string;
-  avgRating?: number;
-  averageRating?: number;
   reviewsCount?: number;
-  gallery?: string[];
 }
 
 export default function PlacePage() {
@@ -69,54 +32,57 @@ export default function PlacePage() {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>('Google');
   const [hoursExpanded, setHoursExpanded] = useState(false);
+  const [place, setPlace] = useState<google.maps.places.PlaceResult | null>(null);
+  const [placeLoading, setPlaceLoading] = useState(true);
+  const [placeError, setPlaceError] = useState(false);
 
-  const { data: place, isLoading } = useQuery<PlaceDetail>({
-    queryKey: ['place', placeId],
-    queryFn: () => fetch(`/api/places/${placeId}`).then((r) => r.json()),
-    staleTime: 10 * 60 * 1000,
-  });
+  const { ready, getDetails } = useGooglePlaces();
 
-  // Cherche un établissement EDP correspondant par nom
+  useEffect(() => {
+    if (!ready || !placeId) return;
+    setPlaceError(false);
+    getDetails({
+      placeId,
+      fields: [
+        'name', 'rating', 'user_ratings_total', 'photos', 'reviews',
+        'opening_hours', 'website', 'formatted_phone_number', 'formatted_address',
+        'price_level', 'types', 'editorial_summary', 'geometry', 'vicinity',
+        'international_phone_number',
+      ],
+    })
+      .then(setPlace)
+      .catch(() => setPlaceError(true))
+      .finally(() => setPlaceLoading(false));
+  }, [ready, placeId]);
+
   const { data: edpMatch } = useQuery<{ data: EdpEstablishment[] }>({
-    queryKey: ['edp-establishment-match', place?.displayName?.text],
+    queryKey: ['edp-match', place?.name],
     queryFn: () =>
-      api
-        .get('/establishments/search', {
-          params: { q: place!.displayName.text, limit: 1 },
-        })
-        .then((r) => r.data),
-    enabled: !!place?.displayName?.text,
+      api.get('/establishments/search', { params: { q: place!.name, limit: 1 } }).then((r) => r.data),
+    enabled: !!place?.name,
     staleTime: 5 * 60 * 1000,
   });
-
   const edpEst = edpMatch?.data?.[0];
 
   const { data: edpReviews } = useQuery({
     queryKey: ['edp-reviews', edpEst?.id],
-    queryFn: () =>
-      api.get(`/reviews/establishment/${edpEst!.id}?limit=5`).then((r) => r.data),
+    queryFn: () => api.get(`/reviews/establishment/${edpEst!.id}?limit=5`).then((r) => r.data),
     enabled: !!edpEst?.id,
   });
 
   const { data: edpPosts } = useQuery({
     queryKey: ['edp-posts', edpEst?.id],
-    queryFn: () =>
-      api
-        .get('/posts', { params: { establishmentId: edpEst!.id, limit: 9 } })
-        .then((r) => r.data),
+    queryFn: () => api.get('/posts', { params: { establishmentId: edpEst!.id, limit: 9 } }).then((r) => r.data),
     enabled: !!edpEst?.id,
   });
 
   const { data: edpReels } = useQuery({
     queryKey: ['edp-reels', edpEst?.id],
-    queryFn: () =>
-      api
-        .get('/reels', { params: { establishmentId: edpEst!.id, limit: 6 } })
-        .then((r) => r.data),
+    queryFn: () => api.get('/reels', { params: { establishmentId: edpEst!.id, limit: 6 } }).then((r) => r.data),
     enabled: !!edpEst?.id,
   });
 
-  if (isLoading || !place) {
+  if (placeLoading) {
     return (
       <div className="animate-pulse space-y-4 pb-24">
         <Skeleton className="w-full h-64" />
@@ -128,14 +94,32 @@ export default function PlacePage() {
     );
   }
 
-  const isOpen = place.currentOpeningHours?.openNow ?? place.regularOpeningHours?.openNow;
-  const heroPhoto = place.photos?.[0]?.url;
-  const aiSummary =
-    place.generativeSummary?.overview?.text ?? place.editorialSummary?.text;
-  const price = place.priceLevel ? PRICE_LABELS[place.priceLevel] : '';
-  const mapsUrl = place.location
-    ? `https://www.google.com/maps/search/?api=1&query=${place.location.latitude},${place.location.longitude}&query_place_id=${place.id}`
-    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.displayName.text)}`;
+  if (placeError || !place) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center px-4">
+        <p className="font-heading font-bold text-foreground">Établissement introuvable</p>
+        <p className="text-sm text-muted-foreground">Impossible de charger les informations de ce lieu.</p>
+        <button
+          onClick={() => router.back()}
+          className="px-4 py-2 rounded-xl border border-border text-sm font-medium hover:bg-muted transition-colors"
+        >
+          Retour
+        </button>
+      </div>
+    );
+  }
+
+  const heroPhoto = place.photos?.[0]?.getUrl({ maxWidth: 800 });
+  const isOpen = place.opening_hours?.isOpen?.();
+  const price = place.price_level != null ? PRICE_ICONS[place.price_level] : '';
+  const lat = place.geometry?.location?.lat();
+  const lng = place.geometry?.location?.lng();
+  const mapsUrl = lat != null && lng != null
+    ? `https://www.google.com/maps/search/?api=1&query=${lat},${lng}&query_place_id=${placeId}`
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name ?? '')}`;
+  // editorial_summary comes back as { language_code, overview } in JS API
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const summary = (place as any).editorial_summary?.overview as string | undefined;
 
   return (
     <div className="pb-24 lg:pb-8">
@@ -150,13 +134,13 @@ export default function PlacePage() {
       </header>
 
       {/* Photo hero */}
-      <div className="w-full bg-muted" style={{ aspectRatio: '16/9', maxHeight: '300px', overflow: 'hidden' }}>
+      <div className="w-full bg-muted overflow-hidden" style={{ aspectRatio: '16/9', maxHeight: '300px' }}>
         {heroPhoto ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={heroPhoto} alt={place.displayName.text} className="w-full h-full object-cover" />
+          <img src={heroPhoto} alt={place.name} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-            <span className="text-6xl font-heading font-bold text-primary/20">{place.displayName.text[0]}</span>
+            <span className="text-6xl font-heading font-bold text-primary/20">{place.name?.[0]}</span>
           </div>
         )}
       </div>
@@ -165,23 +149,19 @@ export default function PlacePage() {
       <div className="px-4 pt-4 pb-3 space-y-2">
         <div className="flex items-start justify-between gap-2">
           <h1 className="font-heading font-extrabold text-2xl text-foreground leading-tight flex-1">
-            {place.displayName.text}
+            {place.name}
           </h1>
-          {price && (
-            <span className="text-sm font-medium text-muted-foreground mt-1">{price}</span>
-          )}
+          {price && <span className="text-sm font-medium text-muted-foreground mt-1">{price}</span>}
         </div>
 
-        {/* Type + statut */}
         <div className="flex items-center gap-3 flex-wrap">
-          {place.primaryTypeDisplayName && (
-            <span className="text-sm text-muted-foreground">{place.primaryTypeDisplayName.text}</span>
+          {place.types?.[0] && (
+            <span className="text-sm text-muted-foreground capitalize">
+              {place.types[0].replace(/_/g, ' ')}
+            </span>
           )}
           {isOpen !== undefined && (
-            <span className={cn(
-              'flex items-center gap-1.5 text-sm font-medium',
-              isOpen ? 'text-success' : 'text-destructive',
-            )}>
+            <span className={cn('flex items-center gap-1.5 text-sm font-medium', isOpen ? 'text-success' : 'text-destructive')}>
               {isOpen ? (
                 <>
                   <span className="relative flex h-2 w-2">
@@ -191,45 +171,35 @@ export default function PlacePage() {
                   Ouvert
                 </>
               ) : (
-                <>
-                  <span className="h-2 w-2 rounded-full bg-destructive" />
-                  Fermé
-                </>
+                <><span className="h-2 w-2 rounded-full bg-destructive" />Fermé</>
               )}
             </span>
           )}
         </div>
 
-        {/* Note Google */}
         {place.rating != null && (
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5">
               {[1, 2, 3, 4, 5].map((s) => (
-                <Star
-                  key={s}
-                  size={14}
-                  className={s <= Math.round(place.rating!) ? 'fill-accent text-accent' : 'text-border'}
-                />
+                <Star key={s} size={14} className={s <= Math.round(place.rating!) ? 'fill-accent text-accent' : 'text-border'} />
               ))}
             </div>
             <span className="font-heading font-bold text-sm">{place.rating.toFixed(1)}</span>
-            {place.userRatingCount != null && (
+            {place.user_ratings_total != null && (
               <span className="text-xs text-muted-foreground">
-                ({place.userRatingCount.toLocaleString('fr-FR')} avis Google)
+                ({place.user_ratings_total.toLocaleString('fr-FR')} avis Google)
               </span>
             )}
           </div>
         )}
 
-        {/* Adresse */}
-        {place.formattedAddress && (
+        {place.formatted_address && (
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <MapPin size={11} />
-            <span>{place.formattedAddress}</span>
+            <span>{place.formatted_address}</span>
           </div>
         )}
 
-        {/* CTAs */}
         <div className="flex gap-3 pt-1">
           <Button className="flex-1 font-heading font-semibold bg-primary text-primary-foreground hover:bg-primary/90 h-12 rounded-xl">
             Réserver
@@ -244,10 +214,7 @@ export default function PlacePage() {
       </div>
 
       {/* Tabs */}
-      <div
-        role="tablist"
-        className="sticky top-14 z-30 bg-background/95 backdrop-blur-sm border-b border-border flex"
-      >
+      <div role="tablist" className="sticky top-14 z-30 bg-background/95 backdrop-blur-sm border-b border-border flex">
         {TABS.map((t) => (
           <button
             key={t}
@@ -256,9 +223,7 @@ export default function PlacePage() {
             onClick={() => setTab(t)}
             className={cn(
               'flex-1 px-5 py-3 text-sm font-heading font-semibold transition-colors border-b-2',
-              tab === t
-                ? 'text-primary border-primary'
-                : 'text-muted-foreground border-transparent hover:text-foreground',
+              tab === t ? 'text-primary border-primary' : 'text-muted-foreground border-transparent hover:text-foreground',
             )}
           >
             {t}
@@ -266,7 +231,6 @@ export default function PlacePage() {
         ))}
       </div>
 
-      {/* Contenu */}
       <div className="pt-4">
         {/* ── ONGLET GOOGLE ── */}
         {tab === 'Google' && (
@@ -274,44 +238,29 @@ export default function PlacePage() {
             {/* Note globale */}
             {place.rating != null && (
               <div className="bg-secondary rounded-2xl p-4 flex items-center gap-4">
-                <div className="flex flex-col items-center">
+                <div className="flex flex-col items-center min-w-[64px]">
                   <span className="font-heading font-extrabold text-4xl text-foreground">
                     {place.rating.toFixed(1)}
                   </span>
                   <div className="flex items-center gap-0.5 mt-1">
                     {[1, 2, 3, 4, 5].map((s) => (
-                      <Star
-                        key={s}
-                        size={12}
-                        className={s <= Math.round(place.rating!) ? 'fill-accent text-accent' : 'text-border'}
-                      />
+                      <Star key={s} size={11} className={s <= Math.round(place.rating!) ? 'fill-accent text-accent' : 'text-border'} />
                     ))}
                   </div>
                 </div>
-                <div className="flex-1 border-l border-border pl-4">
+                <div className="flex-1 border-l border-border pl-4 space-y-1.5">
                   <p className="font-heading font-bold text-foreground">
-                    {place.userRatingCount?.toLocaleString('fr-FR')} avis
+                    {place.user_ratings_total?.toLocaleString('fr-FR')} avis
                   </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">sur Google Maps</p>
-                  {place.websiteUri && (
-                    <a
-                      href={place.websiteUri}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-xs text-primary mt-2"
-                    >
-                      <Globe size={11} />
-                      Site web
-                      <ExternalLink size={10} />
+                  <p className="text-xs text-muted-foreground">sur Google Maps</p>
+                  {place.website && (
+                    <a href={place.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-primary">
+                      <Globe size={11} />Site web<ExternalLink size={10} />
                     </a>
                   )}
-                  {place.internationalPhoneNumber && (
-                    <a
-                      href={`tel:${place.internationalPhoneNumber}`}
-                      className="flex items-center gap-1 text-xs text-primary mt-1"
-                    >
-                      <Phone size={11} />
-                      {place.internationalPhoneNumber}
+                  {place.international_phone_number && (
+                    <a href={`tel:${place.international_phone_number}`} className="flex items-center gap-1 text-xs text-primary">
+                      <Phone size={11} />{place.international_phone_number}
                     </a>
                   )}
                 </div>
@@ -319,34 +268,27 @@ export default function PlacePage() {
             )}
 
             {/* Résumé IA */}
-            {aiSummary && (
+            {summary && (
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Sparkles size={15} className="text-primary" />
-                  <h2 className="font-heading font-bold text-sm text-foreground">Résumé IA</h2>
+                  <h2 className="font-heading font-bold text-sm text-foreground">Résumé</h2>
                 </div>
-                <p className="text-sm text-foreground leading-relaxed bg-secondary rounded-2xl p-4">
-                  {aiSummary}
-                </p>
+                <p className="text-sm text-foreground leading-relaxed bg-secondary rounded-2xl p-4">{summary}</p>
               </div>
             )}
 
             {/* Horaires */}
-            {place.regularOpeningHours?.weekdayDescriptions && (
+            {place.opening_hours?.weekday_text && (
               <div className="space-y-2">
-                <button
-                  onClick={() => setHoursExpanded((v) => !v)}
-                  className="flex items-center gap-2 w-full text-left"
-                >
+                <button onClick={() => setHoursExpanded((v) => !v)} className="flex items-center gap-2 w-full text-left">
                   <Clock size={15} className="text-muted-foreground" />
                   <h2 className="font-heading font-bold text-sm text-foreground">Horaires</h2>
-                  <span className="ml-auto text-xs text-primary">
-                    {hoursExpanded ? 'Masquer' : 'Voir tout'}
-                  </span>
+                  <span className="ml-auto text-xs text-primary">{hoursExpanded ? 'Masquer' : 'Voir tout'}</span>
                 </button>
                 {hoursExpanded && (
                   <div className="bg-secondary rounded-2xl p-4 space-y-1">
-                    {place.regularOpeningHours.weekdayDescriptions.map((line, i) => (
+                    {place.opening_hours.weekday_text.map((line, i) => (
                       <p key={i} className="text-sm text-foreground font-sans">{line}</p>
                     ))}
                   </div>
@@ -361,52 +303,36 @@ export default function PlacePage() {
                   <MessageSquare size={15} className="text-muted-foreground" />
                   <h2 className="font-heading font-bold text-sm text-foreground">Avis récents</h2>
                 </div>
-                {(place.reviews ?? []).slice(0, 3).map((review) => (
-                  <div key={review.name} className="bg-secondary rounded-2xl p-4 space-y-2">
+                {(place.reviews ?? []).slice(0, 3).map((review, i) => (
+                  <div key={i} className="bg-secondary rounded-2xl p-4 space-y-2">
                     <div className="flex items-center gap-2">
-                      {review.authorAttribution?.photoUri ? (
+                      {review.profile_photo_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={review.authorAttribution.photoUri}
-                          alt={review.authorAttribution.displayName}
-                          className="w-8 h-8 rounded-full object-cover"
-                        />
+                        <img src={review.profile_photo_url} alt={review.author_name} className="w-8 h-8 rounded-full object-cover" />
                       ) : (
                         <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                          <span className="text-sm font-bold text-muted-foreground">
-                            {review.authorAttribution?.displayName?.[0] ?? '?'}
-                          </span>
+                          <span className="text-sm font-bold text-muted-foreground">{review.author_name?.[0] ?? '?'}</span>
                         </div>
                       )}
                       <div>
-                        <p className="font-heading font-semibold text-sm text-foreground">
-                          {review.authorAttribution?.displayName}
-                        </p>
+                        <p className="font-heading font-semibold text-sm text-foreground">{review.author_name}</p>
                         <div className="flex items-center gap-1">
                           {[1, 2, 3, 4, 5].map((s) => (
-                            <Star
-                              key={s}
-                              size={10}
-                              className={s <= review.rating ? 'fill-accent text-accent' : 'text-border'}
-                            />
+                            <Star key={s} size={10} className={s <= review.rating ? 'fill-accent text-accent' : 'text-border'} />
                           ))}
-                          <span className="text-xs text-muted-foreground ml-1">
-                            {review.relativePublishTimeDescription}
-                          </span>
+                          <span className="text-xs text-muted-foreground ml-1">{review.relative_time_description}</span>
                         </div>
                       </div>
                     </div>
-                    {review.text?.text && (
-                      <p className="text-sm text-foreground leading-relaxed line-clamp-4">
-                        {review.text.text}
-                      </p>
+                    {review.text && (
+                      <p className="text-sm text-foreground leading-relaxed line-clamp-4">{review.text}</p>
                     )}
                   </div>
                 ))}
               </div>
             )}
 
-            {/* Galerie photos Google */}
+            {/* Galerie photos */}
             {(place.photos ?? []).length > 1 && (
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
@@ -418,8 +344,8 @@ export default function PlacePage() {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       key={i}
-                      src={photo.url}
-                      alt={`${place.displayName.text} photo ${i + 2}`}
+                      src={photo.getUrl({ maxWidth: 400 })}
+                      alt={`${place.name} photo ${i + 2}`}
                       className="aspect-square w-full object-cover rounded-lg"
                       loading="lazy"
                     />
@@ -438,22 +364,14 @@ export default function PlacePage() {
               <div className="flex items-center gap-2">
                 <MessageSquare size={15} className="text-primary" />
                 <h2 className="font-heading font-bold text-sm text-foreground">Avis EDP</h2>
-                {edpEst?.reviewsCount != null && edpEst.reviewsCount > 0 && (
-                  <span className="ml-auto text-xs text-muted-foreground">
-                    {edpEst.reviewsCount} avis
-                  </span>
-                )}
               </div>
-
-              {edpEst && edpReviews?.data?.length > 0 ? (
+              {edpReviews?.data?.length > 0 ? (
                 edpReviews.data.map((r: Parameters<typeof ReviewCard>[0]['review']) => (
                   <ReviewCard key={r.id} review={r} />
                 ))
               ) : (
-                <div className="bg-secondary rounded-2xl p-6 text-center space-y-2">
-                  <p className="text-sm text-muted-foreground">
-                    Aucun avis EDP pour le moment.
-                  </p>
+                <div className="bg-secondary rounded-2xl p-6 text-center space-y-1">
+                  <p className="text-sm text-muted-foreground">Aucun avis EDP pour le moment.</p>
                   <p className="text-xs text-muted-foreground">Sois le premier à donner ton avis !</p>
                 </div>
               )}
@@ -465,21 +383,14 @@ export default function PlacePage() {
                 <ImageIcon size={15} className="text-primary" />
                 <h2 className="font-heading font-bold text-sm text-foreground">Photos EDP</h2>
               </div>
-
-              {edpPosts?.data?.filter((p: { type: string; media?: Array<{ url: string; type: string }> }) => p.type === 'PHOTO' && p.media?.[0]).length > 0 ? (
+              {edpPosts?.data?.filter((p: { type: string }) => p.type === 'PHOTO').length > 0 ? (
                 <div className="grid grid-cols-3 gap-1">
                   {edpPosts.data
-                    .filter((p: { type: string; media?: Array<{ url: string; type: string }> }) => p.type === 'PHOTO' && p.media?.[0])
+                    .filter((p: { type: string; media?: Array<{ url: string }> }) => p.type === 'PHOTO' && p.media?.[0])
                     .slice(0, 9)
                     .map((p: { id: string; media: Array<{ url: string }> }) => (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        key={p.id}
-                        src={p.media[0].url}
-                        alt=""
-                        className="aspect-square w-full object-cover rounded-lg"
-                        loading="lazy"
-                      />
+                      <img key={p.id} src={p.media[0].url} alt="" className="aspect-square w-full object-cover rounded-lg" loading="lazy" />
                     ))}
                 </div>
               ) : (
@@ -495,7 +406,6 @@ export default function PlacePage() {
                 <Video size={15} className="text-primary" />
                 <h2 className="font-heading font-bold text-sm text-foreground">Vidéos EDP</h2>
               </div>
-
               {edpReels?.data?.length > 0 ? (
                 <div className="grid grid-cols-3 gap-1">
                   {edpReels.data.slice(0, 6).map((r: { id: string; thumbnail?: string; title?: string }) => (
@@ -524,7 +434,6 @@ export default function PlacePage() {
                 <Gift size={15} className="text-primary" />
                 <h2 className="font-heading font-bold text-sm text-foreground">Récompenses fidélité</h2>
               </div>
-
               <div className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl p-4 space-y-3 border border-primary/20">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">

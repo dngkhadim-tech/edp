@@ -43,9 +43,6 @@ export default function FeedPage() {
   const leftPosts = posts.filter((_, i) => i % 2 === 0);
   const rightPosts = posts.filter((_, i) => i % 2 !== 0);
 
-  // Insert ReelsRow after N posts in total (appears between left column items)
-  const reelsInsertAtLeft = Math.floor(REELS_AFTER_N_POSTS / 2);
-
   if (isError) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center px-4">

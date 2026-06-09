@@ -2,59 +2,41 @@ import Link from 'next/link';
 import { Star, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export interface GooglePlace {
-  id: string;
-  displayName: { text: string; languageCode?: string };
-  photoUrl?: string | null;
-  rating?: number;
-  userRatingCount?: number;
-  primaryTypeDisplayName?: { text: string };
-  currentOpeningHours?: { openNow: boolean };
-  regularOpeningHours?: { openNow: boolean };
-  formattedAddress?: string;
-  priceLevel?: string;
-}
-
-const PRICE_LABELS: Record<string, string> = {
-  PRICE_LEVEL_FREE: '',
-  PRICE_LEVEL_INEXPENSIVE: '€',
-  PRICE_LEVEL_MODERATE: '€€',
-  PRICE_LEVEL_EXPENSIVE: '€€€',
-  PRICE_LEVEL_VERY_EXPENSIVE: '€€€€',
-};
-
 interface Props {
-  place: GooglePlace;
+  place: google.maps.places.PlaceResult;
 }
+
+const PRICE_ICONS = ['', '€', '€€', '€€€', '€€€€'];
 
 export function PlaceCard({ place }: Props) {
-  const isOpen =
-    place.currentOpeningHours?.openNow ?? place.regularOpeningHours?.openNow;
-  const city = place.formattedAddress?.split(',').at(-2)?.trim() ?? '';
-  const price = place.priceLevel ? PRICE_LABELS[place.priceLevel] : '';
+  const photo = place.photos?.[0]?.getUrl({ maxWidth: 600 });
+  const isOpen = place.opening_hours?.isOpen?.();
+  const city = place.vicinity?.split(',').at(-1)?.trim() ?? '';
+  const price = place.price_level != null ? PRICE_ICONS[place.price_level] : '';
+  const type = place.types?.[0]?.replace(/_/g, ' ') ?? '';
 
   return (
-    <Link href={`/place/${place.id}`} className="group block">
+    <Link href={`/place/${place.place_id}`} className="group block">
       <article className="bg-card border border-border rounded-2xl overflow-hidden hover:scale-[1.02] transition-all hover:shadow-card-hover">
         <div className="relative w-full aspect-[4/3] bg-muted overflow-hidden">
-          {place.photoUrl ? (
+          {photo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={place.photoUrl}
-              alt={place.displayName.text}
+              src={photo}
+              alt={place.name}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               loading="lazy"
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
               <span className="text-4xl font-heading font-bold text-primary/30">
-                {place.displayName.text[0]}
+                {place.name?.[0]}
               </span>
             </div>
           )}
-          {place.primaryTypeDisplayName && (
-            <span className="absolute bottom-2 left-2 px-2.5 py-0.5 rounded-full bg-black/50 text-white text-xs font-medium backdrop-blur-sm">
-              {place.primaryTypeDisplayName.text}
+          {type && (
+            <span className="absolute bottom-2 left-2 px-2.5 py-0.5 rounded-full bg-black/50 text-white text-xs font-medium backdrop-blur-sm capitalize">
+              {type}
             </span>
           )}
           {isOpen !== undefined && (
@@ -70,18 +52,16 @@ export function PlaceCard({ place }: Props) {
         </div>
 
         <div className="p-3 space-y-1">
-          <h3 className="font-heading font-bold text-[15px] leading-tight truncate">
-            {place.displayName.text}
-          </h3>
+          <h3 className="font-heading font-bold text-[15px] leading-tight truncate">{place.name}</h3>
 
           <div className="flex items-center gap-1.5">
             {place.rating != null && (
               <>
                 <Star size={13} className="fill-accent text-accent" />
                 <span className="text-sm font-medium text-accent">{place.rating.toFixed(1)}</span>
-                {place.userRatingCount != null && (
+                {place.user_ratings_total != null && (
                   <span className="text-xs text-muted-foreground">
-                    ({place.userRatingCount.toLocaleString('fr-FR')} avis)
+                    ({place.user_ratings_total.toLocaleString('fr-FR')})
                   </span>
                 )}
               </>

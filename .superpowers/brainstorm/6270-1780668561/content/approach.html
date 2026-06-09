@@ -1,0 +1,42 @@
+<h2>Approche de redesign — Mobile EDP</h2>
+<p class="subtitle">3 écrans à migrer vers le thème light : Messages, Profil, Reels</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Fidèle au design spec web</h3>
+      <p>Messages et Profil calqués exactement sur la spec web (section 4 du design doc). Reels reste dark (fond noir, contenu vidéo). Profil : avatar 72px, stats row, loyalty badge pill, tabs grid/film/bookmark, grille 3 colonnes 1:1.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pour</h4><ul><li>Cohérence maximale web/mobile</li><li>Design déjà validé</li></ul></div>
+        <div class="cons"><h4>Contre</h4><ul><li>Grille photos (posts vides = placeholders)</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Adapté mobile-first</h3>
+      <p>Messages enrichi avec indicateur de non-lus (badge rouge). Profil avec cover photo + sticky header (comme Instagram). Reels dark avec overlay amélioré. Quelques patterns mobile natifs ajoutés (pull-to-refresh, swipe actions).</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pour</h4><ul><li>Expérience native optimisée</li><li>Plus proche des apps de référence</li></ul></div>
+        <div class="cons"><h4>Contre</h4><ul><li>Déviation du design spec</li><li>Scope plus large</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Minimal — thème seulement</h3>
+      <p>Conversion mécanique dark → light : remplacer #0A0A0A par colors.background, #fff par colors.foreground, #888 par colors.muted. Structure identique, zéro nouvelles fonctionnalités.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pour</h4><ul><li>Rapide, risque minimal</li></ul></div>
+        <div class="cons"><h4>Contre</h4><ul><li>Résultat basique, icônes structurelles emoji restent</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:24px">Ma recommandation : <strong>A</strong> — cohérent avec le travail déjà fait sur feed/explore/establishment.</p>
