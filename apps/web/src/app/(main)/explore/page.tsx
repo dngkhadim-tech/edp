@@ -6,7 +6,6 @@ import { PlaceCard, type GooglePlace } from '@/components/explore/PlaceCard';
 import { FilterPills, type FilterOption } from '@/components/shared/FilterPills';
 import { SlidersHorizontal, MapPin, AlertCircle, LocateFixed, LocateOff } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
 
 const FILTER_OPTIONS: FilterOption[] = [
   { value: '', label: 'Tout' },
@@ -17,41 +16,45 @@ const FILTER_OPTIONS: FilterOption[] = [
   { value: 'TOURIST_SPOT', label: 'À visiter' },
 ];
 
-type GeoState =
-  | { status: 'idle' }
-  | { status: 'loading' }
-  | { status: 'ready'; lat: number; lng: number }
-  | { status: 'denied' };
-
-function requestLocation(onUpdate: (state: GeoState) => void) {
-  if (!navigator.geolocation) { onUpdate({ status: 'denied' }); return; }
-  onUpdate({ status: 'loading' });
-  navigator.geolocation.getCurrentPosition(
-    (pos) => onUpdate({ status: 'ready', lat: pos.coords.latitude, lng: pos.coords.longitude }),
-    () => onUpdate({ status: 'denied' }),
-    { timeout: 8000 },
-  );
-}
+const PARIS = { lat: 48.8566, lng: 2.3522 };
 
 export default function ExplorePage() {
   const [type, setType] = useState('');
-  const [geo, setGeo] = useState<GeoState>({ status: 'idle' });
+  const [coords, setCoords] = useState(PARIS);
+  const [usingRealLocation, setUsingRealLocation] = useState(false);
+  const [locating, setLocating] = useState(false);
 
   useEffect(() => {
     navigator.permissions?.query({ name: 'geolocation' }).then((result) => {
-      if (result.state === 'granted') requestLocation(setGeo);
+      if (result.state === 'granted') activateLocation();
     });
   }, []);
 
-  const lat = geo.status === 'ready' ? geo.lat : null;
-  const lng = geo.status === 'ready' ? geo.lng : null;
+  function activateLocation() {
+    if (!navigator.geolocation) return;
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setUsingRealLocation(true);
+        setLocating(false);
+      },
+      () => setLocating(false),
+      { timeout: 8000 },
+    );
+  }
+
+  function deactivateLocation() {
+    setCoords(PARIS);
+    setUsingRealLocation(false);
+  }
 
   const { data, isLoading, isError } = useQuery<{ places: GooglePlace[] }>({
-    queryKey: ['places-nearby', lat, lng, type],
+    queryKey: ['places-nearby', coords.lat, coords.lng, type],
     queryFn: () => {
       const params = new URLSearchParams({
-        lat: String(lat),
-        lng: String(lng),
+        lat: String(coords.lat),
+        lng: String(coords.lng),
         type,
         radius: '5000',
       });
@@ -60,7 +63,6 @@ export default function ExplorePage() {
         return r.json();
       });
     },
-    enabled: geo.status === 'ready',
     staleTime: 5 * 60 * 1000,
   });
 
@@ -69,25 +71,26 @@ export default function ExplorePage() {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <header className="sticky top-0 z-10 bg-background border-b border-border px-4 py-3 flex items-center justify-between">
-        <h1 className="font-heading font-bold text-[18px]">À proximité</h1>
+        <h1 className="font-heading font-bold text-[18px]">À découvrir</h1>
         <div className="flex items-center gap-2">
-          {geo.status === 'ready' ? (
+          {usingRealLocation ? (
             <button
               type="button"
-              onClick={() => setGeo({ status: 'idle' })}
+              onClick={deactivateLocation}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
             >
               <LocateOff size={13} />
-              Désactiver
+              Ma position
             </button>
           ) : (
             <button
               type="button"
-              onClick={() => requestLocation(setGeo)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-secondary text-foreground hover:bg-muted transition-colors"
+              onClick={activateLocation}
+              disabled={locating}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-secondary text-foreground hover:bg-muted transition-colors disabled:opacity-50"
             >
-              <LocateFixed size={13} />
-              Ma position
+              <LocateFixed size={13} className={locating ? 'animate-pulse' : ''} />
+              {locating ? 'Localisation…' : 'Autour de moi'}
             </button>
           )}
           <button
@@ -103,37 +106,7 @@ export default function ExplorePage() {
       <div className="px-4 pt-4 space-y-4 max-w-screen-xl mx-auto w-full pb-8">
         <FilterPills options={FILTER_OPTIONS} value={type} onChange={setType} />
 
-        {/* Géolocalisation en cours */}
-        {geo.status === 'loading' && (
-          <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
-            <div className="w-10 h-10 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-            <p className="text-sm font-sans">Localisation en cours…</p>
-          </div>
-        )}
-
-        {/* Accès refusé ou idle */}
-        {(geo.status === 'idle' || geo.status === 'denied') && (
-          <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
-            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-              <LocateFixed size={28} className="text-muted-foreground" />
-            </div>
-            <div className="space-y-1">
-              <p className="font-heading font-bold text-foreground">Localisation requise</p>
-              <p className="text-sm text-muted-foreground max-w-xs">
-                {geo.status === 'denied'
-                  ? 'L\'accès à ta position a été refusé. Autorise-le dans les réglages de ton navigateur, puis réessaie.'
-                  : 'Active ta position pour voir les restaurants, bars et hôtels à 5 km autour de toi.'}
-              </p>
-            </div>
-            <Button onClick={() => requestLocation(setGeo)} className="gap-2">
-              <LocateFixed size={16} />
-              Activer la localisation
-            </Button>
-          </div>
-        )}
-
-        {/* Chargement */}
-        {geo.status === 'ready' && isLoading && (
+        {isLoading && (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="space-y-2">
@@ -145,20 +118,19 @@ export default function ExplorePage() {
           </div>
         )}
 
-        {/* Erreur */}
-        {geo.status === 'ready' && isError && (
+        {isError && (
           <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
             <AlertCircle size={40} className="text-destructive/50" />
             <p className="text-sm text-muted-foreground">Impossible de charger les établissements</p>
           </div>
         )}
 
-        {/* Résultats */}
-        {geo.status === 'ready' && !isLoading && !isError && (
+        {!isLoading && !isError && (
           places.length > 0 ? (
             <>
               <p className="text-xs text-muted-foreground font-sans">
-                {places.length} établissement{places.length > 1 ? 's' : ''} dans un rayon de 5 km
+                {places.length} établissement{places.length > 1 ? 's' : ''} •{' '}
+                {usingRealLocation ? 'autour de vous' : 'Paris'}
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 {places.map((place) => (
@@ -169,9 +141,7 @@ export default function ExplorePage() {
           ) : (
             <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
               <MapPin size={48} className="opacity-30" />
-              <p className="text-sm font-sans text-center">
-                Aucun établissement trouvé dans un rayon de 5 km
-              </p>
+              <p className="text-sm font-sans text-center">Aucun établissement trouvé</p>
             </div>
           )
         )}
