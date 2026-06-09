@@ -84,7 +84,7 @@ export function PostCard({ post }: PostCardProps) {
     : `/profile/${authorUsername}`;
 
   return (
-    <article className="bg-card border border-border rounded-xl overflow-hidden animate-fade-in">
+    <article className="bg-card rounded-2xl overflow-hidden animate-fade-in shadow-sm">
       <header className="flex items-center justify-between p-4">
         <Link href={profileHref} className="flex items-center gap-3">
           <Avatar className="h-10 w-10">
@@ -151,51 +151,58 @@ export function PostCard({ post }: PostCardProps) {
       })()}
 
       <div className="p-4 space-y-3">
+        {/* Action bar */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1">
             <button
               onClick={handleLike}
               aria-label="J'aime"
-              className={cn(
-                'flex items-center gap-1.5 text-sm transition-colors',
-                liked ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
-              )}
+              className="group flex items-center gap-1.5 px-2 py-1.5 rounded-xl transition-colors hover:bg-primary/8"
             >
               <Heart
                 size={22}
                 className={cn(
-                  liked ? 'fill-primary text-primary' : '',
+                  'transition-all duration-200',
+                  liked
+                    ? 'fill-primary text-primary scale-110'
+                    : 'text-muted-foreground group-hover:text-primary',
                   likeAnimating ? 'animate-like-pop' : '',
                 )}
                 onAnimationEnd={() => setLikeAnimating(false)}
               />
-              <span>{formatNumber(likesCount)}</span>
+              <span className={cn('text-sm font-medium tabular-nums', liked ? 'text-primary' : 'text-muted-foreground')}>
+                {formatNumber(likesCount)}
+              </span>
             </button>
             <Link
               href={`/post/${post.id}`}
-              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+              className="group flex items-center gap-1.5 px-2 py-1.5 rounded-xl hover:bg-secondary transition-colors"
             >
-              <MessageCircle size={22} />
-              <span>{formatNumber(post.commentsCount)}</span>
+              <MessageCircle size={21} className="text-muted-foreground group-hover:text-foreground transition-colors" />
+              <span className="text-sm font-medium text-muted-foreground">{formatNumber(post.commentsCount)}</span>
             </Link>
-            <button className="text-muted-foreground hover:text-foreground">
+            <button className="p-1.5 rounded-xl hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground">
               <Send size={20} />
             </button>
           </div>
           <button
             onClick={() => setSaved(!saved)}
-            className={cn(
-              'transition-colors',
-              saved ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
-            )}
+            className="p-1.5 rounded-xl hover:bg-secondary transition-colors"
+            aria-label={saved ? 'Retirer des favoris' : 'Sauvegarder'}
           >
-            <Bookmark size={20} className={saved ? 'fill-primary' : ''} />
+            <Bookmark
+              size={21}
+              className={cn(
+                'transition-all duration-200',
+                saved ? 'fill-primary text-primary' : 'text-muted-foreground hover:text-foreground',
+              )}
+            />
           </button>
         </div>
 
         {post.caption && (
-          <p className="text-sm">
-            <Link href={profileHref} className="font-semibold mr-2 hover:underline">
+          <p className="text-sm leading-relaxed">
+            <Link href={profileHref} className="font-semibold mr-1.5 hover:underline">
               {authorName}
             </Link>
             {post.caption}
@@ -203,20 +210,16 @@ export function PostCard({ post }: PostCardProps) {
         )}
 
         {post.hashtags?.length > 0 && (
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-x-2 gap-y-0.5">
             {post.hashtags.map((tag) => (
-              <Link
-                key={tag}
-                href={`/hashtag/${tag}`}
-                className="text-xs text-primary hover:underline"
-              >
+              <Link key={tag} href={`/hashtag/${tag}`} className="text-xs text-primary/80 hover:text-primary font-medium">
                 #{tag}
               </Link>
             ))}
           </div>
         )}
 
-        <p className="text-xs text-muted-foreground">{timeAgo(post.createdAt)}</p>
+        <p className="text-[11px] text-muted-foreground/70 uppercase tracking-wide font-medium">{timeAgo(post.createdAt)}</p>
       </div>
     </article>
   );

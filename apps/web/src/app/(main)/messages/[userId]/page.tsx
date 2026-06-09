@@ -6,8 +6,7 @@ import { api } from '@/lib/api';
 import { useAuthStore } from '@/store/auth.store';
 import { io, Socket } from 'socket.io-client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { Send, ArrowLeft, MoreHorizontal } from 'lucide-react';
+import { ArrowLeft, MoreHorizontal, Send, Phone, Video } from 'lucide-react';
 import { getInitials, timeAgo } from '@/lib/utils';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -32,8 +31,14 @@ type ConversationPageProps = {
   params: Promise<{ userId: string }>;
 };
 
+function shouldShowTime(messages: Message[], index: number): boolean {
+  if (index === 0) return true;
+  const prev = new Date(messages[index - 1].createdAt).getTime();
+  const curr = new Date(messages[index].createdAt).getTime();
+  return curr - prev > 5 * 60 * 1000;
+}
+
 export default function ConversationPage({ params }: ConversationPageProps) {
-  // Note: In client components, params is passed as a resolved object, not a Promise
   const { userId } = params as unknown as { userId: string };
   const { user } = useAuthStore();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -84,89 +89,141 @@ export default function ConversationPage({ params }: ConversationPageProps) {
   return (
     <div className="flex flex-col h-screen max-h-screen bg-background">
       {/* Header */}
-      <header className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card flex-shrink-0">
+      <header className="flex items-center gap-3 px-4 py-3 bg-background/80 backdrop-blur-md border-b border-border/50 flex-shrink-0">
         <Link
           href="/messages"
-          className="text-muted-foreground hover:text-foreground transition-colors"
-          aria-label="Retour aux messages"
+          className="p-1.5 -ml-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
+          aria-label="Retour"
         >
-          <ArrowLeft size={20} aria-hidden="true" />
+          <ArrowLeft size={20} />
         </Link>
 
-        {otherUser && (
-          <>
-            <Avatar className="h-9 w-9 flex-shrink-0">
-              <AvatarImage src={otherUser.avatar} />
-              <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
-                {getInitials(otherUser.firstName, otherUser.lastName)}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
+        {otherUser ? (
+          <Link href={`/profile/${otherUser.username}`} className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="relative flex-shrink-0">
+              <Avatar className="h-9 w-9">
+                <AvatarImage src={otherUser.avatar} />
+                <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                  {getInitials(otherUser.firstName, otherUser.lastName)}
+                </AvatarFallback>
+              </Avatar>
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-background" />
+            </div>
+            <div className="min-w-0">
               <p className="text-sm font-heading font-semibold truncate">
                 {otherUser.firstName} {otherUser.lastName}
               </p>
+              <p className="text-[11px] text-emerald-500 font-medium">En ligne</p>
             </div>
-          </>
+          </Link>
+        ) : (
+          <div className="flex-1" />
         )}
 
-        <button
-          className="text-muted-foreground hover:text-foreground transition-colors ml-auto"
-          aria-label="Plus d'options"
-        >
-          <MoreHorizontal size={20} aria-hidden="true" />
-        </button>
+        <div className="flex items-center gap-1 ml-auto">
+          <button className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-all" aria-label="Appel vocal">
+            <Phone size={18} />
+          </button>
+          <button className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-all" aria-label="Appel vidéo">
+            <Video size={18} />
+          </button>
+          <button className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-all" aria-label="Options">
+            <MoreHorizontal size={18} />
+          </button>
+        </div>
       </header>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
-        {messages.map((msg) => {
+      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+        {messages.map((msg, index) => {
           const isMe = msg.senderId === user?.id;
+          const showTime = shouldShowTime(messages, index);
+          const nextMsg = messages[index + 1];
+          const isLast = !nextMsg || nextMsg.senderId !== msg.senderId;
+
           return (
-            <div key={msg.id} className={cn('flex', isMe ? 'justify-end' : 'justify-start')}>
-              <div
-                className={cn(
-                  'max-w-[72%] px-4 py-2.5 text-sm',
-                  isMe ? 'bg-primary text-primary-foreground' : 'bg-secondary text-foreground',
-                )}
-                style={{
-                  borderRadius: isMe ? '16px 4px 16px 16px' : '4px 16px 16px 16px',
-                }}
-              >
-                <p>{msg.content}</p>
-                <p className={cn(
-                  'text-xs mt-1',
-                  isMe ? 'text-primary-foreground/60 text-right' : 'text-muted-foreground',
-                )}>
+            <div key={msg.id}>
+              {showTime && (
+                <p className="text-center text-[10px] text-muted-foreground/60 font-medium my-3 uppercase tracking-wider">
                   {timeAgo(msg.createdAt)}
                 </p>
+              )}
+              <div className={cn('flex items-end gap-2', isMe ? 'justify-end' : 'justify-start', !isLast && 'mb-0.5')}>
+                {!isMe && (
+                  <div className="w-6 flex-shrink-0">
+                    {isLast && otherUser && (
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage src={otherUser.avatar} />
+                        <AvatarFallback className="bg-primary/10 text-primary text-[9px]">
+                          {getInitials(otherUser.firstName, otherUser.lastName)}
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+                  </div>
+                )}
+                <div
+                  className={cn(
+                    'max-w-[72%] px-4 py-2.5 text-sm leading-relaxed',
+                    isMe
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-secondary text-foreground',
+                    isMe
+                      ? isLast ? 'rounded-[20px_4px_20px_20px]' : 'rounded-[20px_20px_4px_20px]'
+                      : isLast ? 'rounded-[4px_20px_20px_20px]' : 'rounded-[20px_20px_20px_4px]',
+                  )}
+                >
+                  {msg.content}
+                </div>
               </div>
             </div>
           );
         })}
+        {messages.length === 0 && (
+          <div className="flex flex-col items-center justify-center h-full gap-3 text-center py-16">
+            {otherUser && (
+              <Avatar className="h-16 w-16">
+                <AvatarImage src={otherUser.avatar} />
+                <AvatarFallback className="bg-primary/10 text-primary text-lg font-semibold">
+                  {getInitials(otherUser.firstName, otherUser.lastName)}
+                </AvatarFallback>
+              </Avatar>
+            )}
+            <div>
+              <p className="font-heading font-semibold text-foreground">
+                {otherUser ? `${otherUser.firstName} ${otherUser.lastName}` : ''}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">Démarrez la conversation</p>
+            </div>
+          </div>
+        )}
         <div ref={bottomRef} />
       </div>
 
       {/* Input */}
-      <div className="flex-shrink-0 px-4 py-3 border-t border-border bg-card flex gap-2 items-center">
-        <div className="flex-1 flex items-center bg-secondary rounded-full px-4 h-11">
+      <div className="flex-shrink-0 px-3 py-3 bg-background/80 backdrop-blur-md border-t border-border/50 flex gap-2 items-end">
+        <div className="flex-1 flex items-center bg-secondary rounded-3xl px-4 min-h-[44px] py-2.5">
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-            placeholder="Votre message..."
+            onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+            placeholder="Message…"
             aria-label="Message"
-            className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/60 resize-none"
           />
         </div>
-        <Button
+        <button
           onClick={sendMessage}
           disabled={!input.trim()}
-          size="icon"
-          className="h-11 w-11 rounded-full flex-shrink-0"
           aria-label="Envoyer"
+          className={cn(
+            'h-11 w-11 rounded-full flex-shrink-0 flex items-center justify-center transition-all duration-200',
+            input.trim()
+              ? 'bg-primary text-primary-foreground shadow-md hover:scale-105 active:scale-95'
+              : 'bg-secondary text-muted-foreground',
+          )}
         >
-          <Send size={18} aria-hidden="true" />
-        </Button>
+          <Send size={17} className={input.trim() ? 'translate-x-px' : ''} />
+        </button>
       </div>
     </div>
   );
