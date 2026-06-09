@@ -138,24 +138,20 @@ jobs:
     if: github.ref == 'refs/heads/main'
     environment: production
 
-    env:
-      RAILWAY_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
-
     steps:
-      - name: Install Railway CLI
-        run: |
-          curl -fsSL https://railway.com/install.sh | bash
-          echo "$HOME/.railway/bin" >> $GITHUB_PATH
-
       - name: Trigger API redeploy
         run: |
-          railway redeploy --service api --yes \
-            --project 77974053-397c-4d2c-9154-9df165745274 \
-            --environment 692a4ceb-495c-446c-b2fa-2e600d24c1a0
+          curl -sf -X POST https://backboard.railway.app/graphql/v2 \
+            -H "Authorization: Bearer ${{ secrets.RAILWAY_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"query":"mutation { serviceInstanceRedeploy(serviceId: \"bacd558c-2fcc-4665-a756-9528fc42feb5\", environmentId: \"692a4ceb-495c-446c-b2fa-2e600d24c1a0\") }"}' \
+            | tee /dev/stderr | jq -e '.data.serviceInstanceRedeploy == true'
 
       - name: Trigger Web redeploy
         run: |
-          railway redeploy --service web --yes \
-            --project 77974053-397c-4d2c-9154-9df165745274 \
-            --environment 692a4ceb-495c-446c-b2fa-2e600d24c1a0
+          curl -sf -X POST https://backboard.railway.app/graphql/v2 \
+            -H "Authorization: Bearer ${{ secrets.RAILWAY_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"query":"mutation { serviceInstanceRedeploy(serviceId: \"655e4c5d-f826-4453-8c39-fb21a7e4aa6f\", environmentId: \"692a4ceb-495c-446c-b2fa-2e600d24c1a0\") }"}' \
+            | tee /dev/stderr | jq -e '.data.serviceInstanceRedeploy == true'
 
