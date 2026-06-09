@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { PlaceCard, type GooglePlace } from '@/components/explore/PlaceCard';
 import { FilterPills, type FilterOption } from '@/components/shared/FilterPills';
@@ -36,20 +36,15 @@ export default function ExplorePage() {
     );
   }, []);
 
-  const handleTypeChange = useCallback((value: string) => setType(value), []);
+  const lat = geo.status === 'ready' ? geo.lat : null;
+  const lng = geo.status === 'ready' ? geo.lng : null;
 
   const { data, isLoading, isError } = useQuery<{ places: GooglePlace[] }>({
-    queryKey: [
-      'places-nearby',
-      geo.status === 'ready' ? geo.lat : null,
-      geo.status === 'ready' ? geo.lng : null,
-      type,
-    ],
+    queryKey: ['places-nearby', lat, lng, type],
     queryFn: () => {
-      if (geo.status !== 'ready') return Promise.resolve({ places: [] });
       const params = new URLSearchParams({
-        lat: String(geo.lat),
-        lng: String(geo.lng),
+        lat: String(lat),
+        lng: String(lng),
         type,
         radius: '5000',
       });
@@ -78,7 +73,7 @@ export default function ExplorePage() {
       </header>
 
       <div className="px-4 pt-4 space-y-4 max-w-screen-xl mx-auto w-full pb-8">
-        <FilterPills options={FILTER_OPTIONS} value={type} onChange={handleTypeChange} />
+        <FilterPills options={FILTER_OPTIONS} value={type} onChange={setType} />
 
         {/* Géolocalisation en cours */}
         {(geo.status === 'idle' || geo.status === 'loading') && (

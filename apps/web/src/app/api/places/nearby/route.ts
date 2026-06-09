@@ -2,6 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const API_KEY = process.env.GOOGLE_MAPS_API_KEY ?? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '';
 
+const FIELD_MASK = [
+  'places.id',
+  'places.displayName',
+  'places.photos',
+  'places.rating',
+  'places.userRatingCount',
+  'places.primaryTypeDisplayName',
+  'places.regularOpeningHours',
+  'places.currentOpeningHours',
+  'places.location',
+  'places.formattedAddress',
+  'places.businessStatus',
+  'places.priceLevel',
+].join(',');
+
 const TYPE_MAP: Record<string, string[]> = {
   RESTAURANT: ['restaurant'],
   BAR: ['bar', 'night_club'],
@@ -28,20 +43,7 @@ export async function GET(req: NextRequest) {
     headers: {
       'Content-Type': 'application/json',
       'X-Goog-Api-Key': API_KEY,
-      'X-Goog-FieldMask': [
-        'places.id',
-        'places.displayName',
-        'places.photos',
-        'places.rating',
-        'places.userRatingCount',
-        'places.primaryTypeDisplayName',
-        'places.regularOpeningHours',
-        'places.currentOpeningHours',
-        'places.location',
-        'places.formattedAddress',
-        'places.businessStatus',
-        'places.priceLevel',
-      ].join(','),
+      'X-Goog-FieldMask': FIELD_MASK,
     },
     body: JSON.stringify({
       includedTypes,
@@ -64,7 +66,9 @@ export async function GET(req: NextRequest) {
 
   const data = await res.json();
 
-  const places = (data.places ?? []).map((p: Record<string, unknown> & { photos?: Array<{ name: string }> }) => ({
+  type RawPlace = { photos?: Array<{ name: string }> } & Record<string, unknown>;
+
+  const places = (data.places ?? []).map((p: RawPlace) => ({
     ...p,
     photoUrl: p.photos?.[0]?.name
       ? `https://places.googleapis.com/v1/${p.photos[0].name}/media?maxWidthPx=600&key=${API_KEY}`
