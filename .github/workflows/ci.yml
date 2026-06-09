@@ -138,32 +138,24 @@ jobs:
     if: github.ref == 'refs/heads/main'
     environment: production
 
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
+
     steps:
       - name: Install Railway CLI
         run: |
           curl -fsSL https://railway.com/install.sh | bash
           echo "$HOME/.railway/bin" >> $GITHUB_PATH
 
-      - name: Write Railway config
-        run: |
-          mkdir -p ~/.railway
-          printf '{"projects":{},"user":{"id":"%s","token":null,"accessToken":"%s","refreshToken":"%s","tokenExpiresAt":0},"editor":null}' \
-            "${{ secrets.RAILWAY_USER_ID }}" \
-            "${{ secrets.RAILWAY_TOKEN }}" \
-            "${{ secrets.RAILWAY_REFRESH_TOKEN }}" \
-            > ~/.railway/config.json
-
       - name: Trigger API redeploy
         run: |
-          railway variable set "BUILD_TRIGGER=$(date +%s)" \
-            --service api \
+          railway redeploy --service api --yes \
             --project 77974053-397c-4d2c-9154-9df165745274 \
             --environment 692a4ceb-495c-446c-b2fa-2e600d24c1a0
 
       - name: Trigger Web redeploy
         run: |
-          railway variable set "BUILD_TRIGGER=$(date +%s)" \
-            --service web \
+          railway redeploy --service web --yes \
             --project 77974053-397c-4d2c-9154-9df165745274 \
             --environment 692a4ceb-495c-446c-b2fa-2e600d24c1a0
 
