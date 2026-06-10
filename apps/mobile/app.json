@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "EDP",
+    "name": "VEYA",
     "slug": "edp",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -32,7 +32,7 @@
       "expo-router",
       "expo-camera",
       "expo-image-picker",
-      ["expo-location", { "locationAlwaysAndWhenInUsePermission": "EDP a besoin de votre localisation pour trouver des établissements proches." }],
+      ["expo-location", { "locationAlwaysAndWhenInUsePermission": "VEYA a besoin de votre localisation pour trouver des établissements proches." }],
       ["expo-notifications", { "icon": "./assets/icon.png", "color": "#C9A84C" }]
     ],
     "scheme": "edp",

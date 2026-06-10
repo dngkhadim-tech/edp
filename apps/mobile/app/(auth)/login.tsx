@@ -43,14 +43,14 @@ export default function LoginScreen() {
           end={{ x: 1, y: 1 }}
           style={styles.hero}
         >
-          <Text style={styles.logo}>EDP</Text>
+          <Text style={styles.logo}>VEYA</Text>
           <Text style={styles.tagline}>Eat · Drink · Pose</Text>
         </LinearGradient>
 
         {/* Formulaire */}
         <View style={styles.form}>
           <Text style={styles.title}>Connexion</Text>
-          <Text style={styles.subtitle}>Bienvenue sur EDP</Text>
+          <Text style={styles.subtitle}>Bienvenue sur VEYA</Text>
 
           <View style={styles.field}>
             <Text style={styles.label}>Email</Text>

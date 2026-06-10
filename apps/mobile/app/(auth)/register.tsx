@@ -88,7 +88,7 @@ export default function RegisterScreen() {
           end={{ x: 1, y: 1 }}
           style={[styles.hero, step === 2 && styles.heroSmall]}
         >
-          <Text style={styles.logo}>EDP</Text>
+          <Text style={styles.logo}>VEYA</Text>
           <Text style={styles.heroTitle}>
             {step === 1 ? 'Créer un compte' : 'Vos informations'}
           </Text>

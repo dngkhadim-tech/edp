@@ -31,7 +31,7 @@ export class EmailService {
       await this.transporter.sendMail({
         from: this.from,
         to: user.email,
-        subject: 'Vérifie ton adresse email — EDP',
+        subject: 'Vérifie ton adresse email — VEYA',
         html: verificationTemplate(user.firstName, link),
       });
     } catch (err) {
@@ -49,7 +49,7 @@ export class EmailService {
       await this.transporter.sendMail({
         from: this.from,
         to: user.email,
-        subject: 'Réinitialise ton mot de passe — EDP',
+        subject: 'Réinitialise ton mot de passe — VEYA',
         html: passwordResetTemplate(user.firstName, link),
       });
     } catch (err) {

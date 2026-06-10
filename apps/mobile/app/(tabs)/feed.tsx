@@ -57,7 +57,7 @@ export default function FeedScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.logo}>EDP</Text>
+        <Text style={styles.logo}>VEYA</Text>
         <View style={styles.icons}>
           <Bell size={22} color={colors.muted} />
           <Search size={22} color={colors.muted} />

@@ -1,4 +1,4 @@
--- EDP — Enrichissement seed : follows, reservations, comments, loyalty
+-- VEYA — Enrichissement seed : follows, reservations, comments, loyalty
 -- Idempotent (ON CONFLICT DO NOTHING)
 
 -- ========== FOLLOWS : relations sociales ==========

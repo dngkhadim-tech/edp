@@ -78,7 +78,7 @@ export class NotificationsService {
       if (!user?.fcmToken) return;
       await admin.messaging().send({
         token: user.fcmToken,
-        notification: { title: 'EDP', body: message },
+        notification: { title: 'VEYA', body: message },
         data: { userId },
       });
     } catch {}

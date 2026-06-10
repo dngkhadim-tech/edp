@@ -38,8 +38,8 @@ async function bootstrap() {
 
   if (!isProd) {
     const config = new DocumentBuilder()
-      .setTitle('EDP API')
-      .setDescription('EDP – Eat • Drink • Pose — API Documentation')
+      .setTitle('VEYA API')
+      .setDescription('VEYA – API Documentation')
       .setVersion('1.0')
       .addBearerAuth()
       .build();
@@ -49,7 +49,7 @@ async function bootstrap() {
 
   const port = configService.get<number>('PORT', 4000);
   await app.listen(port, '0.0.0.0');
-  console.log(`EDP API running on port ${port} [${configService.get('NODE_ENV')}]`);
+  console.log(`VEYA API running on port ${port} [${configService.get('NODE_ENV')}]`);
 }
 
 bootstrap();

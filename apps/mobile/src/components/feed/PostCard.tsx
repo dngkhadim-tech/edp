@@ -40,8 +40,8 @@ export function PostCard({ post }: Props) {
 
   const author = post.author;
   const authorName = author
-    ? (`${author.firstName || ''} ${author.lastName || ''}`.trim() || author.name || 'EDP')
-    : 'EDP';
+    ? (`${author.firstName || ''} ${author.lastName || ''}`.trim() || author.name || 'VEYA')
+    : 'VEYA';
   const initials = authorName.slice(0, 2).toUpperCase();
   const mediaItem = post.media?.[0];
 

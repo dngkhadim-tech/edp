@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Authentification', () => {
   test('affiche la page de connexion', async ({ page }) => {
     await page.goto('/login');
-    await expect(page.getByText('EDP')).toBeVisible();
+    await expect(page.getByText('VEYA')).toBeVisible();
     await expect(page.getByText('Bienvenue')).toBeVisible();
     await expect(page.getByPlaceholder('vous@exemple.com')).toBeVisible();
   });

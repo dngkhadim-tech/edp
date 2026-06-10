@@ -90,7 +90,7 @@ function ReelItem({ item, isActive }: ReelItemProps) {
           ) : null}
           <View style={styles.musicRow}>
             <Music2 size={12} color="#ccc" />
-            <Text style={styles.music}>EDP Original Audio</Text>
+            <Text style={styles.music}>VEYA Original Audio</Text>
           </View>
         </View>
       </View>

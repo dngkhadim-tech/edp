@@ -8,15 +8,15 @@ async function seed() {
   console.log('Seeding database...');
 
   // Admin user
-  const adminPass = await bcrypt.hash('Admin@EDP2024!', 12);
+  const adminPass = await bcrypt.hash('Admin@VEYA2024!', 12);
   await queryRunner.query(`
     INSERT INTO users (email, username, first_name, last_name, password, role, email_verified)
-    VALUES ('admin@edp.app', 'admin_edp', 'Admin', 'EDP', $1, 'ADMIN', true)
+    VALUES ('admin@edp.app', 'admin_edp', 'Admin', 'VEYA', $1, 'ADMIN', true)
     ON CONFLICT (email) DO NOTHING
   `, [adminPass]);
 
   // Test user
-  const userPass = await bcrypt.hash('User@EDP2024!', 12);
+  const userPass = await bcrypt.hash('User@VEYA2024!', 12);
   await queryRunner.query(`
     INSERT INTO users (email, username, first_name, last_name, password, role, email_verified, bio, city, country)
     VALUES ('test@edp.app', 'foodlover_paris', 'Sophie', 'Martin', $1, 'USER', true, 'Passionnée de gastronomie 🍽️', 'Paris', 'France')

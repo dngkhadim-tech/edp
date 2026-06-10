@@ -5,11 +5,11 @@ export function verificationTemplate(firstName: string, link: string): string {
 <body style="margin:0;padding:0;background:#f9fafb;font-family:Arial,sans-serif">
   <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;padding:40px 32px">
     <div style="text-align:center;margin-bottom:32px">
-      <span style="font-size:32px;font-weight:900;color:#E11D48;letter-spacing:-1px">EDP</span>
+      <span style="font-size:32px;font-weight:900;color:#E11D48;letter-spacing:-1px">VEYA</span>
     </div>
     <h1 style="font-size:22px;font-weight:700;color:#111;margin:0 0 12px">Salut ${firstName} !</h1>
     <p style="color:#6b7280;font-size:15px;line-height:1.6;margin:0 0 28px">
-      Vérifie ton adresse email pour activer ton compte EDP et accéder à toutes les fonctionnalités.
+      Vérifie ton adresse email pour activer ton compte VEYA et accéder à toutes les fonctionnalités.
     </p>
     <div style="text-align:center;margin-bottom:32px">
       <a href="${link}" style="background:#E11D48;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;display:inline-block">
