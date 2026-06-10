@@ -3,12 +3,14 @@
 import { useState } from 'react';
 import { useAuthStore } from '@/store/auth.store';
 import { api } from '@/lib/api';
+import { X } from 'lucide-react';
 
 export function EmailVerificationBanner() {
   const user = useAuthStore((s) => s.user);
   const [sent, setSent] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
 
-  if (!user || user.emailVerified) return null;
+  if (!user || user.emailVerified || dismissed) return null;
 
   const handleResend = async () => {
     await api.post('/auth/resend-verification', { email: user.email }).catch(() => {});
@@ -25,6 +27,13 @@ export function EmailVerificationBanner() {
           Renvoyer
         </button>
       )}
+      <button
+        onClick={() => setDismissed(true)}
+        aria-label="Fermer"
+        className="absolute right-3 p-1 rounded-full hover:bg-rose-100 text-rose-500 hover:text-rose-700 transition-colors"
+      >
+        <X size={15} />
+      </button>
     </div>
   );
 }
