@@ -47,7 +47,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex">
       {/* Left hero — desktop only */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary/20 via-background to-background flex-col justify-between p-12">
-        <EdpLogo withTagline className="h-16 w-auto text-primary mx-auto" />
+        <EdpLogo className="h-16 w-auto text-primary mx-auto" />
         <div>
           <p className="text-2xl font-light text-foreground/80">Partagez vos expériences,</p>
           <p className="text-2xl font-light text-foreground/80">réservez vos moments.</p>
@@ -59,7 +59,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md space-y-8">
           {/* Mobile logo */}
           <div className="text-center lg:hidden">
-            <EdpLogo withTagline className="h-16 w-auto text-primary mx-auto" />
+            <EdpLogo className="h-16 w-auto text-primary mx-auto" />
           </div>
 
           <div className="text-center">

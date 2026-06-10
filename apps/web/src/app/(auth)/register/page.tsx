@@ -107,7 +107,7 @@ export default function RegisterPage() {
     <div className="min-h-screen flex">
       {/* Left hero — desktop only */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary/20 via-background to-background flex-col justify-between p-12">
-        <EdpLogo withTagline className="h-16 w-auto text-primary mx-auto" />
+        <EdpLogo className="h-16 w-auto text-primary mx-auto" />
         <div>
           <p className="text-2xl font-light text-foreground/80">Rejoignez la communauté</p>
           <p className="text-2xl font-light text-foreground/80">et partagez vos moments.</p>
@@ -118,7 +118,7 @@ export default function RegisterPage() {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-background">
         <div className="w-full max-w-md space-y-6">
           <div className="text-center lg:hidden">
-            <EdpLogo withTagline className="h-16 w-auto text-primary mx-auto" />
+            <EdpLogo className="h-16 w-auto text-primary mx-auto" />
           </div>
 
           <div className="text-center">

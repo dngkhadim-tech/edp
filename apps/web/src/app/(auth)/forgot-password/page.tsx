@@ -20,7 +20,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-6 p-8">
-      <EdpLogo withTagline className="h-20 w-auto" />
+      <EdpLogo className="h-20 w-auto" />
       {sent ? (
         <div className="text-center">
           <p className="font-semibold text-lg">Email envoyé !</p>
