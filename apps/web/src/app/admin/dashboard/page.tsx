@@ -32,7 +32,7 @@ export default function AdminDashboard() {
     <div className="p-8 space-y-8">
       <div>
         <h1 className="text-3xl font-heading font-bold">Dashboard Admin</h1>
-        <p className="text-muted-foreground mt-1">Vue d'ensemble de la plateforme EDP</p>
+        <p className="text-muted-foreground mt-1">Vue d'ensemble de la plateforme VEYA</p>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">

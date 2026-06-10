@@ -50,7 +50,7 @@ export function Sidebar() {
   return (
     <aside className="fixed left-0 top-0 h-full w-16 lg:w-60 border-r border-border bg-card flex flex-col z-40 hidden md:flex">
       <div className="p-3 lg:p-6">
-        <Link href="/feed" className="block" aria-label="EDP — Eat Drink Pose">
+        <Link href="/feed" className="block" aria-label="VEYA — Eat Drink Pose">
           {/* Narrow (icon-only): monogram only */}
           <EdpLogo className="lg:hidden h-8 w-auto text-primary" />
           {/* Wide: full logo with tagline */}

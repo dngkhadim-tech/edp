@@ -81,7 +81,7 @@ export function Suggestions() {
       </div>
 
       <p className="text-xs text-muted-foreground">
-        EDP – Eat • Drink • Pose © 2024
+        VEYA – Eat • Drink • Pose © 2024
       </p>
     </div>
   );

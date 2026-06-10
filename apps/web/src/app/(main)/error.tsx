@@ -11,7 +11,7 @@ interface ErrorProps {
 
 export default function Error({ error, reset }: ErrorProps) {
   useEffect(() => {
-    console.error('[EDP] Route error:', error);
+    console.error('[VEYA] Route error:', error);
   }, [error]);
 
   return (

@@ -47,7 +47,7 @@ const TESTIMONIALS = [
     name: 'Sophie Martin',
     grade: 'Platinum',
     avatar: 'https://i.pravatar.cc/80?img=1',
-    text: 'EDP a complètement changé ma façon de découvrir les restaurants. Je ne peux plus m\'en passer !',
+    text: 'VEYA a complètement changé ma façon de découvrir les restaurants. Je ne peux plus m\'en passer !',
     city: 'Paris',
   },
   {
@@ -79,7 +79,7 @@ export default function LandingPage() {
       <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-black/80 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-2xl font-heading font-bold text-amber-400">EDP</span>
+            <span className="text-2xl font-heading font-bold text-amber-400">VEYA</span>
             <span className="text-xs text-muted-foreground hidden sm:block">Eat • Drink • Pose</span>
           </div>
           <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
@@ -301,7 +301,7 @@ export default function LandingPage() {
             <span className="text-amber-400">la table ?</span>
           </h2>
           <p className="text-xl text-muted-foreground mb-10">
-            Des milliers de foodies vous attendent sur EDP.
+            Des milliers de foodies vous attendent sur VEYA.
           </p>
           <Link
             href="/register"
@@ -317,7 +317,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
             <div>
-              <h4 className="font-heading font-bold text-amber-400 text-xl mb-4">EDP</h4>
+              <h4 className="font-heading font-bold text-amber-400 text-xl mb-4">VEYA</h4>
               <p className="text-muted-foreground text-sm leading-relaxed">
                 Partagez vos expériences, réservez vos moments.
               </p>
@@ -347,7 +347,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="border-t border-border pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-muted-foreground text-sm">© 2024 EDP – Eat • Drink • Pose. Tous droits réservés.</p>
+            <p className="text-muted-foreground text-sm">© 2024 VEYA – Eat • Drink • Pose. Tous droits réservés.</p>
             <div className="flex items-center gap-2 text-muted-foreground text-sm">
               <Shield size={14} className="text-primary" />
               RGPD conforme

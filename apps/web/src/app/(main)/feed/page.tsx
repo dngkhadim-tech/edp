@@ -62,7 +62,7 @@ export default function FeedPage() {
     <div className="pb-24 lg:pb-8">
       {/* Header mobile */}
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border px-4 py-3 lg:hidden flex items-center justify-between">
-        <span className="font-heading font-extrabold text-xl text-primary">EDP</span>
+        <span className="font-heading font-extrabold text-xl text-primary">VEYA</span>
         <span className="text-xs text-muted-foreground font-sans">Eat · Drink · Pose</span>
       </header>
 

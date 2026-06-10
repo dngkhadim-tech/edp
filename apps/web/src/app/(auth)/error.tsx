@@ -12,7 +12,7 @@ interface ErrorProps {
 
 export default function Error({ error, reset }: ErrorProps) {
   useEffect(() => {
-    console.error('[EDP/auth] Error:', error);
+    console.error('[VEYA/auth] Error:', error);
   }, [error]);
 
   return (

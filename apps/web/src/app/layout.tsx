@@ -3,11 +3,11 @@ import './globals.css';
 import { Providers } from '@/components/layout/Providers';
 
 export const metadata: Metadata = {
-  title: 'EDP – Eat • Drink • Pose',
+  title: 'VEYA',
   description: 'Partagez vos expériences, réservez vos moments.',
   keywords: ['restaurant', 'hotel', 'bar', 'avis', 'réservation', 'réseau social'],
   openGraph: {
-    title: 'EDP – Eat • Drink • Pose',
+    title: 'VEYA',
     description: 'Partagez vos expériences, réservez vos moments.',
     type: 'website',
   },

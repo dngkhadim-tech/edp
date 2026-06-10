@@ -97,7 +97,7 @@ export function PinCard({ post, tall = false }: PinCardProps) {
             ) : (
               <Image
                 src={mediaItem.url}
-                alt={post.caption || 'Post EDP'}
+                alt={post.caption || 'Post VEYA'}
                 fill
                 className="object-cover group-hover:scale-[1.02] transition-transform duration-300"
                 sizes="(max-width: 768px) 50vw, 300px"

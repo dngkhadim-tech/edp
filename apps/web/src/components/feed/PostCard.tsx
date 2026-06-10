@@ -128,7 +128,7 @@ export function PostCard({ post }: PostCardProps) {
             ) : (
               <Image
                 src={mediaItem.url}
-                alt={post.caption || 'Post EDP'}
+                alt={post.caption || 'Post VEYA'}
                 fill
                 className="object-cover"
                 sizes="(max-width: 768px) 100vw, 600px"

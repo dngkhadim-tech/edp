@@ -49,7 +49,7 @@ function NotifItem({ notif }: { notif: Notification }) {
           <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
             {notif.actor
               ? getInitials(notif.actor.firstName, notif.actor.lastName)
-              : 'EDP'}
+              : 'VEYA'}
           </AvatarFallback>
         </Avatar>
         <span className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary/10">

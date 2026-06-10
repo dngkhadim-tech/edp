@@ -14,7 +14,7 @@ import { ReviewCard } from '@/components/establishment/ReviewCard';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const TABS = ['Google', 'EDP'] as const;
+const TABS = ['Google', 'VEYA'] as const;
 type Tab = (typeof TABS)[number];
 
 const PRICE_LABELS: Record<string, string> = {
@@ -348,12 +348,12 @@ export default function PlacePage() {
           </div>
         )}
 
-        {tab === 'EDP' && (
+        {tab === 'VEYA' && (
           <div className="px-4 space-y-6">
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <MessageSquare size={15} className="text-primary" />
-                <h2 className="font-heading font-bold text-sm text-foreground">Avis EDP</h2>
+                <h2 className="font-heading font-bold text-sm text-foreground">Avis VEYA</h2>
                 {edpEst?.reviewsCount != null && edpEst.reviewsCount > 0 && (
                   <span className="ml-auto text-xs text-muted-foreground">{edpEst.reviewsCount} avis</span>
                 )}
@@ -364,7 +364,7 @@ export default function PlacePage() {
                 ))
               ) : (
                 <div className="bg-secondary rounded-2xl p-6 text-center space-y-2">
-                  <p className="text-sm text-muted-foreground">Aucun avis EDP pour le moment.</p>
+                  <p className="text-sm text-muted-foreground">Aucun avis VEYA pour le moment.</p>
                   <p className="text-xs text-muted-foreground">Sois le premier à donner ton avis !</p>
                 </div>
               )}
@@ -373,7 +373,7 @@ export default function PlacePage() {
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <ImageIcon size={15} className="text-primary" />
-                <h2 className="font-heading font-bold text-sm text-foreground">Photos EDP</h2>
+                <h2 className="font-heading font-bold text-sm text-foreground">Photos VEYA</h2>
               </div>
               {edpPosts?.data?.filter((p: { type: string; media?: Array<{ url: string }> }) => p.type === 'PHOTO' && p.media?.[0]).length > 0 ? (
                 <div className="grid grid-cols-3 gap-1">
@@ -387,7 +387,7 @@ export default function PlacePage() {
                 </div>
               ) : (
                 <div className="bg-secondary rounded-2xl p-6 text-center">
-                  <p className="text-sm text-muted-foreground">Aucune photo EDP pour le moment.</p>
+                  <p className="text-sm text-muted-foreground">Aucune photo VEYA pour le moment.</p>
                 </div>
               )}
             </div>
@@ -395,7 +395,7 @@ export default function PlacePage() {
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Video size={15} className="text-primary" />
-                <h2 className="font-heading font-bold text-sm text-foreground">Vidéos EDP</h2>
+                <h2 className="font-heading font-bold text-sm text-foreground">Vidéos VEYA</h2>
               </div>
               {edpReels?.data?.length > 0 ? (
                 <div className="grid grid-cols-3 gap-1">
@@ -414,7 +414,7 @@ export default function PlacePage() {
                 </div>
               ) : (
                 <div className="bg-secondary rounded-2xl p-6 text-center">
-                  <p className="text-sm text-muted-foreground">Aucune vidéo EDP pour le moment.</p>
+                  <p className="text-sm text-muted-foreground">Aucune vidéo VEYA pour le moment.</p>
                 </div>
               )}
             </div>
@@ -430,7 +430,7 @@ export default function PlacePage() {
                     <Gift size={18} className="text-primary" />
                   </div>
                   <div>
-                    <p className="font-heading font-bold text-sm text-foreground">Programme EDP</p>
+                    <p className="font-heading font-bold text-sm text-foreground">Programme VEYA</p>
                     <p className="text-xs text-muted-foreground">Gagne des points en visitant cet établissement</p>
                   </div>
                 </div>

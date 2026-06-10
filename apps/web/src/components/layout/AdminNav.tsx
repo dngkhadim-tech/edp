@@ -29,7 +29,7 @@ export function AdminNav() {
     <aside className="fixed left-0 top-0 h-full w-60 border-r border-border bg-card flex flex-col z-40">
       <div className="p-6 border-b border-border">
         <Link href="/admin/dashboard" className="block">
-          <span className="font-heading font-extrabold text-xl text-primary">EDP</span>
+          <span className="font-heading font-extrabold text-xl text-primary">VEYA</span>
           <span className="block text-xs text-muted-foreground mt-0.5">Administration</span>
         </Link>
       </div>
