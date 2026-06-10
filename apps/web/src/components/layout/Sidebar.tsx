@@ -50,9 +50,9 @@ export function Sidebar() {
   return (
     <aside className="fixed left-0 top-0 h-full w-16 lg:w-60 border-r border-border bg-card flex flex-col z-40 hidden md:flex">
       <div className="p-3 lg:p-6">
-        <Link href="/feed" className="block" aria-label="VEYA">
-          <EdpLogo className="lg:hidden h-8 w-auto" />
-          <EdpLogo className="hidden lg:block h-10 w-auto" />
+        <Link href="/feed" aria-label="VEYA" className="inline-flex items-center bg-foreground rounded-xl px-3 py-2">
+          <EdpLogo className="lg:hidden h-6 w-auto invert" />
+          <EdpLogo className="hidden lg:block h-7 w-auto invert" />
         </Link>
       </div>
 
