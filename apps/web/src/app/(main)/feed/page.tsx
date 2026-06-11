@@ -61,20 +61,20 @@ export default function FeedPage() {
   return (
     <div className="pb-24 lg:pb-8">
       {/* Header mobile */}
-      <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border px-4 py-3 lg:hidden flex items-center justify-between">
-        <span className="font-heading font-extrabold text-xl text-primary">VEYA</span>
-        <span className="text-xs text-muted-foreground font-sans">Eat · Drink · Pose</span>
+      <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border/50 px-4 py-3 lg:hidden flex items-center justify-between">
+        <span className="font-heading font-extrabold text-xl tracking-tight">VEYA</span>
+        <span className="text-[11px] text-muted-foreground font-medium tracking-widest uppercase">Eat · Drink · Pose</span>
       </header>
 
       <CategoryPills value={category} onChange={setCategory} />
 
       {isLoading ? (
         /* Skeleton masonry */
-        <div className="flex gap-2 px-2 mt-1">
-          <div className="flex-1 flex flex-col gap-2">
+        <div className="flex gap-3 px-3 mt-2">
+          <div className="flex-1 flex flex-col gap-3">
             {[0, 1, 2].map((i) => <PinCardSkeleton key={i} tall={i % 2 === 0} />)}
           </div>
-          <div className="flex-1 flex flex-col gap-2">
+          <div className="flex-1 flex flex-col gap-3 mt-8">
             {[0, 1, 2].map((i) => <PinCardSkeleton key={i} tall={i % 2 !== 0} />)}
           </div>
         </div>
@@ -88,16 +88,16 @@ export default function FeedPage() {
           )}
 
           {/* Masonry 2-column grid */}
-          <div className="flex gap-2 px-2 mt-1 items-start">
+          <div className="flex gap-3 px-3 mt-2 items-start">
             {/* Left column */}
-            <div className="flex-1 flex flex-col gap-2">
+            <div className="flex-1 flex flex-col gap-3">
               {leftPosts.map((post, i) => (
                 <PinCard key={post.id} post={post} tall={i % 3 === 0} />
               ))}
             </div>
 
-            {/* Right column — offset by half a card for natural stagger */}
-            <div className="flex-1 flex flex-col gap-2 mt-6">
+            {/* Right column — offset for natural stagger */}
+            <div className="flex-1 flex flex-col gap-3 mt-8">
               {rightPosts.map((post, i) => (
                 <PinCard key={post.id} post={post} tall={i % 3 === 2} />
               ))}
