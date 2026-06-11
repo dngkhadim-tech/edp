@@ -6,7 +6,7 @@ import { useState } from 'react';
 import {
   Star, MapPin, Clock, Navigation, ChevronLeft,
   Globe, Phone, Sparkles, MessageSquare, Image as ImageIcon,
-  Video, Gift, ExternalLink,
+  Video, Gift, ExternalLink, X, Loader2, CalendarDays, Users, CheckCircle2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { api } from '@/lib/api';
@@ -64,11 +64,27 @@ interface EdpEstablishment {
   gallery?: string[];
 }
 
+const TIME_SLOTS = Array.from({ length: 21 }, (_, i) => {
+  const h = Math.floor(i / 2) + 12;
+  const m = i % 2 === 0 ? '00' : '30';
+  return `${h.toString().padStart(2, '0')}:${m}`;
+});
+
+const today = new Date().toISOString().split('T')[0];
+
 export default function PlacePage() {
   const { placeId } = useParams<{ placeId: string }>();
   const router = useRouter();
   const [tab, setTab] = useState<Tab>('Google');
   const [hoursExpanded, setHoursExpanded] = useState(false);
+
+  // Reservation modal
+  const [showReservation, setShowReservation] = useState(false);
+  const [resDate, setResDate] = useState('');
+  const [resTime, setResTime] = useState('');
+  const [resGuests, setResGuests] = useState(2);
+  const [resLoading, setResLoading] = useState(false);
+  const [resDone, setResDone] = useState(false);
 
   const { data: place, isLoading } = useQuery<PlaceDetail>({
     queryKey: ['place', placeId],
@@ -89,6 +105,30 @@ export default function PlacePage() {
   });
 
   const edpEst = edpMatch?.data?.[0];
+
+  const handleReserve = async () => {
+    if (edpEst?.id) {
+      if (!resDate || !resTime) return;
+      setResLoading(true);
+      try {
+        await api.post('/reservations', {
+          establishmentId: edpEst.id,
+          type: 'RESTAURANT',
+          date: resDate,
+          time: resTime,
+          partySize: resGuests,
+        });
+        setResDone(true);
+        setTimeout(() => { setShowReservation(false); setResDone(false); router.push('/reservations'); }, 1500);
+      } finally {
+        setResLoading(false);
+      }
+    } else if (place?.websiteUri) {
+      window.open(place.websiteUri, '_blank');
+    } else if (place?.internationalPhoneNumber) {
+      window.location.href = `tel:${place.internationalPhoneNumber}`;
+    }
+  };
 
   const { data: edpReviews } = useQuery({
     queryKey: ['edp-reviews', edpEst?.id],
@@ -210,7 +250,10 @@ export default function PlacePage() {
         )}
 
         <div className="flex gap-3 pt-1">
-          <Button className="flex-1 font-heading font-semibold bg-primary text-primary-foreground hover:bg-primary/90 h-12 rounded-xl">
+          <Button
+            className="flex-1 font-heading font-semibold bg-primary text-primary-foreground hover:bg-primary/90 h-12 rounded-xl"
+            onClick={() => setShowReservation(true)}
+          >
             Réserver
           </Button>
           <Button variant="outline" className="flex-1 font-heading font-semibold border-border text-foreground h-12 rounded-xl" asChild>
@@ -452,6 +495,117 @@ export default function PlacePage() {
           </div>
         )}
       </div>
+    </div>
+
+      {/* Reservation modal */}
+      {showReservation && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowReservation(false)} />
+          <div className="relative w-full sm:max-w-md bg-background rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl space-y-5">
+            <div className="flex items-center justify-between">
+              <h2 className="font-heading font-bold text-lg">Réserver</h2>
+              <button onClick={() => setShowReservation(false)} className="p-2 rounded-full hover:bg-secondary transition-colors">
+                <X size={18} />
+              </button>
+            </div>
+
+            {resDone ? (
+              <div className="flex flex-col items-center gap-3 py-6">
+                <CheckCircle2 size={48} className="text-primary" />
+                <p className="font-heading font-semibold text-lg">Réservation envoyée !</p>
+                <p className="text-sm text-muted-foreground text-center">Redirection vers vos réservations…</p>
+              </div>
+            ) : !edpEst ? (
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Cet établissement n&apos;est pas encore sur VEYA. Réservez directement :
+                </p>
+                {place?.websiteUri && (
+                  <a href={place.websiteUri} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-2 w-full h-12 px-4 rounded-xl border border-border hover:bg-secondary transition-colors text-sm font-medium">
+                    <Globe size={16} className="text-primary" /> Réserver sur leur site
+                    <ExternalLink size={12} className="ml-auto text-muted-foreground" />
+                  </a>
+                )}
+                {place?.internationalPhoneNumber && (
+                  <a href={`tel:${place.internationalPhoneNumber}`}
+                    className="flex items-center gap-2 w-full h-12 px-4 rounded-xl border border-border hover:bg-secondary transition-colors text-sm font-medium">
+                    <Phone size={16} className="text-primary" /> {place.internationalPhoneNumber}
+                  </a>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Date */}
+                <div className="space-y-1.5">
+                  <label className="flex items-center gap-2 text-sm font-medium">
+                    <CalendarDays size={15} className="text-primary" /> Date
+                  </label>
+                  <input
+                    type="date"
+                    min={today}
+                    value={resDate}
+                    onChange={(e) => setResDate(e.target.value)}
+                    className="w-full h-11 px-3 rounded-xl border border-input bg-secondary text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                </div>
+
+                {/* Heure */}
+                <div className="space-y-1.5">
+                  <label className="flex items-center gap-2 text-sm font-medium">
+                    <Clock size={15} className="text-primary" /> Heure
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {TIME_SLOTS.map((slot) => (
+                      <button
+                        key={slot}
+                        onClick={() => setResTime(slot)}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                          resTime === slot
+                            ? 'bg-primary text-primary-foreground border-primary'
+                            : 'border-border hover:border-primary/50 text-foreground'
+                        }`}
+                      >
+                        {slot}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Personnes */}
+                <div className="space-y-1.5">
+                  <label className="flex items-center gap-2 text-sm font-medium">
+                    <Users size={15} className="text-primary" /> Personnes
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setResGuests((g) => Math.max(1, g - 1))}
+                      className="w-10 h-10 rounded-xl border border-border hover:bg-secondary transition-colors font-bold text-lg"
+                    >
+                      −
+                    </button>
+                    <span className="flex-1 text-center font-heading font-bold text-xl">{resGuests}</span>
+                    <button
+                      onClick={() => setResGuests((g) => Math.min(20, g + 1))}
+                      className="w-10 h-10 rounded-xl border border-border hover:bg-secondary transition-colors font-bold text-lg"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <Button
+                  className="w-full h-12 font-heading font-semibold rounded-xl"
+                  disabled={!resDate || !resTime || resLoading}
+                  onClick={handleReserve}
+                >
+                  {resLoading ? <Loader2 size={18} className="animate-spin" /> : 'Confirmer la réservation'}
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

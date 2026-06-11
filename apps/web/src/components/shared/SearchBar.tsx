@@ -8,6 +8,7 @@ interface Props {
   placeholder?: string;
   defaultValue?: string;
   onSearch: (value: string) => void;
+  onSubmit?: (value: string) => void;
   debounceMs?: number;
   autoFocus?: boolean;
   className?: string;
@@ -17,6 +18,7 @@ export function SearchBar({
   placeholder = 'Rechercher…',
   defaultValue = '',
   onSearch,
+  onSubmit,
   debounceMs = 300,
   autoFocus = false,
   className,
@@ -45,6 +47,9 @@ export function SearchBar({
         type="search"
         value={value}
         onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && value.trim()) onSubmit?.(value.trim());
+        }}
         placeholder={placeholder}
         className="w-full pl-9 pr-8 py-2.5 bg-secondary border border-border rounded-xl text-sm font-sans focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
       />
