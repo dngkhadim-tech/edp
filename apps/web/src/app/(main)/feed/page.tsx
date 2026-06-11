@@ -60,11 +60,6 @@ export default function FeedPage() {
 
   return (
     <div className="pb-24 lg:pb-8">
-      {/* Header mobile */}
-      <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border/50 px-4 py-3 lg:hidden flex items-center justify-between">
-        <span className="font-heading font-extrabold text-xl tracking-tight">VEYA</span>
-        <span className="text-[11px] text-muted-foreground font-medium tracking-widest uppercase">Eat · Drink · Pose</span>
-      </header>
 
       <CategoryPills value={category} onChange={setCategory} />
 
