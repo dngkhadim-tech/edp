@@ -65,11 +65,11 @@ export default function FeedPage() {
 
       {isLoading ? (
         /* Skeleton masonry */
-        <div className="flex gap-3 px-3 mt-2">
-          <div className="flex-1 flex flex-col gap-3">
+        <div className="flex gap-1.5 px-1.5 mt-1.5">
+          <div className="flex-1 flex flex-col gap-1.5">
             {[0, 1, 2].map((i) => <PinCardSkeleton key={i} tall={i % 2 === 0} />)}
           </div>
-          <div className="flex-1 flex flex-col gap-3 mt-8">
+          <div className="flex-1 flex flex-col gap-1.5 mt-6">
             {[0, 1, 2].map((i) => <PinCardSkeleton key={i} tall={i % 2 !== 0} />)}
           </div>
         </div>
@@ -83,16 +83,16 @@ export default function FeedPage() {
           )}
 
           {/* Masonry 2-column grid */}
-          <div className="flex gap-3 px-3 mt-2 items-start">
+          <div className="flex gap-1.5 px-1.5 mt-1.5 items-start">
             {/* Left column */}
-            <div className="flex-1 flex flex-col gap-3">
+            <div className="flex-1 flex flex-col gap-1.5">
               {leftPosts.map((post, i) => (
                 <PinCard key={post.id} post={post} tall={i % 3 === 0} />
               ))}
             </div>
 
             {/* Right column — offset for natural stagger */}
-            <div className="flex-1 flex flex-col gap-3 mt-8">
+            <div className="flex-1 flex flex-col gap-1.5 mt-6">
               {rightPosts.map((post, i) => (
                 <PinCard key={post.id} post={post} tall={i % 3 === 2} />
               ))}

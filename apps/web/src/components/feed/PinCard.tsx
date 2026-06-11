@@ -143,7 +143,7 @@ export function PinCard({ post, tall = false }: PinCardProps) {
       </Link>
 
       {/* Info row: avatar + name · likes · save */}
-      <div className="px-1.5 pt-2.5 pb-3 flex items-center gap-2">
+      <div className="px-1 pt-2 pb-2.5 flex items-center gap-1.5">
         {/* Avatar + name */}
         <Link href={profileHref} className="flex items-center gap-2 min-w-0 flex-1">
           <Avatar className="h-7 w-7 flex-shrink-0">
