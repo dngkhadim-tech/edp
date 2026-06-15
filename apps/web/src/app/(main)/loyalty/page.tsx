@@ -5,7 +5,7 @@ import { api } from '@/lib/api';
 import { useAuthStore } from '@/store/auth.store';
 import { gradeColor, gradeLabel, formatNumber } from '@/lib/utils';
 import { LoyaltyGrade, LOYALTY_THRESHOLDS } from '@edp/shared';
-import { Trophy, Star, Zap, Gift, Crown, type LucideIcon } from 'lucide-react';
+import { Trophy, Star, Zap, Gift, Crown, Loader2, type LucideIcon } from 'lucide-react';
 
 const GRADE_ICONS: Record<string, LucideIcon> = {
   BRONZE: Trophy,
@@ -85,12 +85,12 @@ function Podium({ entries, currentUserId }: { entries: LeaderboardEntry[]; curre
 export default function LoyaltyPage() {
   const { user } = useAuthStore();
 
-  const { data: historyData } = useQuery({
+  const { data: historyData, isLoading: historyLoading } = useQuery({
     queryKey: ['loyalty', 'history'],
     queryFn: () => api.get('/loyalty/history').then((r) => r.data),
   });
 
-  const { data: leaderboard } = useQuery({
+  const { data: leaderboard, isLoading: leaderboardLoading } = useQuery({
     queryKey: ['loyalty', 'leaderboard'],
     queryFn: () => api.get('/loyalty/leaderboard').then((r) => r.data),
   });
@@ -155,7 +155,11 @@ export default function LoyaltyPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div>
           <h2 className="text-xl font-heading font-semibold mb-4">Historique des points</h2>
-          {Object.keys(grouped).length === 0 ? (
+          {historyLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 size={24} className="animate-spin text-primary" />
+            </div>
+          ) : Object.keys(grouped).length === 0 ? (
             <p className="text-sm text-muted-foreground">Aucun historique disponible.</p>
           ) : (
             <div className="space-y-5">
@@ -181,6 +185,12 @@ export default function LoyaltyPage() {
 
         <div>
           <h2 className="text-xl font-heading font-semibold mb-4">Classement</h2>
+          {leaderboardLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 size={24} className="animate-spin text-primary" />
+            </div>
+          ) : (
+          <>
           {entries.length >= 3 && (
             <Podium entries={entries.slice(0, 3)} currentUserId={user?.id} />
           )}
@@ -210,6 +220,8 @@ export default function LoyaltyPage() {
               </div>
             ))}
           </div>
+          </>
+          )}
         </div>
       </div>
     </div>

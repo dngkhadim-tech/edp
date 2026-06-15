@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import {
-  Heart, MessageCircle, UserPlus, Calendar, Star, Trophy, Bell,
+  Heart, MessageCircle, UserPlus, Calendar, Star, Trophy, Bell, Loader2,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -72,7 +72,7 @@ function NotifItem({ notif }: { notif: Notification }) {
 export default function NotificationsPage() {
   const queryClient = useQueryClient();
 
-  const { data } = useQuery<{ data: Notification[] }>({
+  const { data, isLoading } = useQuery<{ data: Notification[] }>({
     queryKey: ['notifications'],
     queryFn: () => api.get('/notifications').then((r) => r.data),
   });
@@ -118,7 +118,11 @@ export default function NotificationsPage() {
 
         <TabsContent value="all">
           <div className="space-y-1 mt-2">
-            {all.length === 0 ? (
+            {isLoading ? (
+              <div className="flex justify-center py-16">
+                <Loader2 size={28} className="animate-spin text-primary" />
+              </div>
+            ) : all.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
                 <Bell size={48} className="mb-4 opacity-20" aria-hidden="true" />
                 <p className="text-sm">Aucune notification</p>
@@ -131,7 +135,11 @@ export default function NotificationsPage() {
 
         <TabsContent value="unread">
           <div className="space-y-1 mt-2">
-            {unread.length === 0 ? (
+            {isLoading ? (
+              <div className="flex justify-center py-16">
+                <Loader2 size={28} className="animate-spin text-primary" />
+              </div>
+            ) : unread.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
                 <Bell size={48} className="mb-4 opacity-20" aria-hidden="true" />
                 <p className="text-sm">Tout est lu !</p>

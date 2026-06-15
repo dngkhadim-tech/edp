@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { Calendar, Users } from 'lucide-react';
+import { Calendar, Users, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
@@ -58,9 +59,11 @@ interface ReservationItem {
 function ReservationCard({
   res,
   onCancel,
+  cancelling = false,
 }: {
   res: ReservationItem;
   onCancel: (id: string) => void;
+  cancelling?: boolean;
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const canCancel = res.status === 'PENDING' || res.status === 'CONFIRMED';
@@ -146,11 +149,13 @@ function ReservationCard({
             </DialogClose>
             <Button
               variant="destructive"
+              disabled={cancelling}
               onClick={() => {
                 onCancel(res.id);
                 setDialogOpen(false);
               }}
             >
+              {cancelling && <Loader2 size={14} className="animate-spin mr-2" />}
               Confirmer l'annulation
             </Button>
           </DialogFooter>
@@ -168,15 +173,17 @@ const TAB_FILTER: Record<string, (status: string) => boolean> = {
 
 export default function ReservationsPage() {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const { data, isLoading } = useQuery({
     queryKey: ['reservations', 'mine'],
     queryFn: () => api.get('/reservations/me').then((r) => r.data),
   });
 
-  const { mutate: cancel } = useMutation({
+  const { mutate: cancel, isPending: cancelling, variables: cancellingId } = useMutation({
     mutationFn: (id: string) => api.patch(`/reservations/${id}/cancel`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['reservations'] }),
+    onError: () => toast({ variant: 'destructive', title: "Impossible d'annuler la réservation" }),
   });
 
   const reservations: ReservationItem[] = data?.data ?? [];
@@ -232,7 +239,12 @@ export default function ReservationsPage() {
                 </div>
               ) : (
                 items.map((res) => (
-                  <ReservationCard key={res.id} res={res} onCancel={cancel} />
+                  <ReservationCard
+                    key={res.id}
+                    res={res}
+                    onCancel={cancel}
+                    cancelling={cancelling && cancellingId === res.id}
+                  />
                 ))
               )}
             </TabsContent>
