@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository } from 'typeorm';
 import { PostEntity } from '../../database/entities/post.entity';
 import { FollowEntity } from '../../database/entities/follow.entity';
 import { PostType, PaginationQuery, FEED_ALGORITHM_WEIGHTS } from '@edp/shared';
@@ -27,27 +27,26 @@ export class FeedService {
         excludedTypes: [PostType.STORY],
       });
 
+    // When user follows people, prioritize their content; otherwise show everything
     if (followingIds.length > 0) {
       qb.andWhere(
-        '(p.author_id IN (:...ids) OR p.establishment_id IN (:...ids) OR p.views_count > 1000)',
+        '(p.author_id IN (:...ids) OR p.establishment_id IN (:...ids))',
         { ids: followingIds },
       );
     }
 
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 3600 * 1000);
-    qb.andWhere('p.created_at > :sevenDaysAgo', { sevenDaysAgo });
-
-    // Weighted scoring for algorithm
+    // Recency-decayed engagement score
     qb.addSelect(
       `(
         ${FEED_ALGORITHM_WEIGHTS.engagement} * (p.likes_count + p.comments_count * 2 + p.shares_count * 3) +
-        ${FEED_ALGORITHM_WEIGHTS.recency} * EXTRACT(EPOCH FROM p.created_at) / 1000000
+        ${FEED_ALGORITHM_WEIGHTS.recency} / (1.0 + EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 86400.0)
       )`,
       'score',
     );
 
     const [data, total] = await qb
       .orderBy('score', 'DESC')
+      .addOrderBy('p.created_at', 'DESC')
       .skip((page - 1) * limit)
       .take(limit)
       .getManyAndCount();
@@ -61,10 +60,9 @@ export class FeedService {
     const qb = this.postRepo.createQueryBuilder('p')
       .leftJoinAndSelect('p.author', 'author')
       .leftJoinAndSelect('p.establishment', 'establishment')
-      .where('p.views_count > 0');
+      .where('p.type NOT IN (:...excludedTypes)', { excludedTypes: [PostType.STORY] });
 
     if (type) qb.andWhere('p.type = :type', { type });
-    else qb.andWhere('p.type NOT IN (:...types)', { types: [PostType.STORY] });
 
     const [data, total] = await qb
       .orderBy('p.likes_count', 'DESC')

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Heart, Bookmark, MapPin } from 'lucide-react';
+import { Heart, Bookmark, MapPin, Play } from 'lucide-react';
 import { api } from '@/lib/api';
 import { cn, formatNumber, getInitials } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -66,12 +66,13 @@ export function PinCard({ post, tall = false }: PinCardProps) {
   const handleLike = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setLiked((v) => !v);
+    const prev = liked;
+    setLiked(!prev);
     setLikeAnimating(true);
-    setLikesCount((c) => (liked ? c - 1 : c + 1));
+    setLikesCount((c) => (prev ? c - 1 : c + 1));
     await api.post(`/posts/${post.id}/like`).catch(() => {
-      setLiked((v) => !v);
-      setLikesCount((c) => (liked ? c + 1 : c - 1));
+      setLiked(prev);
+      setLikesCount((c) => (prev ? c + 1 : c - 1));
     });
   };
 
@@ -95,19 +96,20 @@ export function PinCard({ post, tall = false }: PinCardProps) {
       : `/profile/${authorUsername}`;
 
   const mediaItem = post.media?.[0];
+  const isVideo = mediaItem?.type === 'video';
 
   return (
-    <article className="group">
-      {/* Image */}
+    <article className="group flex flex-col">
+      {/* ── Image block ── */}
       <Link href={`/post/${post.id}`} className="block relative">
-        {mediaItem ? (
-          <div
-            className={cn(
-              'relative overflow-hidden rounded-2xl bg-muted',
-              tall ? 'aspect-[3/5]' : 'aspect-[3/4]',
-            )}
-          >
-            {mediaItem.type === 'video' ? (
+        <div
+          className={cn(
+            'relative overflow-hidden rounded-2xl bg-muted',
+            tall ? 'aspect-[3/5]' : 'aspect-[3/4]',
+          )}
+        >
+          {mediaItem ? (
+            isVideo ? (
               <video
                 src={mediaItem.url}
                 className="w-full h-full object-cover"
@@ -123,88 +125,102 @@ export function PinCard({ post, tall = false }: PinCardProps) {
                 className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                 sizes="(max-width: 768px) 50vw, 300px"
               />
+            )
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center p-4">
+              <p className="text-sm font-medium line-clamp-5 text-center leading-relaxed w-full">
+                {post.caption}
+              </p>
+            </div>
+          )}
+
+          {/* Gradient overlay */}
+          {mediaItem && (
+            <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent pointer-events-none" />
+          )}
+
+          {/* Video badge */}
+          {isVideo && (
+            <div className="absolute top-2.5 left-2.5 flex items-center justify-center h-6 w-6 rounded-full bg-black/50 backdrop-blur-sm">
+              <Play size={10} className="text-white fill-white" />
+            </div>
+          )}
+
+          {/* Save button — always visible on mobile, hover on desktop */}
+          <button
+            onClick={handleSave}
+            aria-label={saved ? 'Retirer des favoris' : 'Sauvegarder'}
+            className={cn(
+              'absolute top-2.5 right-2.5 h-7 w-7 rounded-full flex items-center justify-center backdrop-blur-sm transition-all duration-200',
+              'md:opacity-0 md:group-hover:opacity-100',
+              saved
+                ? 'bg-primary/90 text-white'
+                : 'bg-black/40 text-white/90 hover:bg-black/60',
             )}
+          >
+            <Bookmark size={13} className={saved ? 'fill-white' : ''} />
+          </button>
 
-            {/* Bottom gradient */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent pointer-events-none" />
-
-            {/* Location */}
-            {post.location && (
-              <div className="absolute bottom-2.5 left-2.5 flex items-center gap-1 px-2 py-1 rounded-full bg-black/40 backdrop-blur-sm text-white text-[10px] font-medium">
+          {/* Bottom overlay: location + likes */}
+          <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between p-2.5 pointer-events-none">
+            {post.location ? (
+              <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-black/40 backdrop-blur-sm text-white text-[10px] font-medium pointer-events-auto">
                 <MapPin size={9} />
-                <span className="truncate max-w-[90px]">{post.location}</span>
+                <span className="truncate max-w-[80px]">{post.location}</span>
               </div>
+            ) : (
+              <div />
             )}
+
+            <button
+              onClick={handleLike}
+              aria-label="J'aime"
+              className="flex items-center gap-1 pointer-events-auto px-2 py-1 rounded-full bg-black/40 backdrop-blur-sm"
+            >
+              <Heart
+                size={13}
+                className={cn(
+                  'transition-all duration-200',
+                  liked ? 'fill-rose-400 text-rose-400' : 'text-white/90',
+                  likeAnimating && 'scale-125',
+                )}
+                onTransitionEnd={() => setLikeAnimating(false)}
+              />
+              {likesCount > 0 && (
+                <span className="text-white text-[11px] font-bold tabular-nums leading-none">
+                  {formatNumber(likesCount)}
+                </span>
+              )}
+            </button>
           </div>
-        ) : (
-          <div className="rounded-2xl p-5 bg-gradient-to-br from-primary/20 to-primary/5 min-h-[140px] flex items-center justify-center">
-            <p className="text-sm font-medium line-clamp-5 text-center leading-relaxed">
-              {post.caption}
-            </p>
-          </div>
-        )}
+        </div>
       </Link>
 
-      {/* Info row: avatar + name · likes · save */}
-      <div className="px-1 pt-2 pb-2.5 flex items-center gap-1.5">
-        {/* Avatar + name */}
-        <Link href={profileHref} className="flex items-center gap-2 min-w-0 flex-1">
-          <Avatar className="h-7 w-7 flex-shrink-0">
-            <AvatarImage src={author?.avatar || (author as PostEstablishment)?.logo} />
-            <AvatarFallback className="text-[10px] bg-primary/20 text-primary font-semibold">
-              {getInitials(
-                author?.firstName || (author as PostEstablishment)?.name,
-                author?.lastName || '',
-              )}
-            </AvatarFallback>
-          </Avatar>
-          <span className="text-xs font-semibold truncate text-foreground/90 leading-none">
-            {authorName}
-          </span>
-        </Link>
-
-        {/* Likes */}
-        <button
-          onClick={handleLike}
-          aria-label="J'aime"
-          className="flex items-center gap-1 flex-shrink-0 py-1 px-0.5"
-        >
-          <Heart
-            size={14}
-            className={cn(
-              'transition-all duration-200',
-              liked ? 'fill-rose-500 text-rose-500' : 'text-muted-foreground',
-              likeAnimating ? 'scale-125' : '',
+      {/* ── Author strip ── */}
+      <Link
+        href={profileHref}
+        className="flex items-center gap-2 px-1 pt-2 pb-0.5 min-w-0"
+      >
+        <Avatar className="h-6 w-6 flex-shrink-0">
+          <AvatarImage src={author?.avatar || (author as PostEstablishment)?.logo} />
+          <AvatarFallback className="text-[9px] bg-primary/15 text-primary font-semibold">
+            {getInitials(
+              author?.firstName || (author as PostEstablishment)?.name,
+              author?.lastName || '',
             )}
-            onTransitionEnd={() => setLikeAnimating(false)}
-          />
-          {likesCount > 0 && (
-            <span
-              className={cn(
-                'text-[11px] font-semibold tabular-nums leading-none',
-                liked ? 'text-rose-500' : 'text-muted-foreground',
-              )}
-            >
-              {formatNumber(likesCount)}
-            </span>
-          )}
-        </button>
+          </AvatarFallback>
+        </Avatar>
+        <span className="text-xs font-semibold truncate text-foreground/85 leading-none">
+          {authorName}
+        </span>
+      </Link>
 
-        {/* Save */}
-        <button
-          onClick={handleSave}
-          aria-label={saved ? 'Retirer des favoris' : 'Sauvegarder'}
-          className="flex-shrink-0 py-1 px-0.5"
-        >
-          <Bookmark
-            size={14}
-            className={cn(
-              'transition-all duration-200',
-              saved ? 'fill-primary text-primary' : 'text-muted-foreground hover:text-foreground',
-            )}
-          />
-        </button>
-      </div>
+      {/* ── Caption snippet ── */}
+      {post.caption && mediaItem && (
+        <p className="px-1 pb-2 text-[11px] text-muted-foreground/80 line-clamp-1 leading-relaxed">
+          {post.caption}
+        </p>
+      )}
     </article>
   );
 }

@@ -79,6 +79,18 @@ export class UsersService {
     };
   }
 
+  async getPostsByUser(userId: string, query: PaginationQuery) {
+    const { page = 1, limit = 30 } = query;
+    const [data, total] = await this.postRepo.findAndCount({
+      where: { authorId: userId },
+      relations: ['author'],
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+    return { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
+  }
+
   async updateFcmToken(userId: string, token: string): Promise<void> {
     await this.userRepo.update(userId, { fcmToken: token });
   }
