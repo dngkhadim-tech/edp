@@ -495,7 +495,6 @@ export default function PlacePage() {
           </div>
         )}
       </div>
-    </div>
 
       {/* Reservation modal */}
       {showReservation && (
