@@ -40,13 +40,6 @@ export class UsersController {
     return this.usersService.updateAvatar(req.user.id, url);
   }
 
-  @Get(':id/posts')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  getUserPosts(@Param('id') id: string, @Query() query: PaginationQuery) {
-    return this.usersService.getPostsByUser(id, query);
-  }
-
   @Get(':username')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()

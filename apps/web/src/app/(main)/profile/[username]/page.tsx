@@ -50,7 +50,7 @@ export default function ProfilePage() {
 
   const { data: posts } = useQuery({
     queryKey: ['posts', 'user', profile?.id],
-    queryFn: () => api.get(`/users/${profile.id}/posts`).then((r) => r.data),
+    queryFn: () => api.get(`/posts/user/${profile.id}`).then((r) => r.data),
     enabled: !!profile?.id,
   });
 
