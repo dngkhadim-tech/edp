@@ -6,7 +6,7 @@ import { api } from '@/lib/api';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, PenSquare } from 'lucide-react';
+import { Search, PenSquare, Loader2 } from 'lucide-react';
 import { timeAgo, getInitials } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -24,7 +24,7 @@ interface Conversation {
 export default function MessagesPage() {
   const [search, setSearch] = useState('');
 
-  const { data } = useQuery<{ data: Conversation[] }>({
+  const { data, isLoading } = useQuery<{ data: Conversation[] }>({
     queryKey: ['conversations'],
     queryFn: () => api.get('/messages').then((r) => r.data),
   });
@@ -55,7 +55,11 @@ export default function MessagesPage() {
       </div>
 
       <div className="space-y-1">
-        {filtered.length === 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 size={28} className="animate-spin text-primary" />
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
             <PenSquare size={48} className="mb-4 opacity-20" aria-hidden="true" />
             <p className="text-sm">Aucune conversation</p>

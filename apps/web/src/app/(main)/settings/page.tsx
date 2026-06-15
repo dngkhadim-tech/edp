@@ -12,8 +12,9 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Camera } from 'lucide-react';
+import { Camera, Loader2 } from 'lucide-react';
 import { getInitials } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
 const profileSchema = z.object({
   firstName: z.string().min(2, 'Minimum 2 caractères'),
@@ -48,10 +49,12 @@ function NotifRow({
 }
 
 export default function SettingsPage() {
-  const { user, fetchMe } = useAuthStore();
+  const { user, fetchMe, logout } = useAuthStore();
   const { toast } = useToast();
+  const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [notifs, setNotifs] = useState({
@@ -97,6 +100,20 @@ export default function SettingsPage() {
       toast({ variant: 'destructive', title: "Erreur lors de l'upload" });
     } finally {
       setUploadingAvatar(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!window.confirm('Cette action est irréversible. Votre compte et toutes vos données seront supprimés. Continuer ?')) return;
+    setDeleting(true);
+    try {
+      await api.delete('/users/me');
+      logout();
+      router.push('/');
+    } catch {
+      toast({ variant: 'destructive', title: 'Impossible de supprimer le compte' });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -186,7 +203,11 @@ export default function SettingsPage() {
             aria-label="Email (lecture seule)"
           />
         </div>
-        <Button variant="outline" className="w-full">
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => router.push('/forgot-password')}
+        >
           Changer le mot de passe
         </Button>
       </SettingsSection>
@@ -216,7 +237,13 @@ export default function SettingsPage() {
       <SettingsSection>
         <SectionTitle>Danger</SectionTitle>
         <p className="text-sm text-muted-foreground">Ces actions sont irréversibles.</p>
-        <Button variant="outline" className="border-destructive/30 text-destructive hover:bg-destructive/10">
+        <Button
+          variant="outline"
+          className="border-destructive/30 text-destructive hover:bg-destructive/10 w-full"
+          disabled={deleting}
+          onClick={handleDeleteAccount}
+        >
+          {deleting ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
           Supprimer mon compte
         </Button>
       </SettingsSection>

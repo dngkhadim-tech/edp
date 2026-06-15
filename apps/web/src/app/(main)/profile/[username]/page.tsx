@@ -14,7 +14,7 @@ import { formatNumber, getInitials } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
-import { ChevronLeft, MoreHorizontal, Grid3X3, Film, Bookmark, Play, MapPin, MessageCircle } from 'lucide-react';
+import { ChevronLeft, MoreHorizontal, Grid3X3, Film, Bookmark, Play, MapPin, MessageCircle, Loader2 } from 'lucide-react';
 
 type GridTab = 'posts' | 'reels' | 'saved';
 
@@ -34,6 +34,7 @@ export default function ProfilePage() {
   const { user: me } = useAuthStore();
   const router = useRouter();
   const [following, setFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
   const [gridTab, setGridTab] = useState<GridTab>('posts');
 
   // /profile/me → redirect to the actual username
@@ -62,11 +63,20 @@ export default function ProfilePage() {
   const isMe = me?.username === username;
 
   const handleFollow = async () => {
-    setFollowing(!following);
-    if (following) {
-      await api.delete(`/follows/users/${profile.id}`).catch(() => setFollowing(true));
-    } else {
-      await api.post(`/follows/users/${profile.id}`).catch(() => setFollowing(false));
+    if (followLoading) return;
+    setFollowLoading(true);
+    const prev = following;
+    setFollowing(!prev);
+    try {
+      if (prev) {
+        await api.delete(`/follows/users/${profile.id}`);
+      } else {
+        await api.post(`/follows/users/${profile.id}`);
+      }
+    } catch {
+      setFollowing(prev);
+    } finally {
+      setFollowLoading(false);
     }
   };
 
@@ -154,6 +164,7 @@ export default function ProfilePage() {
           <div className="flex gap-2">
             <Button
               onClick={handleFollow}
+              disabled={followLoading}
               className={cn(
                 'flex-1 font-heading font-semibold h-10 rounded-xl transition-all duration-150',
                 following
@@ -161,7 +172,9 @@ export default function ProfilePage() {
                   : 'bg-primary text-primary-foreground hover:bg-primary/90',
               )}
             >
-              {following ? 'Abonné' : 'Suivre'}
+              {followLoading ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : following ? 'Abonné' : 'Suivre'}
             </Button>
             <Button
               variant="outline"

@@ -6,10 +6,9 @@ import { useAuthStore } from '@/store/auth.store';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { Heart, MessageCircle, Bookmark, Send, ArrowLeft, MapPin } from 'lucide-react';
+import { Heart, MessageCircle, Bookmark, ArrowLeft, MapPin, Loader2 } from 'lucide-react';
 import { formatNumber, getInitials, timeAgo } from '@/lib/utils';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
@@ -31,20 +30,27 @@ export default function PostPage() {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const [newComment, setNewComment] = useState('');
+  const [liked, setLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
+  const [saved, setSaved] = useState(false);
 
-  const { data: post } = useQuery({
+  const { data: post, isLoading, isError } = useQuery({
     queryKey: ['post', id],
     queryFn: () => api.get(`/posts/${id}`).then((r) => r.data),
   });
 
+  useEffect(() => {
+    if (post) {
+      setLiked(post.isLiked ?? false);
+      setLikesCount(post.likesCount ?? 0);
+      setSaved(post.isSaved ?? false);
+    }
+  }, [post?.id]);
+
   const { data: commentsData } = useQuery({
     queryKey: ['comments', id],
     queryFn: () => api.get(`/posts/${id}/comments`).then((r) => r.data),
-  });
-
-  const likeMutation = useMutation({
-    mutationFn: () => api.post(`/posts/${id}/like`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['post', id] }),
+    enabled: !!post,
   });
 
   const commentMutation = useMutation({
@@ -55,9 +61,50 @@ export default function PostPage() {
     },
   });
 
-  if (!post) return null;
+  const handleLike = async () => {
+    const prev = liked;
+    setLiked(!prev);
+    setLikesCount((c) => (prev ? c - 1 : c + 1));
+    await api.post(`/posts/${id}/like`).catch(() => {
+      setLiked(prev);
+      setLikesCount((c) => (prev ? c + 1 : c - 1));
+    });
+  };
+
+  const handleSave = async () => {
+    const prev = saved;
+    setSaved(!prev);
+    await api[prev ? 'delete' : 'post'](`/posts/${id}/save`).catch(() => setSaved(prev));
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="animate-spin text-primary" size={28} />
+      </div>
+    );
+  }
+
+  if (isError || !post) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center px-4">
+        <p className="font-heading font-bold">Publication introuvable</p>
+        <Link href="/feed" className="text-primary text-sm font-medium hover:underline">
+          Retour au fil
+        </Link>
+      </div>
+    );
+  }
+
   const author = post.author || post.establishment;
-  const authorName = author ? `${author.firstName || ''} ${author.lastName || ''}`.trim() || author.name : 'Unknown';
+  const authorName = author
+    ? `${author.firstName || ''} ${author.lastName || ''}`.trim() || author.name
+    : 'Unknown';
+  const authorUsername = author?.username || author?.slug;
+  const profileHref =
+    post.authorType === 'ESTABLISHMENT'
+      ? `/establishment/${authorUsername}`
+      : `/profile/${authorUsername}`;
 
   return (
     <div className="max-w-screen-md mx-auto">
@@ -77,14 +124,18 @@ export default function PostPage() {
 
         <div className="flex flex-col border-l border-border">
           <div className="flex items-center gap-3 p-4 border-b border-border">
-            <Avatar className="h-9 w-9">
-              <AvatarImage src={author?.avatar} />
-              <AvatarFallback className="bg-primary/20 text-primary text-sm">
-                {getInitials(author?.firstName || author?.name, author?.lastName || '')}
-              </AvatarFallback>
-            </Avatar>
+            <Link href={profileHref}>
+              <Avatar className="h-9 w-9">
+                <AvatarImage src={author?.avatar} />
+                <AvatarFallback className="bg-primary/20 text-primary text-sm">
+                  {getInitials(author?.firstName || author?.name, author?.lastName || '')}
+                </AvatarFallback>
+              </Avatar>
+            </Link>
             <div>
-              <p className="font-semibold text-sm">{authorName}</p>
+              <Link href={profileHref} className="font-semibold text-sm hover:underline">
+                {authorName}
+              </Link>
               {post.location && (
                 <p className="text-xs text-muted-foreground flex items-center gap-1">
                   <MapPin size={10} /> {post.location}
@@ -104,7 +155,9 @@ export default function PostPage() {
                 </Avatar>
                 <div>
                   <p className="text-sm">
-                    <span className="font-semibold mr-2">{authorName}</span>
+                    <Link href={profileHref} className="font-semibold mr-2 hover:underline">
+                      {authorName}
+                    </Link>
                     {post.caption}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">{timeAgo(post.createdAt)}</p>
@@ -122,7 +175,11 @@ export default function PostPage() {
                 </Avatar>
                 <div>
                   <p className="text-sm">
-                    <span className="font-semibold mr-2">{comment.author?.firstName} {comment.author?.lastName}</span>
+                    <span className="font-semibold mr-2">
+                      {comment.author
+                        ? `${comment.author.firstName || ''} ${comment.author.lastName || ''}`.trim() || 'Anonyme'
+                        : 'Anonyme'}
+                    </span>
                     {comment.content}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">{timeAgo(comment.createdAt)}</p>
@@ -132,33 +189,60 @@ export default function PostPage() {
           </div>
 
           <div className="border-t border-border p-4 space-y-3">
-            <div className="flex items-center gap-4">
-              <button onClick={() => likeMutation.mutate()} className="flex items-center gap-1.5 text-sm">
-                <Heart size={22} className="text-muted-foreground hover:text-red-500 transition-colors" />
-                <span className="font-semibold">{formatNumber(post.likesCount)}</span>
-              </button>
-              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                <MessageCircle size={22} />
-                <span>{formatNumber(post.commentsCount)}</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <button onClick={handleLike} className="flex items-center gap-1.5 text-sm">
+                  <Heart
+                    size={22}
+                    className={cn(
+                      'transition-colors',
+                      liked
+                        ? 'fill-rose-500 text-rose-500'
+                        : 'text-muted-foreground hover:text-rose-500',
+                    )}
+                  />
+                  <span className={cn('font-semibold', liked ? 'text-rose-500' : '')}>
+                    {formatNumber(likesCount)}
+                  </span>
+                </button>
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <MessageCircle size={22} />
+                  <span>{formatNumber(commentsData?.meta?.total ?? post.commentsCount)}</span>
+                </div>
               </div>
+              <button onClick={handleSave} aria-label={saved ? 'Retirer des favoris' : 'Sauvegarder'}>
+                <Bookmark
+                  size={21}
+                  className={cn(
+                    'transition-colors',
+                    saved ? 'fill-primary text-primary' : 'text-muted-foreground hover:text-foreground',
+                  )}
+                />
+              </button>
             </div>
             <p className="text-xs text-muted-foreground">{timeAgo(post.createdAt)}</p>
           </div>
 
-          <div className="border-t border-border p-3 flex gap-2">
+          <div className="border-t border-border p-3 flex gap-2 items-center">
             <input
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && newComment.trim() && commentMutation.mutate(newComment)}
+              onKeyDown={(e) =>
+                e.key === 'Enter' && newComment.trim() && commentMutation.mutate(newComment)
+              }
               placeholder="Ajouter un commentaire..."
               className="flex-1 text-sm bg-transparent outline-none placeholder:text-muted-foreground"
             />
             <button
               onClick={() => newComment.trim() && commentMutation.mutate(newComment)}
-              disabled={!newComment.trim()}
-              className="text-primary font-semibold text-sm disabled:opacity-40"
+              disabled={!newComment.trim() || commentMutation.isPending}
+              className="text-primary font-semibold text-sm disabled:opacity-40 flex items-center"
             >
-              Publier
+              {commentMutation.isPending ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                'Publier'
+              )}
             </button>
           </div>
         </div>

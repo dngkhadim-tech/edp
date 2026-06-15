@@ -75,10 +75,12 @@ export function PinCard({ post, tall = false }: PinCardProps) {
     });
   };
 
-  const handleSave = (e: React.MouseEvent) => {
+  const handleSave = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setSaved((v) => !v);
+    const prev = saved;
+    setSaved(!prev);
+    await api[prev ? 'delete' : 'post'](`/posts/${post.id}/save`).catch(() => setSaved(prev));
   };
 
   const author = post.author || post.establishment;
@@ -111,6 +113,7 @@ export function PinCard({ post, tall = false }: PinCardProps) {
                 className="w-full h-full object-cover"
                 muted
                 playsInline
+                preload="none"
               />
             ) : (
               <Image

@@ -186,7 +186,11 @@ export function PostCard({ post }: PostCardProps) {
             </button>
           </div>
           <button
-            onClick={() => setSaved(!saved)}
+            onClick={async () => {
+              const prev = saved;
+              setSaved(!prev);
+              await api[prev ? 'delete' : 'post'](`/posts/${post.id}/save`).catch(() => setSaved(prev));
+            }}
             className="p-1.5 rounded-xl hover:bg-secondary transition-colors"
             aria-label={saved ? 'Retirer des favoris' : 'Sauvegarder'}
           >
