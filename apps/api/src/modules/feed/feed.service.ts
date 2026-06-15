@@ -35,17 +35,13 @@ export class FeedService {
       );
     }
 
-    // Recency-decayed engagement score
-    qb.addSelect(
-      `(
-        ${FEED_ALGORITHM_WEIGHTS.engagement} * (p.likes_count + p.comments_count * 2 + p.shares_count * 3) +
-        ${FEED_ALGORITHM_WEIGHTS.recency} / (1.0 + EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 86400.0)
-      )`,
-      'score',
-    );
+    const scoreExpr = `(
+      ${FEED_ALGORITHM_WEIGHTS.engagement} * (p.likes_count + p.comments_count * 2 + p.shares_count * 3) +
+      ${FEED_ALGORITHM_WEIGHTS.recency} / (1.0 + EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 86400.0)
+    )`;
 
     const [data, total] = await qb
-      .orderBy('score', 'DESC')
+      .orderBy(scoreExpr, 'DESC')
       .addOrderBy('p.created_at', 'DESC')
       .skip((page - 1) * limit)
       .take(limit)
