@@ -3,13 +3,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Home, Compass, Plus, Film, User } from 'lucide-react';
+import { Home, Compass, Plus, MessageCircle, User } from 'lucide-react';
 
 const ITEMS = [
-  { href: '/feed',        icon: Home,    label: 'Accueil'  },
-  { href: '/explore',     icon: Compass, label: 'Découvrir' },
-  { href: '/reels',       icon: Film,    label: 'Reels'    },
-  { href: '/profile/me',  icon: User,    label: 'Profil'   },
+  { href: '/feed',        icon: Home,          label: 'Accueil'   },
+  { href: '/explore',     icon: Compass,       label: 'Découvrir' },
+  { href: '/messages',    icon: MessageCircle, label: 'Messages'  },
+  { href: '/profile/me',  icon: User,          label: 'Profil'    },
 ];
 
 export function MobileNav() {
@@ -20,7 +20,6 @@ export function MobileNav() {
       className="fixed bottom-0 left-0 right-0 bg-background border-t border-border flex md:hidden z-40"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      {/* Accueil + Découvrir */}
       {ITEMS.slice(0, 2).map(({ href, icon: Icon, label }) => (
         <NavItem key={href} href={href} icon={Icon} label={label} active={pathname === href || pathname.startsWith(href + '/')} />
       ))}
@@ -36,7 +35,6 @@ export function MobileNav() {
         </span>
       </Link>
 
-      {/* Reels + Profil */}
       {ITEMS.slice(2).map(({ href, icon: Icon, label }) => (
         <NavItem key={href} href={href} icon={Icon} label={label} active={pathname === href || pathname.startsWith(href + '/')} />
       ))}

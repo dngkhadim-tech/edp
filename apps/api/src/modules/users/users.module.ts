@@ -4,10 +4,11 @@ import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { UserEntity } from '../../database/entities/user.entity';
 import { FollowEntity } from '../../database/entities/follow.entity';
+import { PostEntity } from '../../database/entities/post.entity';
 import { MediaModule } from '../media/media.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UserEntity, FollowEntity]), MediaModule],
+  imports: [TypeOrmModule.forFeature([UserEntity, FollowEntity, PostEntity]), MediaModule],
   controllers: [UsersController],
   providers: [UsersService],
   exports: [UsersService],

@@ -1,8 +1,9 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserEntity } from '../../database/entities/user.entity';
 import { FollowEntity } from '../../database/entities/follow.entity';
+import { PostEntity } from '../../database/entities/post.entity';
 import { UpdateProfileDto } from '@edp/shared';
 import { PaginationQuery } from '@edp/shared';
 
@@ -13,6 +14,8 @@ export class UsersService {
     private readonly userRepo: Repository<UserEntity>,
     @InjectRepository(FollowEntity)
     private readonly followRepo: Repository<FollowEntity>,
+    @InjectRepository(PostEntity)
+    private readonly postRepo: Repository<PostEntity>,
   ) {}
 
   async findById(id: string): Promise<UserEntity> {
@@ -25,15 +28,16 @@ export class UsersService {
     const user = await this.userRepo.findOne({ where: { username } });
     if (!user) throw new NotFoundException('User not found');
 
-    let isFollowing = false;
-    if (currentUserId) {
-      const follow = await this.followRepo.findOne({
-        where: { followerId: currentUserId, followingId: user.id, followingType: 'USER' },
-      });
-      isFollowing = !!follow;
-    }
+    const [isFollowing, postsCount] = await Promise.all([
+      currentUserId
+        ? this.followRepo.findOne({
+            where: { followerId: currentUserId, followingId: user.id, followingType: 'USER' },
+          }).then((f) => !!f)
+        : Promise.resolve(false),
+      this.postRepo.count({ where: { authorId: user.id } }),
+    ]);
 
-    return { ...user, isFollowing };
+    return { ...user, postsCount, isFollowing };
   }
 
   async updateProfile(userId: string, dto: UpdateProfileDto): Promise<UserEntity> {
