@@ -16,13 +16,11 @@ const FILTER_OPTIONS: FilterOption[] = [
   { value: 'TOURIST_SPOT', label: 'À visiter' },
 ];
 
-const PARIS = { lat: 48.8566, lng: 2.3522 };
-
 export default function ExplorePage() {
   const [type, setType] = useState('');
-  const [coords, setCoords] = useState(PARIS);
-  const [usingRealLocation, setUsingRealLocation] = useState(false);
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
+  const [locationDenied, setLocationDenied] = useState(false);
 
   useEffect(() => {
     navigator.permissions?.query({ name: 'geolocation' }).then((result) => {
@@ -33,28 +31,30 @@ export default function ExplorePage() {
   function activateLocation() {
     if (!navigator.geolocation) return;
     setLocating(true);
+    setLocationDenied(false);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        setUsingRealLocation(true);
         setLocating(false);
       },
-      () => setLocating(false),
+      () => {
+        setLocating(false);
+        setLocationDenied(true);
+      },
       { timeout: 8000 },
     );
   }
 
   function deactivateLocation() {
-    setCoords(PARIS);
-    setUsingRealLocation(false);
+    setCoords(null);
   }
 
   const { data, isLoading, isError } = useQuery<{ places: GooglePlace[] }>({
-    queryKey: ['places-nearby', coords.lat, coords.lng, type],
+    queryKey: ['places-nearby', coords?.lat, coords?.lng, type],
     queryFn: () => {
       const params = new URLSearchParams({
-        lat: String(coords.lat),
-        lng: String(coords.lng),
+        lat: String(coords!.lat),
+        lng: String(coords!.lng),
         type,
         radius: '5000',
       });
@@ -63,6 +63,7 @@ export default function ExplorePage() {
         return r.json();
       });
     },
+    enabled: coords !== null,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -73,7 +74,7 @@ export default function ExplorePage() {
       <header className="sticky top-0 z-10 bg-background border-b border-border px-4 py-3 flex items-center justify-between">
         <h1 className="font-heading font-bold text-[18px]">À découvrir</h1>
         <div className="flex items-center gap-2">
-          {usingRealLocation ? (
+          {coords !== null ? (
             <button
               type="button"
               onClick={deactivateLocation}
@@ -106,7 +107,32 @@ export default function ExplorePage() {
       <div className="px-4 pt-4 space-y-4 max-w-screen-xl mx-auto w-full pb-8">
         <FilterPills options={FILTER_OPTIONS} value={type} onChange={setType} />
 
-        {isLoading && (
+        {!coords && (
+          <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
+            <MapPin size={48} className="opacity-30" />
+            <div className="space-y-1">
+              <p className="text-sm font-sans font-medium">
+                Active ta position pour découvrir les lieux autour de toi
+              </p>
+              {locationDenied && (
+                <p className="text-xs text-destructive">
+                  Localisation refusée — autorise-la dans les réglages de ton navigateur
+                </p>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={activateLocation}
+              disabled={locating}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+            >
+              <LocateFixed size={15} className={locating ? 'animate-pulse' : ''} />
+              {locating ? 'Localisation…' : 'Activer ma position'}
+            </button>
+          </div>
+        )}
+
+        {coords && isLoading && (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="space-y-2">
@@ -118,19 +144,18 @@ export default function ExplorePage() {
           </div>
         )}
 
-        {isError && (
+        {coords && isError && (
           <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
             <AlertCircle size={40} className="text-destructive/50" />
             <p className="text-sm text-muted-foreground">Impossible de charger les établissements</p>
           </div>
         )}
 
-        {!isLoading && !isError && (
+        {coords && !isLoading && !isError && (
           places.length > 0 ? (
             <>
               <p className="text-xs text-muted-foreground font-sans">
-                {places.length} établissement{places.length > 1 ? 's' : ''} •{' '}
-                {usingRealLocation ? 'autour de vous' : 'Paris'}
+                {places.length} établissement{places.length > 1 ? 's' : ''} • autour de vous
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 {places.map((place) => (

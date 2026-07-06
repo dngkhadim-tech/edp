@@ -5,6 +5,10 @@ import { PostEntity } from '../../database/entities/post.entity';
 import { FollowEntity } from '../../database/entities/follow.entity';
 import { PostType, PaginationQuery, FEED_ALGORITHM_WEIGHTS } from '@edp/shared';
 
+const FEED_MAX_AGE_DAYS = 30;
+const POPULAR_VIEW_THRESHOLD = 1000;
+const NEW_POST_BOOST_HOURS = 24;
+
 @Injectable()
 export class FeedService {
   constructor(
@@ -28,14 +32,15 @@ export class FeedService {
       });
 
     if (followingIds.length > 0) {
+      const newPostBoostThreshold = new Date(Date.now() - NEW_POST_BOOST_HOURS * 3600 * 1000);
       qb.andWhere(
-        '(p.author_id IN (:...ids) OR p.establishment_id IN (:...ids) OR p.views_count > 1000)',
-        { ids: followingIds },
+        '(p.author_id IN (:...ids) OR p.establishment_id IN (:...ids) OR p.views_count > :popularViewThreshold OR p.created_at > :newPostBoostThreshold)',
+        { ids: followingIds, popularViewThreshold: POPULAR_VIEW_THRESHOLD, newPostBoostThreshold },
       );
     }
 
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 3600 * 1000);
-    qb.andWhere('p.created_at > :sevenDaysAgo', { sevenDaysAgo });
+    const maxAgeDate = new Date(Date.now() - FEED_MAX_AGE_DAYS * 24 * 3600 * 1000);
+    qb.andWhere('p.created_at > :maxAgeDate', { maxAgeDate });
 
     // Weighted scoring for algorithm
     qb.addSelect(
@@ -60,11 +65,10 @@ export class FeedService {
 
     const qb = this.postRepo.createQueryBuilder('p')
       .leftJoinAndSelect('p.author', 'author')
-      .leftJoinAndSelect('p.establishment', 'establishment')
-      .where('p.views_count > 0');
+      .leftJoinAndSelect('p.establishment', 'establishment');
 
-    if (type) qb.andWhere('p.type = :type', { type });
-    else qb.andWhere('p.type NOT IN (:...types)', { types: [PostType.STORY] });
+    if (type) qb.where('p.type = :type', { type });
+    else qb.where('p.type NOT IN (:...types)', { types: [PostType.STORY] });
 
     const [data, total] = await qb
       .orderBy('p.likes_count', 'DESC')
