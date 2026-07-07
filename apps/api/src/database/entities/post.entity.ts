@@ -1,6 +1,6 @@
 import {
   Entity, PrimaryGeneratedColumn, Column, CreateDateColumn,
-  UpdateDateColumn, ManyToOne, JoinColumn, Index,
+  UpdateDateColumn, DeleteDateColumn, ManyToOne, JoinColumn, Index,
 } from 'typeorm';
 import { PostType } from '@edp/shared';
 import { UserEntity } from './user.entity';
@@ -73,4 +73,7 @@ export class PostEntity {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
+
+  @DeleteDateColumn({ name: 'deleted_at' })
+  deletedAt?: Date;
 }

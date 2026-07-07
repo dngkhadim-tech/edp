@@ -75,7 +75,7 @@ export class PostsService {
     const { page = 1, limit = 20 } = query;
     const [data, total] = await this.postRepo
       .createQueryBuilder('p')
-      .where(':hashtag = ANY(p.hashtags)', { hashtag })
+      .where('p.hashtags ? :hashtag', { hashtag })
       .orderBy('p.created_at', 'DESC')
       .skip((page - 1) * limit)
       .take(limit)
