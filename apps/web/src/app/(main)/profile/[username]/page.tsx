@@ -54,6 +54,12 @@ export default function ProfilePage() {
     enabled: !!profile?.id,
   });
 
+  const { data: reelPosts } = useQuery({
+    queryKey: ['posts', 'user', 'reels', profile?.id],
+    queryFn: () => api.get(`/posts/user/${profile.id}`, { params: { type: 'REEL' } }).then((r) => r.data),
+    enabled: !!profile?.id && gridTab === 'reels',
+  });
+
   const { data: savedPosts } = useQuery({
     queryKey: ['posts', 'saved', profile?.id],
     queryFn: () => api.get(`/users/me/saved`).then((r) => r.data),
@@ -83,7 +89,10 @@ export default function ProfilePage() {
   if (isLoading) return <ProfileSkeleton />;
   if (!profile) return null;
 
-  const gridItems = gridTab === 'saved' ? (savedPosts?.data ?? []) : (posts?.data ?? []);
+  const gridItems =
+    gridTab === 'saved' ? (savedPosts?.data ?? [])
+    : gridTab === 'reels' ? (reelPosts?.data ?? [])
+    : (posts?.data ?? []);
 
   return (
     <div className="pb-24 lg:pb-8">

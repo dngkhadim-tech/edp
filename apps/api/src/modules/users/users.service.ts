@@ -82,4 +82,8 @@ export class UsersService {
   async updateFcmToken(userId: string, token: string): Promise<void> {
     await this.userRepo.update(userId, { fcmToken: token });
   }
+
+  async deactivateAccount(userId: string): Promise<void> {
+    await this.userRepo.update(userId, { isActive: false });
+  }
 }

@@ -141,7 +141,7 @@ export default function PlacePage() {
     queryKey: ['edp-posts', edpEst?.id],
     queryFn: () =>
       api
-        .get('/posts', { params: { establishmentId: edpEst!.id, limit: 9 } })
+        .get(`/posts/establishment/${edpEst!.id}`, { params: { limit: 9 } })
         .then((r) => r.data),
     enabled: !!edpEst?.id,
   });
@@ -150,7 +150,7 @@ export default function PlacePage() {
     queryKey: ['edp-reels', edpEst?.id],
     queryFn: () =>
       api
-        .get('/reels', { params: { establishmentId: edpEst!.id, limit: 6 } })
+        .get(`/posts/establishment/${edpEst!.id}`, { params: { limit: 6, type: 'REEL' } })
         .then((r) => r.data),
     enabled: !!edpEst?.id,
   });

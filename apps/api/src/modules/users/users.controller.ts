@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Patch, Body, Param, UseGuards,
+  Controller, Get, Patch, Delete, Body, Param, UseGuards,
   Request, Query, UseInterceptors, UploadedFile,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -66,5 +66,12 @@ export class UsersController {
   @ApiBearerAuth()
   updateFcmToken(@Request() req, @Body('token') token: string) {
     return this.usersService.updateFcmToken(req.user.id, token);
+  }
+
+  @Delete('me')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  deleteAccount(@Request() req) {
+    return this.usersService.deactivateAccount(req.user.id);
   }
 }

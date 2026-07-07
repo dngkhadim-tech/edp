@@ -52,7 +52,7 @@ export class SearchService {
     return this.postRepo
       .createQueryBuilder('p')
       .leftJoinAndSelect('p.author', 'author')
-      .where('p.caption ILIKE :q OR :tag = ANY(p.hashtags)', {
+      .where('p.caption ILIKE :q OR p.hashtags ? :tag', {
         q: `%${q}%`,
         tag: q.replace('#', ''),
       })

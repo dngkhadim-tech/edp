@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -58,6 +58,17 @@ function removeRecent(query: string) {
 }
 
 function UserRow({ user, onSelect }: { user: UserResult; onSelect: () => void }) {
+  const [following, setFollowing] = useState(false);
+
+  const { mutate: toggleFollow, isPending } = useMutation({
+    mutationFn: () =>
+      following
+        ? api.delete(`/follows/users/${user.id}`)
+        : api.post(`/follows/users/${user.id}`),
+    onMutate: () => setFollowing((v) => !v),
+    onError: () => setFollowing((v) => !v),
+  });
+
   return (
     <Link
       href={`/profile/${user.username}`}
@@ -78,12 +89,16 @@ function UserRow({ user, onSelect }: { user: UserResult; onSelect: () => void })
         <p className="text-xs text-muted-foreground">@{user.username}</p>
       </div>
       <Button
-        variant="outline"
+        variant={following ? 'outline' : 'default'}
         size="sm"
         className="flex-shrink-0 h-7 text-xs rounded-full px-3"
-        onClick={(e) => e.preventDefault()}
+        disabled={isPending}
+        onClick={(e) => {
+          e.preventDefault();
+          toggleFollow();
+        }}
       >
-        Suivre
+        {following ? 'Abonné' : 'Suivre'}
       </Button>
     </Link>
   );

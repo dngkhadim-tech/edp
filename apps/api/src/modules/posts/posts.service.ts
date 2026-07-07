@@ -37,10 +37,12 @@ export class PostsService {
     return post;
   }
 
-  async getUserPosts(userId: string, query: PaginationQuery) {
-    const { page = 1, limit = 20 } = query;
+  async getUserPosts(userId: string, query: PaginationQuery & { type?: PostType }) {
+    const { page = 1, limit = 20, type } = query;
     const [data, total] = await this.postRepo.findAndCount({
-      where: { authorId: userId, authorType: 'USER' },
+      where: type
+        ? { authorId: userId, authorType: 'USER', type }
+        : { authorId: userId, authorType: 'USER' },
       order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
@@ -48,10 +50,10 @@ export class PostsService {
     return { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
   }
 
-  async getEstablishmentPosts(establishmentId: string, query: PaginationQuery) {
-    const { page = 1, limit = 20 } = query;
+  async getEstablishmentPosts(establishmentId: string, query: PaginationQuery & { type?: PostType }) {
+    const { page = 1, limit = 20, type } = query;
     const [data, total] = await this.postRepo.findAndCount({
-      where: { establishmentId },
+      where: type ? { establishmentId, type } : { establishmentId },
       order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,

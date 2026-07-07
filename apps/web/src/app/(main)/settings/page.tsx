@@ -58,9 +58,22 @@ export default function SettingsPage() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [notifs, setNotifs] = useState({
-    likes: true, comments: true, followers: true, reservations: true,
+    likes: user?.notifyLikes ?? true,
+    comments: user?.notifyComments ?? true,
+    followers: user?.notifyFollowers ?? true,
+    reservations: user?.notifyReservations ?? true,
   });
-  const [privateAccount, setPrivateAccount] = useState(false);
+  const [privateAccount, setPrivateAccount] = useState(user?.isPrivate ?? false);
+
+  const savePreference = async (patch: Record<string, boolean>, revert: () => void) => {
+    try {
+      await api.patch('/users/me', patch);
+      await fetchMe();
+    } catch {
+      revert();
+      toast({ variant: 'destructive', title: 'Erreur lors de la mise à jour' });
+    }
+  };
 
   const { register, handleSubmit, formState: { errors, isDirty } } = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
@@ -215,10 +228,38 @@ export default function SettingsPage() {
       {/* Notifications */}
       <SettingsSection>
         <SectionTitle>Notifications</SectionTitle>
-        <NotifRow label="Likes" checked={notifs.likes} onCheckedChange={(v) => setNotifs((n) => ({ ...n, likes: v }))} />
-        <NotifRow label="Commentaires" checked={notifs.comments} onCheckedChange={(v) => setNotifs((n) => ({ ...n, comments: v }))} />
-        <NotifRow label="Nouveaux abonnés" checked={notifs.followers} onCheckedChange={(v) => setNotifs((n) => ({ ...n, followers: v }))} />
-        <NotifRow label="Réservations" checked={notifs.reservations} onCheckedChange={(v) => setNotifs((n) => ({ ...n, reservations: v }))} />
+        <NotifRow
+          label="Likes"
+          checked={notifs.likes}
+          onCheckedChange={(v) => {
+            setNotifs((n) => ({ ...n, likes: v }));
+            savePreference({ notifyLikes: v }, () => setNotifs((n) => ({ ...n, likes: !v })));
+          }}
+        />
+        <NotifRow
+          label="Commentaires"
+          checked={notifs.comments}
+          onCheckedChange={(v) => {
+            setNotifs((n) => ({ ...n, comments: v }));
+            savePreference({ notifyComments: v }, () => setNotifs((n) => ({ ...n, comments: !v })));
+          }}
+        />
+        <NotifRow
+          label="Nouveaux abonnés"
+          checked={notifs.followers}
+          onCheckedChange={(v) => {
+            setNotifs((n) => ({ ...n, followers: v }));
+            savePreference({ notifyFollowers: v }, () => setNotifs((n) => ({ ...n, followers: !v })));
+          }}
+        />
+        <NotifRow
+          label="Réservations"
+          checked={notifs.reservations}
+          onCheckedChange={(v) => {
+            setNotifs((n) => ({ ...n, reservations: v }));
+            savePreference({ notifyReservations: v }, () => setNotifs((n) => ({ ...n, reservations: !v })));
+          }}
+        />
       </SettingsSection>
 
       {/* Confidentialité */}
@@ -229,7 +270,14 @@ export default function SettingsPage() {
             <p className="text-sm font-medium">Compte privé</p>
             <p className="text-xs text-muted-foreground">Seuls vos abonnés peuvent voir vos publications</p>
           </div>
-          <Switch checked={privateAccount} onCheckedChange={setPrivateAccount} aria-label="Compte privé" />
+          <Switch
+            checked={privateAccount}
+            onCheckedChange={(v) => {
+              setPrivateAccount(v);
+              savePreference({ isPrivate: v }, () => setPrivateAccount(!v));
+            }}
+            aria-label="Compte privé"
+          />
         </div>
       </SettingsSection>
 

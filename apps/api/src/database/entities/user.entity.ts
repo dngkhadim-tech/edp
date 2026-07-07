@@ -81,6 +81,21 @@ export class UserEntity {
   @Column({ name: 'is_active', default: true })
   isActive: boolean;
 
+  @Column({ name: 'is_private', default: false })
+  isPrivate: boolean;
+
+  @Column({ name: 'notify_likes', default: true })
+  notifyLikes: boolean;
+
+  @Column({ name: 'notify_comments', default: true })
+  notifyComments: boolean;
+
+  @Column({ name: 'notify_followers', default: true })
+  notifyFollowers: boolean;
+
+  @Column({ name: 'notify_reservations', default: true })
+  notifyReservations: boolean;
+
   @Column({ name: 'is_2fa_enabled', default: false })
   is2faEnabled: boolean;
 

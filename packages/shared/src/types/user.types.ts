@@ -31,6 +31,11 @@ export interface User {
   isVerified: boolean;
   isPremium: boolean;
   isActive: boolean;
+  isPrivate: boolean;
+  notifyLikes: boolean;
+  notifyComments: boolean;
+  notifyFollowers: boolean;
+  notifyReservations: boolean;
   emailVerified: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -48,4 +53,9 @@ export interface UpdateProfileDto {
   bio?: string;
   city?: string;
   country?: string;
+  isPrivate?: boolean;
+  notifyLikes?: boolean;
+  notifyComments?: boolean;
+  notifyFollowers?: boolean;
+  notifyReservations?: boolean;
 }
