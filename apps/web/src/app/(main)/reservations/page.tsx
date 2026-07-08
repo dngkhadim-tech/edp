@@ -66,6 +66,7 @@ function ReservationCard({
   cancelling?: boolean;
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const canCancel = res.status === 'PENDING' || res.status === 'CONFIRMED';
 
   const dateLabel =
@@ -129,10 +130,45 @@ function ReservationCard({
             Annuler
           </Button>
         )}
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" onClick={() => setDetailsOpen(true)}>
           Détails
         </Button>
       </div>
+
+      <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{res.establishment?.name}</DialogTitle>
+            {res.establishment?.category && (
+              <DialogDescription>{res.establishment.category}</DialogDescription>
+            )}
+          </DialogHeader>
+          <div className="space-y-3 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Statut</span>
+              <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_BADGE[res.status] ?? ''}`}>
+                {STATUS_LABEL[res.status] ?? res.status}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Date</span>
+              <span className="font-medium">{dateLabel}</span>
+            </div>
+            {guestsLabel && (
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Personnes</span>
+                <span className="font-medium">{guestsLabel}</span>
+              </div>
+            )}
+            {res.loyaltyPointsEarned != null && res.loyaltyPointsEarned > 0 && (
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Points de fidélité</span>
+                <span className="font-medium text-primary">+{res.loyaltyPointsEarned}</span>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>

@@ -3,10 +3,14 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Heart, Bookmark, MapPin } from 'lucide-react';
+import { useMutation } from '@tanstack/react-query';
+import { Heart, Bookmark, MapPin, MoreHorizontal } from 'lucide-react';
 import { api } from '@/lib/api';
 import { cn, formatNumber, getInitials } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useAuthStore } from '@/store/auth.store';
+import { useToast } from '@/hooks/use-toast';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 
 interface PostAuthor {
   id?: string;
@@ -62,6 +66,27 @@ export function PinCard({ post, tall = false }: PinCardProps) {
   const [likesCount, setLikesCount] = useState(post.likesCount);
   const [saved, setSaved] = useState(post.isSaved ?? false);
   const [likeAnimating, setLikeAnimating] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const currentUserId = useAuthStore((s) => s.user?.id);
+  const { toast } = useToast();
+  const isOwnPost = post.authorType === 'USER' && post.author?.id === currentUserId;
+
+  const { mutate: deletePost } = useMutation({
+    mutationFn: () => api.delete(`/posts/${post.id}`),
+    onSuccess: () => {
+      setHidden(true);
+      toast({ title: 'Publication supprimée' });
+    },
+    onError: () => toast({ variant: 'destructive', title: 'Impossible de supprimer la publication' }),
+  });
+
+  const { mutate: reportPost } = useMutation({
+    mutationFn: () => api.post(`/posts/${post.id}/flag`),
+    onSuccess: () => toast({ title: 'Publication signalée', description: 'Merci, notre équipe va l’examiner.' }),
+    onError: () => toast({ variant: 'destructive', title: 'Impossible de signaler la publication' }),
+  });
+
+  if (hidden) return null;
 
   const handleLike = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -127,6 +152,31 @@ export function PinCard({ post, tall = false }: PinCardProps) {
 
             {/* Bottom gradient */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent pointer-events-none" />
+
+            {/* Options */}
+            <div className="absolute top-2 right-2" onClick={(e) => e.preventDefault()}>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    aria-label="Options"
+                    className="p-1.5 rounded-full bg-black/40 backdrop-blur-sm text-white hover:bg-black/60 transition-colors"
+                  >
+                    <MoreHorizontal size={14} />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {isOwnPost ? (
+                    <DropdownMenuItem destructive onClick={() => deletePost()}>
+                      Supprimer
+                    </DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem onClick={() => reportPost()}>
+                      Signaler
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
 
             {/* Location */}
             {post.location && (

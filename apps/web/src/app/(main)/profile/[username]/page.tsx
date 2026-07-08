@@ -14,7 +14,7 @@ import { formatNumber, getInitials } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
-import { ChevronLeft, MoreHorizontal, Grid3X3, Film, Bookmark, Play, MapPin, MessageCircle, Loader2 } from 'lucide-react';
+import { ChevronLeft, Grid3X3, Film, Bookmark, Play, MapPin, MessageCircle, Loader2 } from 'lucide-react';
 
 type GridTab = 'posts' | 'reels' | 'saved';
 
@@ -106,9 +106,7 @@ export default function ProfilePage() {
           <ChevronLeft size={20} />
         </button>
         <span className="font-heading font-bold text-sm truncate">@{profile.username}</span>
-        <button aria-label="Plus d'options" className="w-9 h-9 flex items-center justify-center text-muted-foreground hover:bg-muted rounded-full transition-colors">
-          <MoreHorizontal size={20} />
-        </button>
+        <div className="w-9 h-9" aria-hidden="true" />
       </header>
 
       {/* Bloc identité */}
@@ -132,14 +130,14 @@ export default function ProfilePage() {
               <p className="font-heading font-bold text-xl text-foreground tabular-nums">{formatNumber(profile.postsCount ?? 0)}</p>
               <p className="text-xs font-sans text-muted-foreground">posts</p>
             </div>
-            <button className="text-center hover:opacity-70 transition-opacity">
+            <Link href={`/profile/${profile.username}/followers`} className="text-center hover:opacity-70 transition-opacity">
               <p className="font-heading font-bold text-xl text-foreground tabular-nums">{formatNumber(profile.followersCount ?? 0)}</p>
               <p className="text-xs font-sans text-muted-foreground">abonnés</p>
-            </button>
-            <button className="text-center hover:opacity-70 transition-opacity">
+            </Link>
+            <Link href={`/profile/${profile.username}/following`} className="text-center hover:opacity-70 transition-opacity">
               <p className="font-heading font-bold text-xl text-foreground tabular-nums">{formatNumber(profile.followingCount ?? 0)}</p>
               <p className="text-xs font-sans text-muted-foreground">abonnements</p>
-            </button>
+            </Link>
           </div>
         </div>
 

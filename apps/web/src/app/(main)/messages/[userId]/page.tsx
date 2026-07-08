@@ -6,7 +6,7 @@ import { api } from '@/lib/api';
 import { useAuthStore } from '@/store/auth.store';
 import { io, Socket } from 'socket.io-client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ArrowLeft, MoreHorizontal, Send, Phone, Video } from 'lucide-react';
+import { ArrowLeft, Send } from 'lucide-react';
 import { getInitials, timeAgo } from '@/lib/utils';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -120,17 +120,6 @@ export default function ConversationPage({ params }: ConversationPageProps) {
           <div className="flex-1" />
         )}
 
-        <div className="flex items-center gap-1 ml-auto">
-          <button className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-all" aria-label="Appel vocal">
-            <Phone size={18} />
-          </button>
-          <button className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-all" aria-label="Appel vidéo">
-            <Video size={18} />
-          </button>
-          <button className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-all" aria-label="Options">
-            <MoreHorizontal size={18} />
-          </button>
-        </div>
       </header>
 
       {/* Messages */}

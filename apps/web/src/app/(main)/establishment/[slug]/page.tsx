@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import {
   Star, MapPin, Clock, Navigation, Bookmark,
-  ChevronLeft, MoreHorizontal, Check,
+  ChevronLeft, Check,
 } from 'lucide-react';
 import { cn, formatNumber } from '@/lib/utils';
 import { HeroGallery } from '@/components/establishment/HeroGallery';
@@ -116,15 +116,6 @@ export default function EstablishmentPage() {
             )}
           >
             <Bookmark size={18} />
-          </button>
-          <button
-            aria-label="Plus d'options"
-            className={cn(
-              'w-9 h-9 rounded-full flex items-center justify-center transition-colors',
-              scrolled ? 'text-muted-foreground hover:bg-muted' : 'bg-black/40 text-white',
-            )}
-          >
-            <MoreHorizontal size={18} />
           </button>
         </div>
       </header>

@@ -83,6 +83,13 @@ export class PostsController {
     return this.postsService.incrementViews(id);
   }
 
+  @Post(':id/flag')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  flag(@Param('id') id: string) {
+    return this.postsService.flagPost(id);
+  }
+
   @Get('user/:userId')
   @UseGuards(JwtAuthGuard)
   getUserPosts(@Param('userId') userId: string, @Query() query: PaginationQuery) {

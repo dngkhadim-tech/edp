@@ -8,7 +8,7 @@ import { LoyaltyService } from '../loyalty/loyalty.service';
 describe('PostsService', () => {
   let service: PostsService;
 
-  const mockPostRepo = { findAndCount: jest.fn() };
+  const mockPostRepo = { findAndCount: jest.fn(), update: jest.fn() };
   const mockLoyaltyService = { addPoints: jest.fn() };
 
   beforeEach(async () => {
@@ -44,6 +44,16 @@ describe('PostsService', () => {
           where: { authorId: 'user-1', authorType: 'USER' },
         }),
       );
+    });
+  });
+
+  describe('flagPost', () => {
+    it('marks the post as flagged for moderation', async () => {
+      mockPostRepo.update.mockResolvedValue(undefined);
+
+      await service.flagPost('post-1');
+
+      expect(mockPostRepo.update).toHaveBeenCalledWith('post-1', { isFlagged: true });
     });
   });
 

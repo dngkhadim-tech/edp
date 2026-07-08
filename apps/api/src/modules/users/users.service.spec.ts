@@ -8,8 +8,8 @@ import { PostEntity } from '../../database/entities/post.entity';
 describe('UsersService', () => {
   let service: UsersService;
 
-  const mockUserRepo = { update: jest.fn(), findOne: jest.fn() };
-  const mockFollowRepo = {};
+  const mockUserRepo = { update: jest.fn(), findOne: jest.fn(), findBy: jest.fn() };
+  const mockFollowRepo = { findAndCount: jest.fn() };
   const mockPostRepo = {};
 
   beforeEach(async () => {
@@ -56,6 +56,30 @@ describe('UsersService', () => {
         notifyFollowers: true,
         notifyReservations: true,
       }));
+    });
+  });
+
+  describe('getFollowing', () => {
+    it('returns the followed users, not raw follow records', async () => {
+      mockFollowRepo.findAndCount.mockResolvedValue([
+        [
+          { id: 'f1', followerId: 'user-1', followingId: 'user-2', followingType: 'USER' },
+          { id: 'f2', followerId: 'user-1', followingId: 'user-3', followingType: 'USER' },
+        ],
+        2,
+      ]);
+      mockUserRepo.findBy.mockResolvedValue([
+        { id: 'user-2', username: 'bob' },
+        { id: 'user-3', username: 'alice' },
+      ]);
+
+      const result = await service.getFollowing('user-1', {});
+
+      expect(result.data).toEqual([
+        { id: 'user-2', username: 'bob' },
+        { id: 'user-3', username: 'alice' },
+      ]);
+      expect(result.meta.total).toBe(2);
     });
   });
 });

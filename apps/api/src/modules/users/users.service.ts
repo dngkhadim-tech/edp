@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { UserEntity } from '../../database/entities/user.entity';
 import { FollowEntity } from '../../database/entities/follow.entity';
 import { PostEntity } from '../../database/entities/post.entity';
@@ -68,13 +68,17 @@ export class UsersService {
   async getFollowing(userId: string, query: PaginationQuery) {
     const { page = 1, limit = 20 } = query;
     const [follows, total] = await this.followRepo.findAndCount({
-      where: { followerId: userId },
+      where: { followerId: userId, followingType: 'USER' },
       skip: (page - 1) * limit,
       take: limit,
       order: { createdAt: 'DESC' },
     });
+    const users = follows.length
+      ? await this.userRepo.findBy({ id: In(follows.map((f) => f.followingId)) })
+      : [];
+    const byId = new Map(users.map((u) => [u.id, u]));
     return {
-      data: follows,
+      data: follows.map((f) => byId.get(f.followingId)).filter((u): u is UserEntity => !!u),
       meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
     };
   }

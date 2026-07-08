@@ -2,14 +2,85 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Search, PenSquare, Loader2 } from 'lucide-react';
 import { timeAgo, getInitials } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+
+interface UserResult {
+  id: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  avatar?: string | null;
+}
+
+function NewMessageDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+  const [query, setQuery] = useState('');
+  const router = useRouter();
+
+  const { data, isLoading } = useQuery<{ users: UserResult[] }>({
+    queryKey: ['search-users', query],
+    queryFn: () => api.get('/search', { params: { q: query, limit: 10 } }).then((r) => r.data),
+    enabled: query.length >= 2,
+  });
+
+  const users = data?.users ?? [];
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Nouveau message</DialogTitle>
+        </DialogHeader>
+        <Input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Rechercher une personne"
+          autoFocus
+        />
+        <div className="space-y-1 max-h-72 overflow-y-auto">
+          {isLoading && (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 size={22} className="animate-spin text-primary" />
+            </div>
+          )}
+          {!isLoading && query.length >= 2 && users.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-8">Aucun résultat</p>
+          )}
+          {users.map((u) => (
+            <button
+              key={u.id}
+              type="button"
+              onClick={() => {
+                onOpenChange(false);
+                router.push(`/messages/${u.id}`);
+              }}
+              className="w-full flex items-center gap-3 py-2 px-2 -mx-2 hover:bg-secondary rounded-xl transition-colors text-left"
+            >
+              <Avatar className="h-9 w-9 flex-shrink-0">
+                <AvatarImage src={u.avatar ?? undefined} />
+                <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
+                  {getInitials(u.firstName, u.lastName)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                <p className="text-sm font-medium truncate">{u.firstName} {u.lastName}</p>
+                <p className="text-xs text-muted-foreground truncate">@{u.username}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 interface Conversation {
   userId: string;
@@ -23,6 +94,7 @@ interface Conversation {
 
 export default function MessagesPage() {
   const [search, setSearch] = useState('');
+  const [newMessageOpen, setNewMessageOpen] = useState(false);
 
   const { data, isLoading } = useQuery<{ data: Conversation[] }>({
     queryKey: ['conversations'],
@@ -39,10 +111,12 @@ export default function MessagesPage() {
     <div className="max-w-screen-sm mx-auto px-4 py-8 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-heading font-bold">Messages</h1>
-        <Button variant="ghost" size="icon" aria-label="Nouveau message">
+        <Button variant="ghost" size="icon" aria-label="Nouveau message" onClick={() => setNewMessageOpen(true)}>
           <PenSquare size={20} aria-hidden="true" />
         </Button>
       </div>
+
+      <NewMessageDialog open={newMessageOpen} onOpenChange={setNewMessageOpen} />
 
       <div className="relative">
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" aria-hidden="true" />

@@ -6,6 +6,8 @@ import { PlaceCard, type GooglePlace } from '@/components/explore/PlaceCard';
 import { FilterPills, type FilterOption } from '@/components/shared/FilterPills';
 import { SlidersHorizontal, MapPin, AlertCircle, LocateFixed, LocateOff } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 
 const FILTER_OPTIONS: FilterOption[] = [
   { value: '', label: 'Tout' },
@@ -16,11 +18,29 @@ const FILTER_OPTIONS: FilterOption[] = [
   { value: 'TOURIST_SPOT', label: 'À visiter' },
 ];
 
+const PRICE_LEVELS = ['PRICE_LEVEL_INEXPENSIVE', 'PRICE_LEVEL_MODERATE', 'PRICE_LEVEL_EXPENSIVE', 'PRICE_LEVEL_VERY_EXPENSIVE'];
+const PRICE_OPTIONS = [
+  { value: '', label: 'Tout' },
+  { value: 'PRICE_LEVEL_INEXPENSIVE', label: '€' },
+  { value: 'PRICE_LEVEL_MODERATE', label: '€€' },
+  { value: 'PRICE_LEVEL_EXPENSIVE', label: '€€€' },
+];
+const RATING_OPTIONS = [
+  { value: 0, label: 'Toutes' },
+  { value: 3, label: '3+' },
+  { value: 4, label: '4+' },
+  { value: 4.5, label: '4.5+' },
+];
+
 export default function ExplorePage() {
   const [type, setType] = useState('');
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
   const [locationDenied, setLocationDenied] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [minRating, setMinRating] = useState(0);
+  const [maxPriceLevel, setMaxPriceLevel] = useState('');
+  const filtersActive = minRating > 0 || maxPriceLevel !== '';
 
   useEffect(() => {
     navigator.permissions?.query({ name: 'geolocation' }).then((result) => {
@@ -67,7 +87,11 @@ export default function ExplorePage() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const places = data?.places ?? [];
+  const places = (data?.places ?? []).filter((p) => {
+    if (minRating > 0 && (p.rating ?? 0) < minRating) return false;
+    if (maxPriceLevel && p.priceLevel && PRICE_LEVELS.indexOf(p.priceLevel) > PRICE_LEVELS.indexOf(maxPriceLevel)) return false;
+    return true;
+  });
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -96,13 +120,72 @@ export default function ExplorePage() {
           )}
           <button
             type="button"
-            className="p-2 rounded-full hover:bg-secondary transition-colors"
+            onClick={() => setFiltersOpen(true)}
+            className="relative p-2 rounded-full hover:bg-secondary transition-colors"
             aria-label="Filtres"
           >
-            <SlidersHorizontal size={18} className="text-muted-foreground" />
+            <SlidersHorizontal size={18} className={filtersActive ? 'text-primary' : 'text-muted-foreground'} />
+            {filtersActive && (
+              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary" />
+            )}
           </button>
         </div>
       </header>
+
+      <Dialog open={filtersOpen} onOpenChange={setFiltersOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Filtres</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-5">
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Note minimale</p>
+              <div className="flex flex-wrap gap-2">
+                {RATING_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setMinRating(opt.value)}
+                    className={cn(
+                      'px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
+                      minRating === opt.value ? 'bg-primary text-primary-foreground' : 'bg-secondary text-foreground hover:bg-muted',
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Prix maximum</p>
+              <div className="flex flex-wrap gap-2">
+                {PRICE_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setMaxPriceLevel(opt.value)}
+                    className={cn(
+                      'px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
+                      maxPriceLevel === opt.value ? 'bg-primary text-primary-foreground' : 'bg-secondary text-foreground hover:bg-muted',
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {filtersActive && (
+              <button
+                type="button"
+                onClick={() => { setMinRating(0); setMaxPriceLevel(''); }}
+                className="text-sm text-muted-foreground hover:text-foreground underline"
+              >
+                Réinitialiser les filtres
+              </button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="px-4 pt-4 space-y-4 max-w-screen-xl mx-auto w-full pb-8">
         <FilterPills options={FILTER_OPTIONS} value={type} onChange={setType} />

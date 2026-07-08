@@ -64,6 +64,9 @@ export class PostEntity {
   @Column({ name: 'views_count', default: 0 })
   viewsCount: number;
 
+  @Column({ name: 'is_flagged', default: false })
+  isFlagged: boolean;
+
   @Index()
   @Column({ name: 'expires_at', nullable: true, type: 'timestamp' })
   expiresAt?: Date;

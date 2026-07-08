@@ -71,6 +71,10 @@ export class PostsService {
     await this.postRepo.increment({ id }, 'viewsCount', 1);
   }
 
+  async flagPost(id: string): Promise<void> {
+    await this.postRepo.update(id, { isFlagged: true });
+  }
+
   async getByHashtag(hashtag: string, query: PaginationQuery) {
     const { page = 1, limit = 20 } = query;
     const [data, total] = await this.postRepo
